@@ -143,3 +143,5 @@ mongoose.connection.once('open', async () => {
     console.log('Error ensuring category indexes:', err.message);
   }
 });
+
+module.exports = app;
