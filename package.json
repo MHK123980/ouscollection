@@ -30,6 +30,9 @@
     "razorpay": "^2.8.3",
     "dotenv": "^16.0.1"
   },
+  "engines": {
+    "node": "18.x"
+  },
   "devDependencies": {
     "nodemon": "^2.0.19"
   }
