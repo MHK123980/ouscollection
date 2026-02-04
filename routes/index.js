@@ -44,22 +44,14 @@ router.get(
   }
 );
 
-router.get("/login", authentication.checkLoggedOut, async (req, res) => {
-  const allCategories = await Category.find();
-  const errorMessage = req.flash("error");
-  res.render("master/login", {
-    errorMessage: errorMessage,
-    allCategories: allCategories,
-  });
-});
-router.get("/register", authentication.checkLoggedOut, async (req, res) => {
-  const errorMessage = req.flash("message");
-  const allCategories = await Category.find();
-  res.render("master/register", {
-    errorMessage: errorMessage,
-    allCategories: allCategories,
-  });
-});
+router.get("/login", (req, res) => {
+  // Customer login disabled — redirect to home
+  res.redirect("/")
+})
+router.get("/register", (req, res) => {
+  // Customer registration disabled — redirect to home
+  res.redirect("/")
+})
 
 router.get(
   "/auth/google",
@@ -150,12 +142,9 @@ router.post("/resendOtp", async (req, res) => {
   await sendOtp(req, res);
   req.flash("message", "Otp resend successful");
 });
-router.post("/login", userControl.userLogin, (req, res) => {
-  if (req.user.isAdmin === true) {
-    res.redirect("/admin");
-  } else {
-    res.redirect("/");
-  }
+router.post("/login", (req, res) => {
+  // Customer login disabled
+  res.redirect("/")
 });
 router.post("/register", userControl.userRegister);
 

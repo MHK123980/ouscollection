@@ -5,13 +5,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>myStyle | Shopping</title>
+  <title>OUS Collection | Shopping</title>
 
   <!-- Google Font -->
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;600;900&display=swap" rel="stylesheet">
 
   <!-- Css Styles -->
-  <link rel="shortcut icon" href="/img/favicon.png" type="image/x-icon">
+  <!-- favicon removed per request -->
   <link rel="stylesheet" href="/css/bootstrap.min.css" type="text/css">
   <link rel="stylesheet" href="/css/font-awesome.min.css" type="text/css">
   <link rel="stylesheet" href="/css/elegant-icons.css" type="text/css">
@@ -39,11 +39,10 @@
   <div class="humberger__menu__overlay"></div>
   <div class="humberger__menu__wrapper">
     <div class="humberger__menu__logo">
-      <a href="/"><img src="/img/logo.png" alt=""></a>
+      <a href="/"><h2 style="color: white; margin: 0;">OUS Collection</h2></a>
     </div>
     <div class="humberger__menu__cart">
       <ul>
-        <li><a href="/user/wishlist"><i class="fa fa-heart"></i><span class="wishlist-item-count">0</span></a></li>
         <li><a href="/user/cart"><i class="fa fa-shopping-bag"></i><span class="cart-item-count">0</span></a></li>
       </ul>
     </div>
@@ -62,7 +61,6 @@
           <a onclick="document.getElementById('logoutForm').submit();"><i class="fa-solid fa-right-from-bracket"></i>Logout</a>
         </form>
         <% } else {%>
-        <a href="/login"><i class="fa fa-user"></i> Login</a>
         <% } %>
       </div>
     </div>
@@ -89,8 +87,7 @@
     </div> -->
     <div class="humberger__menu__contact">
       <ul>
-        <li><i class="fa fa-envelope"></i> info@codestrek.in</li>
-        <li>Free Shipping for all Order of ₹599</li>
+        <li><i class="fa fa-envelope"></i> info@ouscollection.com</li>
       </ul>
     </div>
   </div>
@@ -104,8 +101,7 @@
           <div class="col-lg-6 col-md-6">
             <div class="header__top__left">
               <ul>
-                <li><i class="fa fa-envelope"></i> info@codestreak.in</li>
-                <li>Free Shipping for all Order of ₹599</li>
+                <li><i class="fa fa-envelope"></i> info@ouscollection.com</li>
               </ul>
             </div>
           </div>
@@ -118,8 +114,8 @@
                 <a href="#"><i class="fa fa-pinterest-p"></i></a>
               </div> -->
               <div class="header__top__right__language">
-                <img src="/img/language.png" alt="">
-                <div>English</div>
+                <img src="https://flagcdn.com/w20/pk.png" alt="Pakistan Flag">
+                <div>Urdu</div>
               </div>
               <div class="header__top__right__auth">
                 <% if(locals.user){ %>
@@ -137,7 +133,6 @@
                 </ul>
 
                 <% } else {%>
-                <a href="/login"><i class="fa fa-user"></i> Login</a>
                 <% } %>
               </div>
             </div>
@@ -149,7 +144,7 @@
       <div class="row">
         <div class="col-lg-3">
           <div class="header__logo">
-            <a href="/"><img src="/img/logo.png" alt=""></a>
+            <a href="/"><h2 style="margin: 0; color: #333;">OUS Collection</h2></a>
           </div>
         </div>
         <div class="col-lg-7">
@@ -159,7 +154,6 @@
               <li><a class="nav-item" href="/shop/1">Shop</a></li>
               <li><a class="nav-item" href="/shop/category/men/1">Men</a></li>
               <li><a class="nav-item" href="/shop/category/women/1">Women</a></li>
-              <li><a class="nav-item" href="/shop/category/kids/1">kids</a></li>
               <li><a class="nav-item" href="/contact">Contact</a></li>
             </ul>
           </nav>
@@ -167,7 +161,6 @@
         <div class="col-lg-2">
           <div class="header__cart">
             <ul>
-              <li><a href="/user/wishlist"><i class="fa fa-heart"></i><span class="wishlist-item-count">0</span></a></li>
               <li><a href="/user/cart"><i class="fa fa-shopping-bag"></i><span class="cart-item-count">0</span></a></li>
             </ul>
           </div>
@@ -188,14 +181,13 @@
       <div class="row">
         <div class="col-lg-3 col-md-6 col-sm-6">
           <div class="footer__about">
-            <div class="footer__about__logo">
-              <a href="/"><img src="/img/logo.png" alt=""></a>
-            </div>
-            <ul>
-              <li>Address: 60-49 Road 11378 India</li>
-              <li>Phone: +65 11.188.888</li>
-              <li>Email: info@codestreak.in</li>
-            </ul>
+                <div class="footer__about__logo">
+                  <a href="/"><h3 style="margin:0;">OUS Collection</h3></a>
+                </div>
+                <ul>
+                  <li>Address: 60-49 Road 11378</li>
+                  <li>Email: info@ouscollection.com</li>
+                </ul>
           </div>
         </div>
         <div class="col-lg-4 col-md-6 col-sm-6 offset-lg-1">
@@ -271,7 +263,7 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa" crossorigin="anonymous"></script>
   <script src="https://kit.fontawesome.com/e915e405f3.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  <script src="/js/wishlist.js"></script>
+  <!-- wishlist removed -->
   <script src="/js/cart.js"></script>
   <script src="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>

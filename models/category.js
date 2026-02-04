@@ -3,8 +3,12 @@ const Product = require("./product")
 const categorySchema = new mongoose.Schema({
     categoryName: {
         type: String,
-        required: true,
-        unique: true,
+        required: true
+    },
+    division: {
+        type: String,
+        enum: ['Mens', 'Womens'],
+        required: true
     }
 })
 

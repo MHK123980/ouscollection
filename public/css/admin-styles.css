@@ -64,6 +64,51 @@
   --bs-body-bg: #fff;
 }
 
+/* Select2 Styling for Bootstrap 5 */
+.select2-container--bootstrap-5 .select2-dropdown {
+  border: 1px solid #dee2e6;
+  border-radius: 0.25rem;
+}
+
+.select2-container--bootstrap-5.select2-container--open .select2-selection--single {
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.modal .select2-dropdown {
+  position: fixed !important;
+  z-index: 10000 !important;
+}
+
+.select2-results__option {
+  padding: 0.5rem 0.75rem;
+}
+
+.select2-results__option:hover,
+.select2-results__option--highlighted {
+  background-color: #0d6efd;
+  color: white;
+}
+
+/* Ensure Select2 selection elements align correctly (arrow and clear on right) */
+.select2-container--bootstrap-5 .select2-selection--single {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.select2-container--bootstrap-5 .select2-selection__rendered {
+  flex: 1 1 auto;
+  margin-right: .5rem;
+}
+.select2-container--bootstrap-5 .select2-selection__clear {
+  right: 2.25rem !important;
+  left: auto !important;
+}
+.select2-container--bootstrap-5 .select2-selection__arrow {
+  right: .5rem !important;
+  left: auto !important;
+}
 *,
 *::before,
 *::after {

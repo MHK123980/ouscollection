@@ -13,12 +13,14 @@
         <thead>
           <tr>
             <th>Category</th>
+            <th>Division</th>
             <th>Action</th>
           </tr>
         </thead>
         <tfoot>
           <tr>
             <th>Category</th>
+            <th>Division</th>
             <th>Action</th>
           </tr>
         </tfoot>
@@ -26,6 +28,7 @@
           <% allCategories.forEach(category=>{ %>
           <tr>
             <td><%= category.categoryName %> </td>
+            <td><span class="badge <%= category.division === 'Mens' ? 'badge-primary' : 'badge-danger' %>"><%= category.division %></span></td>
             <td>
               <form action="/admin/deleteCategory/<%= category.id%>?_method=DELETE" method="post">
                 <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#categoryModal<%= category.id %>">
@@ -59,13 +62,22 @@
             <div class="modal-dialog modal-dialog-centered">
               <div class="modal-content">
                 <div class="modal-header">
-                  <h5 class="modal-title" id="exampleModalLabel">Add Category</h5>
+                  <h5 class="modal-title" id="exampleModalLabel">Edit Category</h5>
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form action="/admin/editCategory/<%= category.id %>?_method=PUT" method="post">
                   <div class="modal-body">
-                    <label class="form-label">Name</label>
-                    <input type="text" name="categoryName" value="<%= category.categoryName %>" class="form-control">
+                    <div>
+                      <label class="form-label">Category Name</label>
+                      <input type="text" name="categoryName" value="<%= category.categoryName %>" class="form-control" required>
+                    </div>
+                    <div>
+                      <label class="form-label mt-3">Division</label>
+                      <select name="division" class="form-select" required>
+                        <option value="Mens" <%= category.division === 'Mens' ? 'selected' : '' %>>Men's</option>
+                        <option value="Womens" <%= category.division === 'Womens' ? 'selected' : '' %>>Women's</option>
+                      </select>
+                    </div>
                   </div>
                   <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

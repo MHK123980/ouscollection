@@ -1,50 +1,127 @@
 
-document.forms["checkoutForm"].addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const paymentType = $('input[name=paymentType]:checked', '#checkoutForm').val()
-    data = new URLSearchParams(new FormData(event.target))
-    if (paymentType == "cod") {
-        checkout(data)
+document.addEventListener('DOMContentLoaded', function () {
+    console.log('Checkout JS loaded');
+
+    const checkoutForm = document.getElementById('checkoutForm');
+    const placeOrderBtn = document.getElementById('rzp-button1');
+
+    console.log('Checkout form element:', checkoutForm);
+    console.log('Place order button element:', placeOrderBtn);
+
+    if (checkoutForm) {
+        console.log('Adding form submit listener');
+        checkoutForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            console.log('Form submitted - preventDefault called');
+
+            const paymentType = $('input[name=paymentType]:checked', '#checkoutForm').val()
+            console.log('Payment type:', paymentType);
+
+            const formData = new FormData(event.target)
+            console.log('Form data created');
+
+            if (paymentType == "cod") {
+                console.log('Processing COD order');
+                checkout(formData)
+            } else if (paymentType == "razorpay") {
+                console.log('Processing Razorpay order');
+                razorpay(orderId, amount, formData)
+            } else {
+                console.error('No payment type selected');
+            }
+        });
     } else {
-        razorpay(orderId, amount)
+        console.error('Checkout form not found');
     }
+
+    if (placeOrderBtn) {
+        console.log('Place Order button found');
+        // Removed redundant click listeners that were causing double submission
+        // The button is type="submit", so it will naturally trigger the form's submit event
+    } else {
+        console.error('Place order button not found');
+    }
+
+    // Check if button is disabled on page load
+    setTimeout(() => {
+        if (placeOrderBtn) {
+            console.log('Button disabled after load:', placeOrderBtn.disabled);
+            console.log('Button classes:', placeOrderBtn.className);
+        }
+    }, 1000);
 });
 
 
-async function checkout(data) {
+async function checkout(formData) {
     try {
         const response = await axios({
             url: '/user/checkout',
             method: "post",
-            data: data,
+            data: formData,
+            data: formData,
+            // headers: { 'Content-Type': 'multipart/form-data' }  <-- REMOVED: Let browser set boundary
         });
         if (response.status == 201) {
             await Swal.fire({
-                title: 'Congrats!',
-                text: 'Order Successful',
+                title: 'Order Placed Successfully!',
+                text: 'Your order has been placed successfully.',
                 icon: 'success',
                 confirmButtonColor: '#273952',
                 width: "25em",
-                timer: 3000
+                // timer: 3000 // Removed timer to let animation complete and user read message
             })
-            window.location = "/user/myOrders"
+
+            if (response.data && response.data.isGuest) {
+                window.location = "/"
+            } else {
+                window.location = "/user/myOrders"
+            }
+        } else {
+            await Swal.fire({
+                icon: 'error',
+                title: 'Order Not Placed',
+                text: 'Failed to place order. Please try again.',
+                confirmButtonColor: '#273952',
+                width: "25em",
+                // timer: 3000
+            })
+            // window.location = "/user/checkout" // Removed auto-refresh on failure
         }
     } catch (err) {
         console.error(err)
+        let errorTitle = 'Order Not Placed';
+        let errorMessage = 'Something went wrong while placing your order.';
+
+        if (err.response) {
+            if (err.response.status === 401) {
+                errorTitle = 'Authentication Required';
+                errorMessage = 'Please login to place an order.';
+            } else if (err.response.data && err.response.data.message) {
+                errorMessage = err.response.data.message;
+            }
+        }
+
         await Swal.fire({
             icon: 'error',
-            title: 'Oops...',
-            text: 'Something went wrong!',
+            title: errorTitle,
+            text: errorMessage,
             confirmButtonColor: '#273952',
             width: "25em",
-            timer: 3000
+            // timer: 3000
         })
-        window.location = "/user/checkout"
+
+        if (err.response && err.response.status === 401) {
+            // Redirect to login or home if 401
+            window.location = "/";
+        } else {
+            // Do not refresh page on standard errors so user can fix them
+            // window.location = "/user/checkout"
+        }
     }
 }
 
 
-function razorpay(orderId, amount) {
+function razorpay(orderId, amount, formData) {
     let options = {
         "key": "rzp_test_qdnGosbHKRU60Y", // Enter the Key ID generated from the Dashboard
         "name": "myStyle",
@@ -70,11 +147,11 @@ function razorpay(orderId, amount) {
 
                     //appending order Id and payment id to data to update on database
 
-                    data.append("orderId", orderId)
-                    data.append("paymentId", paymentId)
+                    formData.append("orderId", orderId)
+                    formData.append("paymentId", paymentId)
 
                     //calling checkout after payment verification
-                    checkout(data)
+                    checkout(formData)
 
                 } else {
                     await Swal.fire({
@@ -119,21 +196,22 @@ function fillForm(address, index) {
     $("#address-index").prop("disabled", false)
 
     $("#address-index").val(index)
-    $("[name='firstName']").val(myAddress.firstName)
-    $("[name='lastName']").val(myAddress.lastName)
-    $("[name='house']").val(myAddress?.house)
+    $("[name='fullName']").val(myAddress.firstName + (myAddress.lastName ? ' ' + myAddress.lastName : ''))
+    $("[name='phone']").val(myAddress.phone)
+    $("[name='phone2']").val(myAddress.phone2 || '')
+    $("[name='house']").val(myAddress.house)
     $("[name='address']").val(myAddress.address)
+    $("[name='areaName']").val(myAddress.areaName || myAddress.address)
+    $("[name='landmark']").val(myAddress.landmark || '')
     $("[name='city']").val(myAddress.city)
     $("[name='state']").val(myAddress.state)
-    $("[name='pincode']").val(myAddress.pincode)
-    $("[name='phone']").val(myAddress.phone)
-
+    $("[name='email']").val(myAddress.email || '')
 }
 
 function handleChange(checkbox) {
     if (checkbox.checked == true) {
         $("#addressInputField :input").not("[name=email]").prop("disabled", false)
-        $("#addressInputField :input").not("[name=newAddress]").val('')
+        $("#addressInputField :input").not("[name=newAddress]").not("[name=phone2]").not("[name=landmark]").val('')
     }
 }
 

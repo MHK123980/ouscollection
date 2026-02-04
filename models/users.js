@@ -8,7 +8,6 @@ const addressSchema = new mongoose.Schema({
   },
   lastName: {
     type: String,
-    require: true,
   },
   house: {
     type: String,
@@ -27,7 +26,6 @@ const addressSchema = new mongoose.Schema({
   },
   pincode: {
     type: Number,
-    required: true,
   },
   phone: {
     type: String,

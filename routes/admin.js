@@ -1,5 +1,26 @@
 const express = require("express")
 const router = express.Router()
+const passport = require('passport')
+
+// Admin login page (public)
+router.get('/login', async (req, res) => {
+	const messages = { error: req.flash('error') }
+	res.render('admin/adminLogin', { messages, layout: false })
+})
+
+// Admin login POST
+router.post('/login', (req, res, next) => {
+	passport.authenticate('local', { failureFlash: true, failureRedirect: '/admin/login' })(req, res, function () {
+		// Successful authentication
+		if (req.user && req.user.isAdmin) {
+			return res.redirect('/admin')
+		}
+		// Not an admin - log out and redirect to homepage
+		req.logout(function (err) {
+			return res.redirect('/')
+		})
+	})
+})
 const userControl = require("../controllers/userController")
 const multer = require("../middleware/multer")
 const authentication = require("../middleware/authentication")
@@ -43,6 +64,7 @@ router.put("/outForDelivery/:id", orderControl.outForDelivery)
 router.put("/deliverPackage/:id", orderControl.deliverPackage)
 router.put("/cancelOrder/:id", orderControl.cancelOrder)
 
+router.delete("/orders/:id", adminControl.deleteOrder)
 router.delete("/deleteProduct/:id", productControl.deleteProduct)
 router.delete("/deleteCategory/:id", adminControl.deleteCategory)
 router.delete("/logout", userControl.userLogout)

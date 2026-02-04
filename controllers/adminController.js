@@ -246,45 +246,91 @@ module.exports = {
         ])
         .exec();
       console.log(myOrder);
+      const isAjax = req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'));
       if (myOrder) {
-        res.render("admin/orderDetails", {
-          myOrder: myOrder,
-          layout: "layouts/adminLayout",
-        });
+        if (isAjax) {
+          res.json({ myOrder });
+        } else {
+          res.render("admin/orderDetails", {
+            myOrder: myOrder,
+            layout: "layouts/adminLayout",
+          });
+        }
+      } else {
+        if (isAjax) {
+          res.status(404).json({ error: "Order not found" });
+        } else {
+          req.flash("message", "Invalid orderId");
+          res.redirect("/admin/orders");
+        }
+      }
+    } catch (err) {
+      console.log(err);
+      const isAjax = req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'));
+      if (isAjax) {
+        res.status(500).json({ error: "Server error" });
       } else {
         req.flash("message", "Invalid orderId");
         res.redirect("/admin/orders");
       }
-    } catch (err) {
-      req.flash("message", "Invalid orderId");
-      res.redirect("/admin/orders");
-      console.log(err);
     }
   },
 
   addCategory: async (req, res) => {
     try {
+      const normalizedName = _.startCase(_.toLower((req.body.categoryName || '').trim()));
+      const division = (req.body.division || '').trim();
+
+      // Check if a category with same name and division already exists
+      const exists = await Category.findOne({ categoryName: normalizedName, division: division }).exec();
+      if (exists) {
+        req.flash("message", "Category already exists in the selected division");
+        return res.redirect("/admin/categories");
+      }
+
+      // Create and save
       const category = new Category({
-        categoryName: _.startCase(_.toLower(req.body.categoryName)),
+        categoryName: normalizedName,
+        division: division,
       });
       await category.save();
       res.redirect("/admin/categories");
     } catch (err) {
       console.log(err.message);
-      req.flash("message", "category already exists");
+      // Friendly handling for duplicate key index errors
+      if (err.code === 11000) {
+        req.flash("message", "A category with that name already exists (index constraint). Please check existing categories.");
+      } else {
+        req.flash("message", "Error adding category");
+      }
       res.redirect("/admin/categories");
     }
   },
 
   editCategory: async (req, res) => {
     try {
+      const normalizedName = _.startCase(_.toLower((req.body.categoryName || '').trim()));
+      const division = (req.body.division || '').trim();
+
+      // Check if another category with same name and division exists
+      const conflict = await Category.findOne({ categoryName: normalizedName, division: division, _id: { $ne: req.params.id } }).exec();
+      if (conflict) {
+        req.flash("message", "Another category with the same name exists in the selected division");
+        return res.redirect("/admin/categories");
+      }
+
       await Category.findByIdAndUpdate(req.params.id, {
-        categoryName: _.startCase(_.toLower(req.body.categoryName)),
+        categoryName: normalizedName,
+        division: division
       });
       res.redirect("/admin/categories");
     } catch (err) {
       console.log(err.message);
-      req.flash("message", "Error editing in category");
+      if (err.code === 11000) {
+        req.flash("message", "A category with that name already exists (index constraint). Please check existing categories.");
+      } else {
+        req.flash("message", "Error editing in category");
+      }
       res.redirect("/admin/categories");
     }
   },
@@ -325,6 +371,28 @@ module.exports = {
       console.log(err.message);
       req.flash("message", "Error un blocking User");
       res.redirect("/admin/users");
+    }
+  },
+
+  deleteOrder: async (req, res) => {
+    try {
+      const orderId = req.params.id;
+      const order = await Order.findById(orderId);
+
+      if (!order) {
+        req.flash("message", "Order not found");
+        return res.redirect("/admin/orders");
+      }
+
+      // Delete the order
+      await Order.findByIdAndDelete(orderId);
+
+      req.flash("message", "Order deleted successfully");
+      res.redirect("/admin/orders");
+    } catch (err) {
+      console.log(err.message);
+      req.flash("message", "Error deleting order");
+      res.redirect("/admin/orders");
     }
   },
 };

@@ -3,8 +3,7 @@ const mongoose = require("mongoose")
 const orderSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true
+        ref: "User"
     },
     deliveryAddress: {
         type: Object
@@ -26,6 +25,10 @@ const orderSchema = new mongoose.Schema({
     },
     total: {
         type: Number
+    },
+    totalDeliveryCharges: {
+        type: Number,
+        default: 0
     },
     coupon: {
         code: String,

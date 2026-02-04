@@ -1,24 +1,16 @@
-const Razorpay = require("razorpay");
-
-const instance = new Razorpay({
-    key_id: process.env.key_id,
-    key_secret: process.env.key_secret,
-});
+// Payment functionality removed - using COD only
+// const Razorpay = require("razorpay");
+// const instance = new Razorpay({
+//     key_id: process.env.key_id,
+//     key_secret: process.env.key_secret,
+// });
 
 module.exports = {
     generateOrder: (req, res) => {
-        const options = {
-            amount: req.body.amount,  // amount in the smallest currency unit
-            currency: "INR",
-            receipt: "order1001"
-        };
-        instance.orders.create(options, function (err, order) {
-            if (err) {
-                console.log(err)
-            } else {
-                res.send({ orderId: order.id })
-            }
-        });
+        // Since Razorpay is disabled and we're using COD only, return a mock order ID
+        // This prevents the 500 error when the frontend tries to generate order IDs
+        const mockOrderId = "order_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
+        res.send({ orderId: mockOrderId });
     },
 
     verifyPayment: (req, res) => {

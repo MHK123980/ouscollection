@@ -32,7 +32,7 @@ const productSchema = new mongoose.Schema({
     },
     category: {
         type: mongoose.Schema.Types.ObjectId,
-        required: true,
+        required: false,
         ref: "Category"
     },
     subCategory: {
@@ -51,6 +51,15 @@ const productSchema = new mongoose.Schema({
     },
     discount: Number,
     offerPrice: Number,
+    deliveryCharges: {
+        type: Number,
+        required: true,
+        default: 0
+    },
+    increaseDeliveryChargesWithQuantity: {
+        type: Boolean,
+        default: false
+    },
     description: {
         type: String,
         required: true

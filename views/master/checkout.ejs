@@ -33,10 +33,10 @@
           <div class="card-body">
             <h5 class="card-title"><i class="fa-solid fa-location-dot"></i> <%= myAddress.firstName %></h5>
             <address class="card-text">
-              <%= myAddress.firstName +' '+ myAddress.lastName %>, <%= myAddress.house %>, <%= myAddress.address %>,
-              <%=myAddress.city  %>, <%=myAddress.state %>, <br>
-              pincode: <%= myAddress.pincode %><br>
-              ph:<%= myAddress.phone %>
+              <%= myAddress.firstName %>, <%= myAddress.house %>, <%= myAddress.address %>, <%= myAddress.areaName %>,<br>
+              <%= myAddress.city %>, <%= myAddress.state %><br>
+              ph: <%= myAddress.phone %>
+              <% if(myAddress.phone2) { %><br>Alt: <%= myAddress.phone2 %><% } %>
             </address>
             <button class="btn btn-outline-dark" onclick="fillForm('<%=JSON.stringify(myAddress)%>','<%=Number(index)%>')">Use this address</button>
             <button class="float-right btn btn-outline-secondary" onclick="removeAddress('<%=Number(index)%>')"><i class="fa-solid fa-trash-can"></i></button>
@@ -52,50 +52,61 @@
       <form action="/user/checkout" method="post" id="checkoutForm">
         <div class="row">
           <div class="col-lg-6" id="addressInputField">
-            <div class="row">
-              <div class="col-lg-6">
-                <div class="checkout__input">
-                  <p>Fist Name<span>*</span></p>
-                  <input type="text" name="firstName" required>
-                </div>
-              </div>
-              <div class="col-lg-6">
-                <div class="checkout__input">
-                  <p>Last Name<span>*</span></p>
-                  <input type="text" name="lastName" required>
-                </div>
-              </div>
-            </div>
             <div class="checkout__input">
-              <p>Address<span>*</span></p>
-              <input type="text" name="address" required placeholder="Street Address" class="checkout__input__add">
-              <input type="text" name="house" placeholder="Apartment, suite, unite ect (optinal)">
-            </div>
-            <div class="checkout__input">
-              <p>Town/City<span>*</span></p>
-              <input type="text" name="city" required>
-            </div>
-            <div class="checkout__input autocomplete">
-              <p>State<span>*</span></p>
-              <input type="text" name="state" id="state" required>
-            </div>
-            <div class="checkout__input">
-              <p>Postcode<span>*</span></p>
-              <input type="tel" name="pincode" minlength="6" maxlength="6" required>
+              <p>Full Name<span>*</span></p>
+              <input type="text" name="fullName" required>
             </div>
             <div class="row">
               <div class="col-lg-6">
                 <div class="checkout__input">
-                  <p>Phone<span>*</span></p>
-                  <input type="tel" name="phone" minlength="10" maxlength="10" required>
+                  <p>Mobile No<span>*</span></p>
+                  <input type="tel" name="phone" minlength="11" maxlength="11" required>
                 </div>
               </div>
               <div class="col-lg-6">
                 <div class="checkout__input">
-                  <p>Email<span>*</span></p>
-                  <input type="text" name="email" placeholder="<%= user.email %>" readonly>
+                  <p>Another Mobile No</p>
+                  <input type="tel" name="phone2" minlength="11" maxlength="11">
                 </div>
               </div>
+            </div>
+            <div class="checkout__input">
+              <p>House No<span>*</span></p>
+              <input type="text" name="house" required placeholder="House Number">
+            </div>
+            <div class="checkout__input">
+              <p>Street Name/No<span>*</span></p>
+              <input type="text" name="address" required placeholder="Street Name/Number" class="checkout__input__add">
+            </div>
+            <div class="checkout__input">
+              <p>Area Name<span>*</span></p>
+              <input type="text" name="areaName" required placeholder="Area Name">
+            </div>
+            <div class="checkout__input">
+              <p>Famous Nearest Place</p>
+              <input type="text" name="landmark" placeholder="e.g., Near XYZ Park">
+            </div>
+            <div class="row">
+              <div class="col-lg-6">
+                <div class="checkout__input">
+                  <p>City<span>*</span></p>
+                  <input type="text" name="city" required>
+                </div>
+              </div>
+              <div class="col-lg-6">
+                <div class="checkout__input autocomplete">
+                  <p>Province<span>*</span></p>
+                  <input type="text" name="state" id="state" required>
+                </div>
+              </div>
+            </div>
+            <div class="checkout__input">
+              <p>Pincode</p>
+              <input type="number" name="pincode" minlength="6" maxlength="6">
+            </div>
+            <div class="checkout__input">
+              <p>Email</p>
+              <input type="text" name="email" placeholder="<%= user.email %>" readonly>
             </div>
 
             <input type="hidden" id="address-index" name="addressIndex" value="">
@@ -123,22 +134,30 @@
                   <li class="mb-2">
                     <img type="button" src="/files/<%= item.productId.productImagePath[0] %>" alt="" width="50" height="60">
                     <%= item.name %> x<%= item.quantity %>
-                    <span>₹<%= item.offerPrice ? (item.offerPrice*item.quantity).toFixed(2) : (item.price*item.quantity).toFixed(2)  %> </span>
+                    <span>Rs <%= item.offerPrice ? (item.offerPrice*item.quantity).toFixed(2) : (item.price*item.quantity).toFixed(2)  %> </span>
+                    <% const dCharge = Number(item.productId.deliveryCharges || 0) %>
+                    <% const itemDelivery = item.productId.increaseDeliveryChargesWithQuantity ? (dCharge * item.quantity) : dCharge %>
+                    <% if(itemDelivery && itemDelivery>0){ %>
+                    <div class="small text-muted">Delivery: Rs <%= itemDelivery.toFixed(2) %><% if(item.productId.increaseDeliveryChargesWithQuantity){ %> (per piece: Rs <%= dCharge.toFixed(2) %>)<% } %></div>
+                    <% } %>
                   </li>
                   <%}) %>
 
                 </ul>
               </div>
 
-              <div class="checkout__order__subtotal">Subtotal <span><del>₹<%= findCart.subTotal.toFixed(2) %></del></span></div>
+              <div class="checkout__order__subtotal">Subtotal <span><del>Rs <%= findCart.subTotal.toFixed(2) %></del></span></div>
               <% if(couponCode){%>
-              <div class="checkout__order__total">Cart Discount <span class="text-muted">₹<%= (findCart.subTotal - findCart.total ).toFixed(2)%></span></div>
+              <div class="checkout__order__total">Cart Discount <span class="text-muted">Rs <%= (findCart.subTotal - findCart.total ).toFixed(2)%></span></div>
               <div class="checkout__order__total">Coupon <span class="text-muted"><i class="fa-solid fa-tags"></i> <%=couponCode %></span></div>
-              <div class="checkout__order__total">Coupon Discount <span class="text-muted">₹<%=couponDiscount %> </span></div>
-              <div class="checkout__order__total">Total <span>₹<%= (findCart.total - couponDiscount).toFixed(2) %></span></div>
+              <div class="checkout__order__total">Coupon Discount <span class="text-muted">Rs <%=couponDiscount %> </span></div>
+              <div class="checkout__order__total">Delivery Charges <span class="text-muted">+ Rs <%= (findCart.totalDeliveryCharges || 0).toFixed(2) %></span></div>
+              <div class="checkout__order__total">Total <span>Rs <%= (findCart.total + (findCart.totalDeliveryCharges || 0) - couponDiscount).toFixed(2) %></span></div>
               <%}else{ %>
-              <div class="checkout__order__total">Cart Discount <span class="text-muted">₹<%= (findCart.subTotal - findCart.total).toFixed(2) %> </span></div>
-              <div class="checkout__order__total">Total <span>₹<%= findCart.total.toFixed(2) %></span></div>
+              <div class="checkout__order__total">Cart Discount <span class="text-muted">Rs <%= (findCart.subTotal - findCart.total).toFixed(2) %> </span></div>
+              <div class="checkout__order__total">Delivery Charges <span class="text-muted">+ Rs <%= (findCart.totalDeliveryCharges || 0).toFixed(2) %></span></div>
+              <% let finalTotal = findCart.total + (findCart.totalDeliveryCharges || 0) %>
+              <div class="checkout__order__total">Total <span>Rs <%= finalTotal.toFixed(2) %></span></div>
               <% } %>
 
               <div class="form-check">
@@ -150,12 +169,12 @@
 
               <div class="form-check">
                 <label for="online-payment">
-                  <input class="form-check-input" id="online-payment" type="radio" name="paymentType" value="razorpay">
-                  Online Payment <i class="fa-brands fa-cc-visa"></i> <i class="fa-solid fa-credit-card"></i> <i class="fa-brands fa-cc-mastercard"></i> <i class="fa-brands fa-google-pay"></i>
+                  <input class="form-check-input" id="online-payment" type="radio" name="paymentType" value="razorpay" disabled>
+                  Online Payment <span class="badge badge-warning">Coming Soon</span> <i class="fa-brands fa-cc-visa"></i>
                 </label>
               </div>
 
-              <button type="submit" class="site-btn" id="rzp-button1">PLACE ORDER</button>
+              <button type="submit" class="site-btn" id="rzp-button1" style="cursor: pointer; pointer-events: auto;">PLACE ORDER <% if(couponCode){%> (Rs <%= (findCart.total + (findCart.totalDeliveryCharges || 0) - couponDiscount).toFixed(2) %>)<% }else{%> (Rs <%= (findCart.total + (findCart.totalDeliveryCharges || 0)).toFixed(2) %>)<% }%></button>
             </div>
 
           </div>
@@ -167,18 +186,30 @@
 
 <!-- Checkout Section End -->
 <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://unpkg.com/axios@0.21.1/dist/axios.min.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js" crossorigin="anonymous"></script>
 <script src="/js/checkout.js"></script>
 <script src="/js/address-auto-complete.js"></script>
 <script>
  
 // generating orderId for razorpay 
   const couponDiscount = '<%=couponDiscount%>'
-  const cartTotal = '<%=findCart.total%>'
+  const cartTotal = '<%= (findCart.total + (findCart.totalDeliveryCharges || 0)) %>'
   let amount = couponDiscount ? (cartTotal - couponDiscount) * 100 : cartTotal * 100
   amount = parseInt(amount)
   let data
   console.log(amount)
+  
+  // Disable online payment option
+  document.getElementById('online-payment').addEventListener('change', function() {
+    if (this.checked) {
+      this.checked = false;
+      toastr.options = { "positionClass": "toast-bottom-right" }
+      toastr.warning('Online Payment Coming Soon!')
+      document.getElementById('cod').checked = true;
+    }
+  });
+  
   $(document).ready(async function() {
     try {
       const settings = await axios({

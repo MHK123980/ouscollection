@@ -17,7 +17,6 @@
           <tr>
             <th>Image</th>
             <th>Name</th>
-            <th>Brand</th>
             <th>Category</th>
             <th>Stock</th>
             <th>Price</th>
@@ -31,7 +30,6 @@
           <tr>
             <th>Image</th>
             <th>Name</th>
-            <th>Brand</th>
             <th>Category</th>
             <th>Stock</th>
             <th>Price</th>
@@ -46,8 +44,7 @@
           <tr>
             <td><img src="/files/<%= product.productImagePath[0]%>" alt="<%= product.name %>" width="60" class="img-fluid img-thumbnail"></td>
             <td><%= product.name %></td>
-            <td><%= product.brand %></td>
-            <td><%= product.category.categoryName %></td>
+            <td><%= product.category ? product.category.categoryName : '-' %></td>
             <td><%= product.quantity %></td>
             <td><%= product.price %></td>
             <td><%= product.discount %></td>
@@ -99,20 +96,25 @@
                       <input type="text" value="<%=product.name %>" name="name" required class="form-control">
                     </div>
                     <div>
-                      <label class="form-label">Brand</label>
-                      <input type="text" value="<%=product.brand %>" name="brand" required class="form-control">
-                    </div>
-                    <div>
-                      <label class="form-label">Category</label>
-                      <select name="category" class="form-select">
-                        <% allCategories.forEach(category=>{ %>
-                        <% if(product.category.id==category.id) { %>
-                        <option selected value="<%=category.id %>" label="<%=category.categoryName %>"></option>
-                        <% } else { %>
-                        <option value="<%=category.id %>" label="<%=category.categoryName %>">
-                        </option>
+                      <label class="form-label">Category <span class="text-muted">(Optional)</span></label>
+                      <select name="category" class="form-select category-select">
+                        <option value="">Select category...</option>
+                        <% const mensCats = allCategories.filter(c => c.division === 'Mens'); %>
+                        <% const womensCats = allCategories.filter(c => c.division === 'Womens'); %>
+                        <% if(mensCats.length > 0) { %>
+                          <optgroup label="Men's">
+                            <% mensCats.forEach(cat => { %>
+                            <option value="<%=cat._id %>" <%= product.category && product.category._id && product.category._id.toString() === cat._id.toString() ? 'selected' : '' %>><%= cat.categoryName %></option>
+                            <% }); %>
+                          </optgroup>
                         <% } %>
-                        <% }) %>
+                        <% if(womensCats.length > 0) { %>
+                          <optgroup label="Women's">
+                            <% womensCats.forEach(cat => { %>
+                            <option value="<%=cat._id %>" <%= product.category && product.category._id && product.category._id.toString() === cat._id.toString() ? 'selected' : '' %>><%= cat.categoryName %></option>
+                            <% }); %>
+                          </optgroup>
+                        <% } %>
                       </select>
                     </div>
                     <div>
@@ -124,8 +126,20 @@
                       <input type="number" name="price" min="1" value="<%=product.price %>" required class="form-control">
                     </div>
                     <div>
-                      <label class="form-label">Discount</label>
-                      <input type="number" name="discount" value="<%=product.discount %>" class="form-control">
+                      <label class="form-label">Delivery Charges (Rs)</label>
+                      <input type="number" name="deliveryCharges" min="0" step="0.01" value="<%= typeof product.deliveryCharges !== 'undefined' ? product.deliveryCharges : 0 %>" required class="form-control">
+                    </div>
+                    <div class="form-check mt-2">
+                      <% if(product.increaseDeliveryChargesWithQuantity){ %>
+                      <input class="form-check-input" checked type="checkbox" name="increaseDeliveryChargesWithQuantity" id="increaseDeliveryChargesWithQuantity-<%= product.id %>">
+                      <% } else { %>
+                      <input class="form-check-input" type="checkbox" name="increaseDeliveryChargesWithQuantity" id="increaseDeliveryChargesWithQuantity-<%= product.id %>">
+                      <% } %>
+                      <label class="form-check-label" for="increaseDeliveryChargesWithQuantity-<%= product.id %>">Increase delivery charges with quantity</label>
+                    </div>
+                    <div>
+                      <label class="form-label">Discount <span class="text-muted">(in percentage)</span></label>
+                      <input type="number" name="discount" min="0" max="100" step="0.01" value="<%=product.discount %>" class="form-control" placeholder="Optional">
                     </div>
                     <div class="form-check form-switch mt-2">
                       <% if(product.isFeatured){%>
@@ -164,4 +178,34 @@
       filename: "product_details",
     });
   }
+
+  // Initialize Select2 for category dropdown in edit modals
+  $(document).ready(function() {
+    // Initialize Select2 on page load
+    $('.category-select').select2({
+      placeholder: "Search and select category...",
+      allowClear: true,
+      theme: "bootstrap-5",
+      width: '100%'
+    });
+  });
+
+  // Re-initialize Select2 when any edit modal is shown
+  $(document).on('show.bs.modal', function () {
+    $(this).find('.category-select').each(function() {
+      if (!$(this).data('select2')) {
+        $(this).select2({
+          placeholder: "Search and select category...",
+          allowClear: true,
+          theme: "bootstrap-5",
+          width: '100%'
+        });
+      }
+    });
+  });
+
+  // Destroy Select2 when modal is hidden to avoid memory leaks
+  $(document).on('hidden.bs.modal', function () {
+    $(this).find('.category-select').select2('destroy');
+  });
 </script>

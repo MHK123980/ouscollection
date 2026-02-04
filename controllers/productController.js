@@ -8,15 +8,17 @@ module.exports = {
             const discount = req.body.discount ? parseFloat(req.body.discount) : null
             const offerPrice = req.body.discount ? price - ((price / 100) * discount) : null;
             const isFeatured = req.body.isFeatured == 'on' ? true : false
-            const productImages = req.files != null ? req.files.map((img) => img.filename) : null
+            const productImages = req.files && req.files.length > 0 ? req.files.map((img) => img.filename) : null
             const product = new Product({
                 name: req.body.name,
                 brand: req.body.brand,
-                category: req.body.category,
+                category: req.body.category || null,
                 quantity: req.body.quantity,
                 price: price,
                 discount: discount,
                 offerPrice: offerPrice,
+                deliveryCharges: req.body.deliveryCharges ? Number(req.body.deliveryCharges) : 0,
+                increaseDeliveryChargesWithQuantity: req.body.increaseDeliveryChargesWithQuantity == 'on' ? true : false,
                 isFeatured: isFeatured,
                 description: req.body.description,
                 productImagePath: productImages
@@ -41,20 +43,22 @@ module.exports = {
             const offerPrice = req.body.discount ? price - ((price / 100) * discount) : null;
             const isFeatured = req.body.isFeatured == "on" ? true : false
             const oldProductImages = product.productImagePath
-            const productImages = req.files.length > 0 ? req.files.map((img) => img.filename) : oldProductImages
+            const productImages = req.files && req.files.length > 0 ? req.files.map((img) => img.filename) : oldProductImages
             await Product.findByIdAndUpdate(req.params.id, {
                 name: req.body.name,
                 brand: req.body.brand,
-                category: req.body.category,
+                category: req.body.category || null,
                 quantity: req.body.quantity,
                 price: price,
                 discount: discount,
                 offerPrice: offerPrice,
+                deliveryCharges: req.body.deliveryCharges ? Number(req.body.deliveryCharges) : 0,
+                increaseDeliveryChargesWithQuantity: req.body.increaseDeliveryChargesWithQuantity == 'on' ? true : false,
                 isFeatured: isFeatured,
                 description: req.body.description,
                 productImagePath: productImages
             })
-            if (req.files.length > 0) {
+            if (req.files && req.files.length > 0) {
                 oldProductImages.forEach(async (image) => {
                     await fs.unlink("./public/files/" + image)
                 })

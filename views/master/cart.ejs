@@ -45,25 +45,31 @@
                 </td>
                 <%if(item.offerPrice){%>
                 <td class="shoping__cart__price">
-                  <del class="text-muted">₹<%= item.price %></del>
-                  ₹<%= item.offerPrice.toFixed(2) %>
+                  <del class="text-muted">Rs <%= item.price %></del>
+                  Rs <%= item.offerPrice.toFixed(2) %>
                 </td>
                 <% }else{ %>
-                <td class="shoping__cart__price">₹<%= item.price %></td>
+                <td class="shoping__cart__price">Rs <%= item.price %></td>
                 <% } %>
                 <td class="shoping__cart__quantity">
                   <div class="quantity">
                     <div class="pro-qty">
                       <span class="dec qtybtn" onclick="addToCart('<%=item.productId.id%>','<%=item.name%>','<%=item.price%>',-1,'<%=item?.offerPrice%>')">-</span>
-                      <input type="text" id="currentQuantity-<%= item.productId.id %>" value="<%= item.quantity %>" />
+                      <input type="text" id="currentQuantity-<%= item.productId.id %>" value="<%= item.quantity %>" data-current-quantity="<%= item.quantity %>" data-max-stock="<%= item.productId.quantity %>" data-delivery-charges="<%= item.productId.deliveryCharges || 0 %>" data-increase-delivery="<%= item.productId.increaseDeliveryChargesWithQuantity || false %>" onchange="updateQuantity('<%=item.productId.id%>','<%=item.name%>','<%=item.price%>','<%=item?.offerPrice%>')" />
                       <span class="inc qtybtn" onclick="addToCart('<%=item.productId.id%>','<%=item.name%>','<%=item.price%>',1,'<%=item?.offerPrice%>')">+</span>
                     </div>
                   </div>
                 </td>
                 <td class="shoping__cart__total" id="item-<%=item.productId.id %>">
-                  <% if(item.offerPrice) {%> ₹<%= (item.offerPrice *
-                  item.quantity).toFixed(2) %> <% }else {%> ₹<%= (item.price *
+                  <% if(item.offerPrice) {%> Rs <%= (item.offerPrice *
+                  item.quantity).toFixed(2) %> <% }else {%> Rs <%= (item.price *
                   item.quantity).toFixed(2) %> <% } %>
+                  <% // show per-item delivery charge %>
+                  <% const dCharge = Number(item.productId.deliveryCharges || 0) %>
+                  <% const itemDelivery = item.productId.increaseDeliveryChargesWithQuantity ? (dCharge * item.quantity) : dCharge %>
+                  <% if(itemDelivery && itemDelivery>0){ %>
+                  <div class="text-muted small">Delivery: Rs <%= itemDelivery.toFixed(2) %><% if(item.productId.increaseDeliveryChargesWithQuantity){ %> (per piece: Rs <%= dCharge.toFixed(2) %>)<% } %></div>
+                  <% } %>
                 </td>
                 <td class="shoping__cart__item__close">
                   <span class="icon_close" onclick="deleteItem('<%=item.productId.id %>')"></span>
@@ -100,11 +106,11 @@
           <ul id="total-list">
             <li>
               Subtotal
-              <span><del>₹<%= findCart.subTotal.toFixed(2) %></del></span>
+              <span><del>Rs <%= findCart.subTotal.toFixed(2) %></del></span>
             </li>
             <% let discount = findCart.subTotal - findCart.total %>
             <li>
-              Cart Discount <span class="text-muted">₹<%=discount.toFixed(2)%></span>
+              Cart Discount <span class="text-muted">Rs <%=discount.toFixed(2)%></span>
             </li>
             <% if(couponCode){%>
             <li>
@@ -114,13 +120,19 @@
               Coupon Discount <span class="text-muted"> <%=couponDiscount.toFixed(2)%> </span>
             </li>
             <li>
+              Delivery Charges <span class="text-muted">Rs <%= (findCart.totalDeliveryCharges || 0).toFixed(2) %></span>
+            </li>
+            <li>
               Total
-              <span>₹<%= (findCart.total - couponDiscount).toFixed(2) %></span>
+              <span>Rs <%= (findCart.total + (findCart.totalDeliveryCharges || 0) - couponDiscount).toFixed(2) %></span>
             </li>
             <% }else{%>
             <li>
+              Delivery Charges <span class="text-muted">Rs <%= (findCart.totalDeliveryCharges || 0).toFixed(2) %></span>
+            </li>
+            <li>
               Total
-              <span>₹<%= findCart.total.toFixed(2) %></span>
+              <span>Rs <%= (findCart.total + (findCart.totalDeliveryCharges || 0)).toFixed(2) %></span>
             </li>
             <% } %>
           </ul>
@@ -145,7 +157,13 @@
 
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 <script>
- 
+// Initialize cart totals on page load
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.location.pathname === '/cart' || window.location.pathname === '/checkout') {
+        updateCartTotals();
+    }
+});
+
 document.forms["couponForm"].addEventListener("submit", async (event) => {
 event.preventDefault();
 const couponCode = document.getElementById("couponCode").value;

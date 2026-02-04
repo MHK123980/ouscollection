@@ -1,8 +1,8 @@
 <!-- Hero Section Begin -->
-<section class="hero hero-normal">
+<section class="hero hero-normal" id="heroSection">
   <div class="container">
     <div class="row">
-      <div class="col-lg-3">
+      <div class="col-lg-3" id="heroDept">
         <div class="hero__categories">
           <div class="hero__categories__all">
             <i class="fa fa-bars"></i>
@@ -15,7 +15,7 @@
           </ul>
         </div>
       </div>
-      <div class="col-lg-9">
+      <div class="col-lg-9" id="heroSearch">
         <div class="hero__search">
           <div class="hero__search__form autocomplete">
             <form action="/search/1" method="get" id="searchForm">
@@ -27,7 +27,7 @@
               <button type="submit" class="site-btn">SEARCH</button>
             </form>
           </div>
-          <div class="hero__search__phone">
+          <div class="hero__search__phone" id="heroPhone">
             <div class="hero__search__phone__icon">
               <i class="fa fa-phone"></i>
             </div>
@@ -41,4 +41,17 @@
     </div>
   </div>
 </section>
+<script>
+  // Hide department and phone sections on non-home/non-admin pages
+  const pathname = window.location.pathname;
+  const isAdminPage = pathname.includes('/admin');
+  const isHomePage = pathname === '/' || pathname === '';
+  
+  if (!isAdminPage && !isHomePage) {
+    document.getElementById('heroDept').style.display = 'none';
+    document.getElementById('heroPhone').style.display = 'none';
+    document.getElementById('heroSearch').classList.add('col-lg-12');
+    document.getElementById('heroSearch').classList.remove('col-lg-9');
+  }
+</script>
 <!-- Hero Section End -->

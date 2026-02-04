@@ -38,8 +38,8 @@
         <tbody>
           <% allOrders.forEach(order=>{ %>
           <tr id="order-<%= order.id %>">
-            <td><a href="/admin/orders/<%= order.id %>" class="link-dark"><%=order.id%></a></td>
-            <td><%=order.userId.email %></td>
+            <td><button onclick="viewOrderDetails('<%= order.id %>')" class="btn btn-link p-0 link-dark"><%=order.id%></button></td>
+            <td><%= order.userId ? order.userId.email : (order.deliveryAddress.email ? order.deliveryAddress.email : 'Guest') %></td>
             <td>
               <%=order.deliveryAddress.firstName%>
               <%=order.deliveryAddress.lastName%>,
@@ -62,27 +62,46 @@
             <% } %>
             <td><span class="badge order-status" id="status-<%= order.id%>"><%=order.status %></span></td>
             <td id="action-<%= order.id %>" class="text-center">
-              <% if(order.status==="Pending"){%>
-              <div class="btn-group" role="group" aria-label="Basic example">
-                <button class="btn btn-sm btn-outline-dark" onclick="packOrder('<%=order.id%>')"><i class="fa-solid fa-boxes-packing"></i> Pack</button>
-                <button class="btn btn-sm btn-outline-danger" onclick="cancelOrder('<%=order.id%>')"><i class="fa-solid fa-ban"></i> Cancel</button>
+              <div class="btn-group-vertical" role="group">
+                <button onclick="viewOrderDetails('<%= order.id %>')" class="btn btn-sm btn-outline-primary mb-1"><i class="fa-solid fa-eye"></i> View Details</button>
+                <button class="btn btn-sm btn-outline-danger mb-1" onclick="deleteOrder('<%=order.id%>')"><i class="fa-solid fa-trash"></i> Delete Order</button>
+                <% if(order.status==="Pending"){%>
+                <div class="btn-group" role="group" aria-label="Basic example">
+                  <button class="btn btn-sm btn-outline-dark" onclick="packOrder('<%=order.id%>')"><i class="fa-solid fa-boxes-packing"></i> Pack</button>
+                  <button class="btn btn-sm btn-outline-danger" onclick="cancelOrder('<%=order.id%>')"><i class="fa-solid fa-ban"></i> Cancel</button>
+                </div>
+                <% }else if(order.status==="Packed"){ %>
+                <button class="btn btn-sm btn-outline-dark" onclick="shipOrder('<%=order.id%>')"><i class="fa-solid fa-truck-fast"></i> Ship Order</button>
+                <% }else if(order.status==="Shipped"){ %>
+                <button class="btn btn-sm btn-outline-dark" onclick="outForDelivery('<%=order.id%>')"><i class="fa-solid fa-house-chimney"></i> Out For Delivery</button>
+                <% }else if(order.status==="Out for delivery"){ %>
+                <button class="btn btn-sm btn-outline-dark" onclick="deliverPackage('<%=order.id%>')"><i class="fa-solid fa-thumbs-up"></i> Deliver Package</button>
+                <% }else if(order.status==="Delivered"){%>
+                <button class="btn btn-outline-dark" disabled><i class="fa-solid fa-thumbs-up"></i></button>
+                <%}else{%>
+                <button class="btn btn-outline-dark" disabled><i class="fa-solid fa-ban"></i></button>
+                <% } %>
               </div>
-              <% }else if(order.status==="Packed"){ %>
-              <button class="btn btn-sm btn-outline-dark" onclick="shipOrder('<%=order.id%>')"><i class="fa-solid fa-truck-fast"></i> Ship Order</button>
-              <% }else if(order.status==="Shipped"){ %>
-              <button class="btn btn-sm btn-outline-dark" onclick="outForDelivery('<%=order.id%>')"><i class="fa-solid fa-house-chimney"></i> Out For Delivery</button>
-              <% }else if(order.status==="Out for delivery"){ %>
-              <button class="btn btn-sm btn-outline-dark" onclick="deliverPackage('<%=order.id%>')"><i class="fa-solid fa-thumbs-up"></i> Deliver Package</button>
-              <% }else if(order.status==="Delivered"){%>
-              <button class="btn btn-outline-dark" disabled><i class="fa-solid fa-thumbs-up"></i></button>
-              <%}else{%>
-              <button class="btn btn-outline-dark" disabled><i class="fa-solid fa-ban"></i></button>
-              <% } %>
             </td>
           </tr>
           <% }) %>
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- Order Details Modal -->
+  <div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="orderDetailsModalLabel">Order Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="orderDetailsContent">
+          <!-- Order details will be loaded here -->
+        </div>
+      </div>
     </div>
   </div>
 

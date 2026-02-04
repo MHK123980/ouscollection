@@ -207,18 +207,25 @@
     // proQty.append('<span class="inc qtybtn">+</span>');
     proQty.on('click', '.qtybtn', function () {
         var $button = $(this);
-        var oldValue = $button.parent().find('input').val();
+        var $input = $button.parent().find('input');
+        var oldValue = $input.val();
+        var maxStock = $input.data('max-stock') || 999999; // Default to high number if not set
+        
         if ($button.hasClass('inc')) {
             var newVal = parseFloat(oldValue) + 1;
+            // Don't allow incrementing beyond stock
+            if (newVal > maxStock) {
+                newVal = maxStock;
+            }
         } else {
-            // Don't allow decrementing below zero
+            // Don't allow decrementing below one
             if (oldValue > 1) {
                 var newVal = parseFloat(oldValue) - 1;
             } else {
                 newVal = 1;
             }
         }
-        $button.parent().find('input').val(newVal);
+        $input.val(newVal);
     });
 
 })(jQuery);
