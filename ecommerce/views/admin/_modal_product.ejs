@@ -1,0 +1,117 @@
+<div class="modal fade" id="addProduct" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Add Product</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form action="/admin/addProduct" method="post" enctype="multipart/form-data">
+          <div>
+            <label class="form-label">Name</label>
+            <input type="text" value="" name="name" required class="form-control">
+          </div>
+          <div>
+            <label class="form-label">Category <span class="text-muted">(Optional)</span></label>
+            <select name="category" class="form-select category-select">
+              <option value="">Select category...</option>
+              <% const mensCats = allCategories.filter(c => c.division === 'Mens'); %>
+              <% const womensCats = allCategories.filter(c => c.division === 'Womens'); %>
+              <% if(mensCats.length > 0) { %>
+                <optgroup label="Men's">
+                  <% mensCats.forEach(cat => { %>
+                  <option value="<%=cat._id %>"><%= cat.categoryName %></option>
+                  <% }); %>
+                </optgroup>
+              <% } %>
+              <% if(womensCats.length > 0) { %>
+                <optgroup label="Women's">
+                  <% womensCats.forEach(cat => { %>
+                  <option value="<%=cat._id %>"><%= cat.categoryName %></option>
+                  <% }); %>
+                </optgroup>
+              <% } %>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Stock</label>
+            <input type="number" name="quantity" min="1" value="" required class="form-control">
+          </div>
+          <div>
+            <label class="form-label">Price</label>
+            <input type="number" name="price" min="1" value="" required class="form-control">
+          </div>
+          <div>
+            <label class="form-label">Delivery Charges (Rs)</label>
+            <input type="number" name="deliveryCharges" min="0" step="0.01" value="0" required class="form-control">
+          </div>
+          <div class="form-check mt-2">
+            <input class="form-check-input" type="checkbox" name="increaseDeliveryChargesWithQuantity" id="increaseDeliveryChargesWithQuantity">
+            <label class="form-check-label" for="increaseDeliveryChargesWithQuantity">Increase delivery charges with quantity</label>
+          </div>
+          <div>
+            <label class="form-label">Discount <span class="text-muted">(in percentage)</span></label>
+            <input type="number" name="discount" min="0" max="100" step="0.01" value="" class="form-control" placeholder="Optional">
+          </div>
+          <div class="form-check form-switch mt-2">
+            <input class="form-check-input" type="checkbox" name="isFeatured" id="flexSwitchCheckDefault">
+            <label class="form-check-label" for="flexSwitchCheckDefault">Is Featured ?</label>
+          </div>
+          <div><label class="form-label">Description</label></div>
+          <div><textarea name="description" rows="5" placeholder="Add description" class="form-control" required></textarea></div>
+          <div>
+            <label class="form-label">Upload Product Image</label>
+            <input type="file" multiple name="productImages" required class="form-control" onchange="preview()">
+            <div class="mt-2" id="previewProductImages">
+              <!-- preview images while uploading images -->
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-dark">Add Product</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Remove cache file of modal when closing
+  $("#addProduct").on("hidden.bs.modal", function() {
+    $(this).find('form').trigger('reset');
+    $("#previewProductImages").html("")
+    // Destroy Select2 when modal closes
+    $(this).find('.category-select').select2('destroy');
+  });
+
+  // Show uploaded images on form
+  function preview() {
+    const selectedFiles = event.target.files
+    for (const file of selectedFiles) {
+      let src = URL.createObjectURL(file);
+      $("#previewProductImages").append(`<img src='${src}' alt='' width='60' class='rounded mx-1 img-fluid'>`)
+    }
+  }
+
+  // Initialize Select2 for category dropdown
+  $(document).ready(function() {
+    // Initialize Select2 on page load
+    $('#addProduct .category-select').select2({
+      placeholder: "Search and select category...",
+      allowClear: true,
+      theme: "bootstrap-5",
+      width: '100%'
+    });
+  });
+
+  // Re-initialize Select2 when modal is shown
+  $('#addProduct').on('show.bs.modal', function () {
+    $(this).find('.category-select').select2({
+      placeholder: "Search and select category...",
+      allowClear: true,
+      theme: "bootstrap-5",
+      width: '100%'
+    });
+  });
+</script>
