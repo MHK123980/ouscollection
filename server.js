@@ -1,4 +1,6 @@
-require("dotenv").config();
+if (process.env.NODE_ENV !== 'production') {
+  require("dotenv").config();
+}
 const express = require("express");
 const expressLayout = require("express-ejs-layouts");
 const dbConfig = require("./config/dbConfig");
@@ -119,8 +121,10 @@ app.use((err, req, res, next) => {
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("server is up and running on port" + PORT));
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => console.log("server is up and running on port " + PORT));
+}
 
 // Ensure category index allows same name across different divisions
 const mongoose = require('./config/dbConfig');
