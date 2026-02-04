@@ -16,7 +16,7 @@
           </div>
         </div>
         <% if(primaryBanner){%>
-        <div class="hero__item set-bg primary-banner" data-setbg="/files/<%= primaryBanner.bannerImagePath %>">
+        <div class="hero__item set-bg primary-banner" data-setbg="<%= primaryBanner.bannerImagePath.startsWith('http') ? primaryBanner.bannerImagePath : '/files/' + primaryBanner.bannerImagePath %>">
           <div class="hero__text">
             <span>OUS Collection</span>
             <h2><%= primaryBanner.title %> <br><%= primaryBanner.caption %></h2>
@@ -74,7 +74,7 @@
       <% featuredProducts.forEach((product)=> { %>
       <div class="col-lg-3 col-md-4 col-sm-6 mix <%= product.category.categoryName %>">
         <div class="featured__item">
-          <div class="featured__item__pic set-bg" data-setbg="/files/<%=product.productImagePath[0]%>">
+          <div class="featured__item__pic set-bg" data-setbg="<%= product.productImagePath[0].startsWith('http') ? product.productImagePath[0] : '/files/' + product.productImagePath[0] %>">
             <ul class="featured__item__pic__hover">
               <li><a onclick="addToCart('<%=product.id%>','<%=product.name%>','<%=product.price%>',1,'<%=product?.offerPrice%>')"><i class="fa fa-shopping-cart"></i></a></li>
             </ul>
@@ -106,7 +106,7 @@
       <% secondaryBanner.forEach(banner=>{ %>
       <div class="col-lg-6 col-md-6 col-sm-6">
         <div class="banner__pic">
-          <img src="/files/<%= banner.bannerImagePath %> " alt="">
+          <img src="<%= banner.bannerImagePath.startsWith('http') ? banner.bannerImagePath : '/files/' + banner.bannerImagePath %> " alt="">
         </div>
       </div>
       <% }) %>
@@ -128,7 +128,7 @@
               <% latestProducts.slice(0,3).forEach((product)=> { %>
               <a href="/product/<%= product.id %>" class="latest-product__item">
                 <div class="latest-product__item__pic">
-                  <img src="/files/<%=product.productImagePath[0]%>" alt="">
+                  <img src="<%= product.productImagePath[0].startsWith('http') ? product.productImagePath[0] : '/files/' + product.productImagePath[0] %>" alt="">
                 </div>
                 <% if(product.discount){%>
                 <div class="latest-product__item__text">
@@ -148,7 +148,7 @@
               <% latestProducts.slice(3,6).forEach((product)=> { %>
               <a href="/product/<%= product.id %>" class="latest-product__item">
                 <div class="latest-product__item__pic">
-                  <img src="/files/<%=product.productImagePath[0]%>" alt="">
+                  <img src="<%= product.productImagePath[0].startsWith('http') ? product.productImagePath[0] : '/files/' + product.productImagePath[0] %>" alt="">
                 </div>
                 <% if(product.discount){%>
                 <div class="latest-product__item__text">

@@ -38,8 +38,9 @@
                     <td>
                       <div class="d-flex mb-2">
                         <div class="flex-shrink-0">
-                          <img src="/files/<%= product.productId.productImagePath[0] %>" alt="" width="60"
-                            class="img-fluid rounded">
+                          <img
+                            src="<%= product.productId.productImagePath[0].startsWith('http') ? product.productId.productImagePath[0] : '/files/' + product.productId.productImagePath[0] %>"
+                            alt="" width="60" class="img-fluid rounded">
                         </div>
                         <div class="flex-lg-grow-1 ms-3">
                           <h6 class="small mb-0"><a href="/product/<%= product.productId.id %>" class="text-reset">
@@ -171,8 +172,8 @@
     })
     var divToPrint = $(hashId).html();
     var head = "<html><head>" + $("head").html() + "</head>";
-    var allContent = head + "<body  onload=' window.print()'>" + "<" + tagname + attributes + ">" + divToPrint
-      + "</" + tagname + ">" + "</body></html>"; var newWin = window.open('', 'Print-Window');
+    var allContent = head + "<body  onload=' window.print()'>" + "<" + tagname + attributes + ">" + divToPrint + "</" +
+      tagname + ">" + "</body></html>"; var newWin = window.open('', 'Print-Window');
     newWin.document.open(); newWin.document.write(allContent); newWin.document.close();
     setTimeout(function () { newWin.close(); }, 1000);
   } </script>

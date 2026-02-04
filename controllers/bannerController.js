@@ -1,6 +1,6 @@
 const Banner = require("../models/banner")
 const _ = require("lodash")
-const { findById } = require("../models/banner")
+const { uploadToImgBB } = require("../services/imageService")
 
 module.exports = {
 
@@ -22,7 +22,12 @@ module.exports = {
     addBanner: async (req, res) => {
         try {
             const { title, viewOrder, caption, promoCoupon, url } = req.body
-            const bannerImagePath = req.file != null ? req.file.filename : null
+
+            let bannerImagePath = null;
+            if (req.file) {
+                bannerImagePath = await uploadToImgBB(req.file.buffer);
+            }
+
             const newBanner = new Banner({
                 title: _.startCase(_.toLower(title)),
                 caption: caption?.toUpperCase(),
@@ -34,7 +39,7 @@ module.exports = {
             await newBanner.save()
             res.redirect("/admin/banners")
         } catch (err) {
-            req.flash("message", "Error creating banner.")
+            req.flash("message", "Error creating banner: " + err.message)
             res.redirect("/admin/banners")
             console.log(err)
         }
