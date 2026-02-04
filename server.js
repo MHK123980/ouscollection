@@ -1,10 +1,11 @@
 const path = require("path");
-try {
-  if (process.env.NODE_ENV !== 'production') {
+// Safely handle dotenv for Vercel environment
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  try {
     require("dotenv").config();
+  } catch (err) {
+    console.log("Dotenv skip");
   }
-} catch (e) {
-  console.log("dotenv not found, skipping...");
 }
 const express = require("express");
 const expressLayout = require("express-ejs-layouts");
@@ -18,9 +19,9 @@ const User = require("./models/users");
 const multer = require("multer");
 
 const cors = require("cors");
-
 const app = express();
 
+// Explicitly set views root for Vercel
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 app.set("layout", "layouts/masterLayout");
