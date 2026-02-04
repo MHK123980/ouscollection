@@ -1,5 +1,10 @@
-if (process.env.NODE_ENV !== 'production') {
-  require("dotenv").config();
+const path = require("path");
+try {
+  if (process.env.NODE_ENV !== 'production') {
+    require("dotenv").config();
+  }
+} catch (e) {
+  console.log("dotenv not found, skipping...");
 }
 const express = require("express");
 const expressLayout = require("express-ejs-layouts");
@@ -16,13 +21,14 @@ const cors = require("cors");
 
 const app = express();
 
-const indexRouter = require("./routes/index");
-const userRouter = require("./routes/user");
-const adminRouter = require("./routes/admin");
-
+app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 app.set("layout", "layouts/masterLayout");
 app.set("layout extractScripts", true);
+
+const indexRouter = require("./routes/index");
+const userRouter = require("./routes/user");
+const adminRouter = require("./routes/admin");
 
 app.use(cors({
   origin: true,
