@@ -41,8 +41,10 @@ router.get("/orders", adminControl.orders)
 router.get("/coupons", adminControl.coupons)
 router.get("/banners", bannerControl.getBanner)
 router.get("/orders/:id", adminControl.orderDetails)
+router.get("/addOrder", adminControl.getAddOrder)
+router.get("/report", adminControl.getReport)
 
-
+router.post("/addOrder", adminControl.postAddOrder)
 router.post("/addCategory", adminControl.addCategory)
 router.post("/addProduct", multer.productImage, productControl.addProduct)
 router.post("/addCoupon", couponControl.addCoupon)

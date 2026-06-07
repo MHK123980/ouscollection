@@ -1,0 +1,48 @@
+          <div class="featured__item">
+            <div class="featured__item__pic set-bg" data-setbg="<%= product.productImagePath[0].startsWith('http') ? product.productImagePath[0] : '/files/' + product.productImagePath[0] %>" style="cursor: pointer;" onclick="window.location.href='/product/<%= product.id || product._id %>'">
+              
+              <% if(product.quantity <= 0) { %>
+              <span class="badge bg-danger text-white" style="position:absolute; top:10px; right:10px; z-index:5; font-size:0.75rem;">Out Of Stock</span>
+              <% } else if(product.quantity <= 5) { %>
+              <span class="badge bg-warning text-dark" style="position:absolute; top:10px; right:10px; z-index:5; font-size:0.75rem;">Low In Stock!!</span>
+              <% } %>
+              
+              <% if(product.isFeatured) { %>
+              <span class="badge bg-warning text-dark" style="position:absolute; top:10px; left:10px; z-index:5; font-size:0.75rem;"><i class="fa fa-star"></i> Featured</span>
+              <% } %>
+              
+              <ul class="featured__item__pic__hover">
+                <li><a onclick="event.stopPropagation(); addToCart('<%=product.id || product._id%>','<%=product.name%>','<%=product.price%>',1,'<%=product?.offerPrice%>')"><i class="fa fa-shopping-cart"></i></a></li>
+              </ul>
+            </div>
+            
+            <% if(product.isWholesaleSet) { %>
+              <% if(product.discount){ %>
+              <div class="product__discount__item__text">
+                <h5><a href="/product/<%= product.id || product._id %>"><%= product.name %> </a></h5>
+                <div class="product__item__price">
+                   <div style="font-size:14px; font-weight:normal; color:#b2b2b2;">Piece cost : <del>Rs <%= product.price.toFixed(2) %></del> Rs <%= product.offerPrice.toFixed(2) %></div>
+                   Set Costs : Rs <%= (product.offerPrice * product.piecesPerSet).toFixed(2) %>
+                </div>
+              </div>
+              <% } else { %>
+              <div class="product__item__text">
+                <h6><a href="/product/<%= product.id || product._id %>"><%= product.name %></a></h6>
+                <div style="font-size:14px; color:#b2b2b2;">Piece cost : Rs <%= product.price.toFixed(2) %></div>
+                <h5>Set Costs : Rs <%= (product.price * product.piecesPerSet).toFixed(2) %></h5>
+              </div>
+              <% } %>
+            <% } else { %>
+              <% if(product.discount){ %>
+              <div class="product__discount__item__text">
+                <h5><a href="/product/<%= product.id || product._id %>"><%= product.name %> </a></h5>
+                <div class="product__item__price"> Rs <%= product.offerPrice.toFixed(2)%><span>Rs <%= product.price %> </span></div>
+              </div>
+              <%  } else{ %>
+              <div class="product__item__text">
+                <h6><a href="/product/<%= product.id || product._id %>"><%= product.name %></a></h6>
+                <h5>Rs <%= product.price %></h5>
+              </div>
+              <%  } %>
+            <% } %>
+          </div>

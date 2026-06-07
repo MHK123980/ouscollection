@@ -74,7 +74,7 @@ async function checkout(formData) {
             if (response.data && response.data.isGuest) {
                 window.location = "/"
             } else {
-                window.location = "/user/myOrders"
+                window.location = "/"
             }
         } else {
             await Swal.fire({

@@ -132,9 +132,12 @@
 
                   <% findCart.products.forEach(item=>{%>
                   <li class="mb-2">
-                    <img type="button" src="/files/<%= item.productId.productImagePath[0] %>" alt="" width="50" height="60">
+                    <img type="button" src="<%= item.productId.productImagePath[0].startsWith('http') ? item.productId.productImagePath[0] : '/files/' + item.productId.productImagePath[0] %>" alt="" width="50" height="60">
                     <%= item.name %> x<%= item.quantity %>
                     <span>Rs <%= item.offerPrice ? (item.offerPrice*item.quantity).toFixed(2) : (item.price*item.quantity).toFixed(2)  %> </span>
+                    <% if(item.productId && item.productId.isWholesaleSet) { %>
+                      <div class="small text-muted mt-1">Piece cost: Rs <%= item.offerPrice ? (item.offerPrice / item.productId.piecesPerSet).toFixed(2) : (item.price / item.productId.piecesPerSet).toFixed(2) %> | Set Costs: Rs <%= item.offerPrice ? item.offerPrice.toFixed(2) : item.price.toFixed(2) %></div>
+                    <% } %>
                     <% const dCharge = Number(item.productId.deliveryCharges || 0) %>
                     <% const itemDelivery = item.productId.increaseDeliveryChargesWithQuantity ? (dCharge * item.quantity) : dCharge %>
                     <% if(itemDelivery && itemDelivery>0){ %>
@@ -146,7 +149,11 @@
                 </ul>
               </div>
 
-              <div class="checkout__order__subtotal">Subtotal <span><del>Rs <%= findCart.subTotal.toFixed(2) %></del></span></div>
+              <% if(findCart.subTotal !== findCart.total) { %>
+                <div class="checkout__order__subtotal">Subtotal <span><del>Rs <%= findCart.subTotal.toFixed(2) %></del></span></div>
+              <% } else { %>
+                <div class="checkout__order__subtotal">Subtotal <span>Rs <%= findCart.subTotal.toFixed(2) %></span></div>
+              <% } %>
               <% if(couponCode){%>
               <div class="checkout__order__total">Cart Discount <span class="text-muted">Rs <%= (findCart.subTotal - findCart.total ).toFixed(2)%></span></div>
               <div class="checkout__order__total">Coupon <span class="text-muted"><i class="fa-solid fa-tags"></i> <%=couponCode %></span></div>

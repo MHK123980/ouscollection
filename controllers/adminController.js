@@ -18,6 +18,9 @@ module.exports = {
       const orderStatusDeliveredPromise = Order.find({
         status: "Delivered",
       }).countDocuments();
+      const orderStatusCancelledPromise = Order.find({
+        status: "Cancelled",
+      }).countDocuments();
       const totalSalePromise = Order.aggregate([
         {
           $match: {
@@ -37,17 +40,19 @@ module.exports = {
           },
         },
       ]);
-      const [userCount, orderStatusPending, orderStatusDelivered, totalSale] =
+      const [userCount, orderStatusPending, orderStatusDelivered, totalSale, orderStatusCancelled] =
         await Promise.all([
           userCountPromise,
           orderStatusPendingPromise,
           orderStatusDeliveredPromise,
           totalSalePromise,
+          orderStatusCancelledPromise,
         ]);
       const orderStatusCount = [
         orderStatusPending,
         orderStatusDelivered,
-        totalSale[0]?.totalAmount.toFixed(2),
+        totalSale[0]?.totalAmount?.toFixed(2) || '0.00',
+        orderStatusCancelled,
       ];
       res.render("admin/index", {
         errorMessage: errorMessage,
@@ -191,7 +196,7 @@ module.exports = {
   orders: async (req, res) => {
     try {
       const errorMessage = req.flash("message");
-      const allOrders = await Order.find()
+      const allOrders = await Order.find({ isDeleted: { $ne: true } })
         .populate([
           {
             path: "userId",
@@ -380,19 +385,145 @@ module.exports = {
       const order = await Order.findById(orderId);
 
       if (!order) {
-        req.flash("message", "Order not found");
-        return res.redirect("/admin/orders");
+        return res.status(404).json({ error: "Order not found" });
       }
 
-      // Delete the order
-      await Order.findByIdAndDelete(orderId);
+      // Soft-delete: mark as deleted instead of removing
+      order.isDeleted = true;
+      await order.save();
 
-      req.flash("message", "Order deleted successfully");
-      res.redirect("/admin/orders");
+      return res.status(200).json({ message: "Order deleted successfully" });
     } catch (err) {
       console.log(err.message);
-      req.flash("message", "Error deleting order");
+      return res.status(500).json({ error: "Error deleting order" });
+    }
+  },
+
+  getAddOrder: async (req, res) => {
+    try {
+      const errorMessage = req.flash("message");
+      const products = await Product.find({ quantity: { $gt: 0 } }).sort({ name: 1 });
+      res.render("admin/addOrder", {
+        products: products,
+        errorMessage: errorMessage,
+        layout: "layouts/adminLayout"
+      });
+    } catch (err) {
+      console.log(err);
+      req.flash("message", "Error loading add order page");
       res.redirect("/admin/orders");
     }
   },
+
+  postAddOrder: async (req, res) => {
+    try {
+      const Counter = require("../models/counter");
+      const { email, firstName, lastName, address, city, province, phone, orderProducts } = req.body;
+      
+      const items = JSON.parse(orderProducts);
+      if (!items || items.length === 0) {
+        req.flash("message", "No products selected");
+        return res.redirect("/admin/addOrder");
+      }
+
+      let totalAmount = 0;
+      let totalQuantity = 0;
+      let totalDeliveryCharges = 0;
+      const orderItems = [];
+
+      for (let item of items) {
+        const product = await Product.findById(item.productId);
+        if (product && product.quantity >= item.quantity) {
+          const price = product.offerPrice || product.price;
+          const itemTotal = price * item.quantity;
+          totalAmount += itemTotal;
+          totalQuantity += item.quantity;
+          
+          // Calculate delivery charges
+          let itemDelivery = product.deliveryCharges || 0;
+          if (product.increaseDeliveryChargesWithQuantity) {
+            itemDelivery = itemDelivery * item.quantity;
+          }
+          totalDeliveryCharges += itemDelivery;
+          
+          orderItems.push({
+            productId: product._id,
+            name: product.name,
+            quantity: item.quantity,
+            price: product.price,
+            offerPrice: product.offerPrice
+          });
+
+          // update stock
+          product.quantity -= item.quantity;
+          await product.save();
+        } else {
+          req.flash("message", `Insufficient stock for ${item.name}`);
+          return res.redirect("/admin/addOrder");
+        }
+      }
+
+      // Generate sequential order ID
+      const counter = await Counter.findOneAndUpdate(
+        { name: 'orderId' },
+        { $inc: { seq: 1 } },
+        { new: true, upsert: true }
+      );
+      const orderIdStr = 'ORD-' + String(counter.seq).padStart(4, '0');
+
+      const finalTotal = totalAmount + totalDeliveryCharges;
+
+      const newOrder = new Order({
+        orderIdStr: orderIdStr,
+        deliveryAddress: {
+          email: email || '', firstName, lastName, address, city, province, phone
+        },
+        products: orderItems,
+        quantity: totalQuantity,
+        total: finalTotal,
+        subTotal: totalAmount,
+        totalDeliveryCharges: totalDeliveryCharges,
+        paymentType: 'online_paid',
+        status: "Pending"
+      });
+
+      await newOrder.save();
+      req.flash("message", "Order " + orderIdStr + " created successfully");
+      res.redirect("/admin/orders");
+      
+    } catch (err) {
+      console.log(err);
+      req.flash("message", "Error creating order: " + err.message);
+      res.redirect("/admin/addOrder");
+    }
+  },
+
+  getReport: async (req, res) => {
+    try {
+      const now = new Date();
+      const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+
+      const thisMonthOrders = await Order.find({
+        createdAt: { $gte: thisMonthStart },
+        isDeleted: { $ne: true }
+      }).populate('products.productId').exec();
+
+      const lastMonthOrders = await Order.find({
+        createdAt: { $gte: lastMonthStart, $lte: lastMonthEnd },
+        isDeleted: { $ne: true }
+      }).populate('products.productId').exec();
+
+      res.render("admin/report", {
+        layout: false,
+        thisMonthOrders,
+        lastMonthOrders,
+        now
+      });
+    } catch (err) {
+      console.log(err);
+      res.redirect("/admin");
+    }
+  }
 };

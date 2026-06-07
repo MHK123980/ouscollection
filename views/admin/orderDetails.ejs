@@ -158,6 +158,11 @@
         </div>
       </div>
     </div>
+    
+    <!-- Print Footer -->
+    <div class="mt-5 text-center d-none print-only">
+      <small>OusCollection All Rights Reserved By MHK</small>
+    </div>
   </div>
 </div>
 
@@ -171,7 +176,8 @@
       attributes += " " + elem.name + " ='" + elem.value + "' ";
     })
     var divToPrint = $(hashId).html();
-    var head = "<html><head>" + $("head").html() + "</head>";
+    var customPrintCss = "<style>@media print { .print-only { display: block !important; } .btn-icon-text { display: none !important; } }</style>";
+    var head = "<html><head>" + $("head").html() + customPrintCss + "</head>";
     var allContent = head + "<body  onload=' window.print()'>" + "<" + tagname + attributes + ">" + divToPrint + "</" +
       tagname + ">" + "</body></html>"; var newWin = window.open('', 'Print-Window');
     newWin.document.open(); newWin.document.write(allContent); newWin.document.close();

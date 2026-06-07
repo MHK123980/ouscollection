@@ -44,6 +44,11 @@ module.exports = {
         .limit(12)
         .exec();
 
+      const allProductsPromise = Product.find()
+        .populate("category")
+        .sort({ createdAt: -1 })
+        .exec();
+
       const [
         allCategories,
         primaryBanner,
@@ -52,6 +57,7 @@ module.exports = {
         topRatedProducts,
         topReviewedProducts,
         secondaryBanner,
+        allProducts,
       ] = await Promise.all([
         allCategoriesPromise,
         primaryBannerPromise,
@@ -60,6 +66,7 @@ module.exports = {
         topRatedProductsPromise,
         topReviewedProductsPromise,
         secondaryBannerPromise,
+        allProductsPromise,
       ]);
 
       res.render("master/index", {
@@ -70,6 +77,7 @@ module.exports = {
         topReviewedProducts: topReviewedProducts,
         primaryBanner: primaryBanner,
         secondaryBanner: secondaryBanner,
+        allProducts: allProducts,
       });
     } catch (err) {
       console.log(err);
@@ -178,15 +186,29 @@ module.exports = {
       }
       const allCategories = await Category.find();
       const paramsId = _.upperFirst(req.params.category);
-      const findCategory = await Category.find({ categoryName: paramsId });
+      let findCategory = await Category.find({ categoryName: paramsId });
+
+      // If no exact category match, check if it's a division name (Men->Mens, Women->Womens)
+      let categoryIds = [];
+      if (!findCategory || findCategory.length === 0) {
+        const divisionMap = { 'Men': 'Mens', 'Women': 'Womens' };
+        const divisionName = divisionMap[paramsId] || paramsId;
+        findCategory = await Category.find({ division: divisionName });
+        if (!findCategory || findCategory.length === 0) {
+          return res.render("errorPage/error", { layout: false });
+        }
+        categoryIds = findCategory.map(c => c._id);
+      } else {
+        categoryIds = [findCategory[0]._id];
+      }
 
       const latestProducts = await Product.find({
-        category: findCategory[0].id,
+        category: { $in: categoryIds },
       })
         .sort({ createdAt: -1 })
         .limit(6);
 
-      const findProducts = await Product.find({ category: findCategory[0].id })
+      const findProducts = await Product.find({ category: { $in: categoryIds } })
         .where("price")
         .equals(priceRange)
         .sort(sort)
@@ -196,7 +218,7 @@ module.exports = {
 
       //getting count of products for pagination
 
-      const count = await Product.find({ category: findCategory[0].id })
+      const count = await Product.find({ category: { $in: categoryIds } })
         .where("price")
         .equals(priceRange)
         .sort(sort)

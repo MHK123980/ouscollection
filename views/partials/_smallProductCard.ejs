@@ -1,0 +1,38 @@
+              <a href="/product/<%= product.id || product._id %>" class="latest-product__item">
+                <div class="latest-product__item__pic" style="position:relative;">
+                  <% if(product.quantity <= 0) { %>
+                  <span class="badge bg-danger text-white" style="position:absolute; top:0px; right:0px; z-index:5; font-size:0.55rem; padding: 2px 4px;">Out Of Stock</span>
+                  <% } else if(product.quantity <= 5) { %>
+                  <span class="badge bg-warning text-dark" style="position:absolute; top:0px; right:0px; z-index:5; font-size:0.55rem; padding: 2px 4px;">Low In Stock!!</span>
+                  <% } %>
+                  <img src="<%= product.productImagePath[0].startsWith('http') ? product.productImagePath[0] : '/files/' + product.productImagePath[0] %>" alt="">
+                </div>
+                
+                <% if(product.isWholesaleSet) { %>
+                  <% if(product.discount){%>
+                  <div class="latest-product__item__text">
+                    <h6><%= product.name %></h6>
+                    <div style="font-size:12px; color:#b2b2b2;">Piece cost: <del>Rs <%=product.price.toFixed(2)%></del> Rs <%=product.offerPrice.toFixed(2)%></div>
+                    <span style="font-size:14px; font-weight:bold;">Set Costs: Rs <%=(product.offerPrice * product.piecesPerSet).toFixed(2)%></span>
+                  </div>
+                  <% }else{%>
+                  <div class="latest-product__item__text">
+                    <h6><%= product.name %></h6>
+                    <div style="font-size:12px; color:#b2b2b2;">Piece cost: Rs <%=product.price.toFixed(2)%></div>
+                    <span style="font-size:14px; font-weight:bold;">Set Costs: Rs <%=(product.price * product.piecesPerSet).toFixed(2)%></span>
+                  </div>
+                  <% } %>
+                <% } else { %>
+                  <% if(product.discount){%>
+                  <div class="latest-product__item__text">
+                    <h6><%= product.name %></h6>
+                    <h6><del><%=product.price  %></del></h6> <span>Rs <%= product.offerPrice.toFixed(2) %></span>
+                  </div>
+                  <% }else{%>
+                  <div class="latest-product__item__text">
+                    <h6><%= product.name %></h6>
+                    <span>Rs <%= product.price %></span>
+                  </div>
+                  <% } %>
+                <% } %>
+              </a>

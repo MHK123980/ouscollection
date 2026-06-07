@@ -34,7 +34,96 @@
 </head>
 
 <body class="sb-nav-fixed">
- 
+  <!-- Global Loader -->
+  <style>
+    #preloder {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #ffffff;
+      z-index: 999999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      transition: opacity 0.3s ease;
+    }
+    .fabric-loader {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .spool {
+      width: 30px;
+      height: 50px;
+      background: #8b5a2b;
+      position: relative;
+      border-radius: 4px;
+    }
+    .spool::before, .spool::after {
+      content: '';
+      position: absolute;
+      width: 50px;
+      height: 8px;
+      background: #d2a679;
+      left: -10px;
+      border-radius: 2px;
+    }
+    .spool::before { top: -4px; }
+    .spool::after { bottom: -4px; }
+    .thread {
+      position: absolute;
+      width: 100%;
+      height: 36px;
+      top: 7px;
+      background: repeating-linear-gradient(
+        0deg,
+        rgb(33, 37, 41),
+        rgb(33, 37, 41) 4px,
+        #6c757d 4px,
+        #6c757d 8px
+      );
+      animation: unwind 0.8s linear infinite;
+    }
+    @keyframes unwind {
+      0% { background-position: 0 0; }
+      100% { background-position: 0 8px; }
+    }
+    .loader-text {
+      margin-top: 20px;
+      font-family: Arial, sans-serif;
+      color: rgb(33, 37, 41);
+      font-weight: bold;
+      letter-spacing: 3px;
+      animation: pulseText 1.5s ease-in-out infinite;
+    }
+    @keyframes pulseText {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+  </style>
+  <div id="preloder">
+    <div class="fabric-loader">
+      <div class="spool">
+        <div class="thread"></div>
+      </div>
+      <div class="loader-text">LOADING...</div>
+    </div>
+  </div>
+  <script>
+    window.addEventListener('load', function() {
+      var preloder = document.getElementById('preloder');
+      if (preloder) {
+        preloder.style.opacity = '0';
+        setTimeout(function() {
+          preloder.style.display = 'none';
+        }, 300);
+      }
+    });
+  </script>
+
   <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
     <!-- Navbar Brand-->
     <a class="navbar-brand ps-3" href="/admin">Admin Panel</a>
@@ -140,6 +229,24 @@
   <script src="https://cdn.jsdelivr.net/npm/vanilla-datatables-exportable@latest/datatable.exportable.min.js" type="text/javascript"></script>
   <script src="/js/datatables-simple-demo.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+
+  <!-- Global Admin Socket.io: notify on new orders from any admin page -->
+  <script>
+    if (typeof io !== 'undefined') {
+      const adminSocket = io();
+      adminSocket.on('new_order', (order) => {
+        // Only show toast if we're NOT already on the orders page (that page handles its own reload)
+        if (!window.location.pathname.includes('/admin/orders')) {
+          toastr.info(
+            '<i class="fa-solid fa-bell"></i> New order from <strong>' + (order.deliveryAddress.firstName || 'Customer') + '</strong> - PKR ' + (order.total ? order.total.toFixed(2) : '0') + '<br><a href="/admin/orders" class="btn btn-sm btn-dark mt-2">View Orders</a>',
+            'New Order!',
+            { timeOut: 10000, extendedTimeOut: 5000, closeButton: true, progressBar: true, enableHtml: true }
+          );
+        }
+      });
+    }
+  </script>
 
 
   <script>

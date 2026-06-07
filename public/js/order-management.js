@@ -26,15 +26,8 @@ async function packOrder(orderId) {
         document.getElementById("waiter").innerHTML = ""
         if (response.status == 201) {
             let myOrderStatus = document.getElementById("status-" + orderId)
-            let myOrderAction = document.getElementById("action-" + orderId)
-            myOrderStatus.classList.replace("bg-warning", "bg-info")
+            myOrderStatus.className = "badge order-status bg-info";
             myOrderStatus.innerHTML = "Packed"
-            myOrderAction.innerHTML = `
-                <div class="btn-group-vertical" role="group">
-                    <button onclick="viewOrderDetails('${orderId}')" class="btn btn-sm btn-outline-primary mb-1"><i class="fa-solid fa-eye"></i> View Details</button>
-                    <button class="btn btn-sm btn-outline-danger mb-1" onclick="deleteOrder('${orderId}')"><i class="fa-solid fa-trash"></i> Delete Order</button>
-                    <button class="btn btn-sm btn-outline-dark" onclick="shipOrder('${orderId}')"><i class="fa-solid fa-truck-fast"></i> Ship Order</button>
-                </div>`
             toastr.options = { "positionClass": "toast-bottom-left" }
             toastr.success('<i class="fa-solid fa-boxes-packing"></i> orderId:' + orderId + ' ' + 'status updated to Packed.')
         } else {
@@ -56,15 +49,8 @@ async function shipOrder(orderId) {
         document.getElementById("waiter").innerHTML = ""
         if (response.status == 201) {
             let myOrderStatus = document.getElementById("status-" + orderId)
-            let myOrderAction = document.getElementById("action-" + orderId)
-            myOrderStatus.classList.replace("bg-info", "bg-primary")
+            myOrderStatus.className = "badge order-status bg-primary";
             myOrderStatus.innerHTML = "Shipped"
-            myOrderAction.innerHTML = `
-                <div class="btn-group-vertical" role="group">
-                    <button onclick="viewOrderDetails('${orderId}')" class="btn btn-sm btn-outline-primary mb-1"><i class="fa-solid fa-eye"></i> View Details</button>
-                    <button class="btn btn-sm btn-outline-danger mb-1" onclick="deleteOrder('${orderId}')"><i class="fa-solid fa-trash"></i> Delete Order</button>
-                    <button class="btn btn-sm btn-outline-dark" onclick="outForDelivery('${orderId}')"><i class="fa-solid fa-house-chimney"></i> Out For Delivery</button>
-                </div>`
             toastr.options = { "positionClass": "toast-bottom-left" }
             toastr.success('orderId:' + orderId + ' ' + 'status updated to Shipped.')
         } else {
@@ -74,7 +60,6 @@ async function shipOrder(orderId) {
         window.location.reload()
         console.error(err)
     }
-
 }
 
 async function outForDelivery(orderId) {
@@ -87,15 +72,8 @@ async function outForDelivery(orderId) {
         document.getElementById("waiter").innerHTML = ""
         if (response.status == 201) {
             let myOrderStatus = document.getElementById("status-" + orderId)
-            let myOrderAction = document.getElementById("action-" + orderId)
-            myOrderStatus.classList.replace("bg-primary", "bg-dark")
+            myOrderStatus.className = "badge order-status bg-dark";
             myOrderStatus.innerHTML = "Out for delivery"
-            myOrderAction.innerHTML = `
-                <div class="btn-group-vertical" role="group">
-                     <button onclick="viewOrderDetails('${orderId}')" class="btn btn-sm btn-outline-primary mb-1"><i class="fa-solid fa-eye"></i> View Details</button>
-                    <button class="btn btn-sm btn-outline-danger mb-1" onclick="deleteOrder('${orderId}')"><i class="fa-solid fa-trash"></i> Delete Order</button>
-                    <button class="btn btn-sm btn-outline-dark" onclick="deliverPackage('${orderId}')"><i class="fa-solid fa-thumbs-up"></i> Deliver Package</button>
-                </div>`
             toastr.options = { "positionClass": "toast-bottom-left" }
             toastr.success('<i class="fa-solid fa-truck-fast"></i> orderId:' + orderId + ' ' + 'is out for delivery.')
         } else {
@@ -117,15 +95,17 @@ async function deliverPackage(orderId) {
         document.getElementById("waiter").innerHTML = ""
         if (response.status == 201) {
             let myOrderStatus = document.getElementById("status-" + orderId)
-            let myOrderAction = document.getElementById("action-" + orderId)
-            myOrderStatus.classList.replace("bg-dark", "bg-success")
+            myOrderStatus.className = "badge order-status bg-success";
             myOrderStatus.innerHTML = "Delivered"
-            myOrderAction.innerHTML = `
-                <div class="btn-group-vertical" role="group">
-                     <button onclick="viewOrderDetails('${orderId}')" class="btn btn-sm btn-outline-primary mb-1"><i class="fa-solid fa-eye"></i> View Details</button>
-                    <button class="btn btn-sm btn-outline-danger mb-1" onclick="deleteOrder('${orderId}')"><i class="fa-solid fa-trash"></i> Delete Order</button>
-                    <button class="btn btn-outline-dark" disabled ><i class="fa-solid fa-thumbs-up"></i></button>
-                </div>`
+            
+            // Disable the select dropdown
+            const selectEl = document.querySelector(`#action-${orderId} select`);
+            if (selectEl) selectEl.disabled = true;
+
+            // Show delete button
+            const deleteBtn = document.getElementById("delete-btn-" + orderId);
+            if (deleteBtn) deleteBtn.style.display = 'block';
+
             toastr.options = { "positionClass": "toast-bottom-left" }
             toastr.success('Order id' + orderId + 'status updated to delivered.')
         } else {
@@ -136,7 +116,8 @@ async function deliverPackage(orderId) {
         console.error(err)
     }
 }
-async function cancelOrder(orderId) {
+
+async function cancelOrder(orderId, selectEl, oldStatus) {
     try {
         let result = await Swal.fire({
             title: 'Are you sure?',
@@ -158,20 +139,24 @@ async function cancelOrder(orderId) {
             document.getElementById("waiter").innerHTML = ""
             if (response.status == 201) {
                 let myOrderStatus = document.getElementById("status-" + orderId)
-                let myOrderAction = document.getElementById("action-" + orderId)
-                myOrderStatus.classList.replace("bg-warning", "bg-danger")
+                myOrderStatus.className = "badge order-status bg-danger";
                 myOrderStatus.innerHTML = "Cancelled"
-                myOrderAction.innerHTML = `
-                    <div class="btn-group-vertical" role="group">
-                         <button onclick="viewOrderDetails('${orderId}')" class="btn btn-sm btn-outline-primary mb-1"><i class="fa-solid fa-eye"></i> View Details</button>
-                        <button class="btn btn-sm btn-outline-danger mb-1" onclick="deleteOrder('${orderId}')"><i class="fa-solid fa-trash"></i> Delete Order</button>
-                        <button class="btn btn-outline-dark" disabled ><i class="fa-solid fa-ban"></i></button>
-                    </div>`
+                
+                // Disable the select dropdown
+                if (selectEl) selectEl.disabled = true;
+
+                // Show delete button
+                const deleteBtn = document.getElementById("delete-btn-" + orderId);
+                if (deleteBtn) deleteBtn.style.display = 'block';
+
                 toastr.options = { "positionClass": "toast-bottom-left" }
                 toastr.success('Order cancelled successfully.')
             } else {
                 toastr.error('Error updating order status')
             }
+        } else {
+            // Revert select back to previous status if they cancel the swal
+            if (selectEl) selectEl.value = oldStatus || selectEl.getAttribute('data-old-value');
         }
     } catch (err) {
         window.location.reload()
@@ -211,6 +196,33 @@ async function deleteOrder(orderId) {
         window.location.reload()
         console.error(err)
     }
+}
+
+async function changeOrderStatus(selectEl, orderId, oldStatus) {
+    const newStatus = selectEl.value;
+    
+    // Store old value in case we need to revert (like cancelled)
+    if (!selectEl.getAttribute('data-old-value')) {
+        selectEl.setAttribute('data-old-value', oldStatus);
+    }
+    const currentOldValue = selectEl.getAttribute('data-old-value');
+    
+    // Warn before changing if they select Cancelled
+    if (newStatus === "Cancelled") {
+        cancelOrder(orderId, selectEl, currentOldValue);
+        return;
+    }
+    
+    // Route to appropriate function
+    if (newStatus === "Packed") packOrder(orderId);
+    else if (newStatus === "Shipped") shipOrder(orderId);
+    else if (newStatus === "Out for delivery") outForDelivery(orderId);
+    else if (newStatus === "Delivered") deliverPackage(orderId);
+    
+    // Update old status reference for next change
+    selectEl.setAttribute('data-old-value', newStatus);
+    // Update the inline onclick attribute to use the new status for next time
+    selectEl.setAttribute('onchange', `changeOrderStatus(this, '${orderId}', '${newStatus}')`);
 }
 
 async function viewOrderDetails(orderId) {
@@ -260,3 +272,67 @@ async function viewOrderDetails(orderId) {
     }
 }
 
+function printSlip(orderId) {
+    axios.get(`/admin/orders/${orderId}`)
+        .then(response => {
+            const order = response.data.myOrder;
+            const fullName = `${order.deliveryAddress.firstName} ${order.deliveryAddress.lastName || ''}`.trim();
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Order Slip - ${order.orderIdStr || order._id}</title>
+                    <style>
+                        body { font-family: 'Segoe UI', sans-serif; padding: 20px; max-width: 400px; margin: 0 auto; }
+                        .header { text-align: center; border-bottom: 2px dashed #333; padding-bottom: 10px; margin-bottom: 15px; }
+                        .header h2 { margin: 0; font-size: 20px; }
+                        .header p { margin: 3px 0; color: #666; font-size: 12px; }
+                        .info-row { display: flex; justify-content: space-between; font-size: 13px; margin: 4px 0; }
+                        .divider { border-top: 1px dashed #ccc; margin: 10px 0; }
+                        table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 10px 0; }
+                        th, td { padding: 5px 4px; text-align: left; border-bottom: 1px solid #eee; }
+                        th { font-weight: bold; }
+                        .total-row { font-weight: bold; font-size: 14px; border-top: 2px solid #333; }
+                        .footer { text-align: center; margin-top: 20px; font-size: 11px; color: #999; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h2>OUS Collection</h2>
+                        <p>Order Slip</p>
+                        <p>${new Date(order.createdAt).toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' })}</p>
+                    </div>
+                    <div class="info-row"><span>Order #:</span><span><strong>${order.orderIdStr || order._id}</strong></span></div>
+                    <div class="info-row"><span>Customer:</span><span>${fullName}</span></div>
+                    <div class="info-row"><span>Phone:</span><span>${order.deliveryAddress.phone || '-'}</span></div>
+                    <div class="info-row"><span>Address:</span><span>${order.deliveryAddress.address || ''}, ${order.deliveryAddress.city || ''}</span></div>
+                    <div class="info-row"><span>Province:</span><span>${order.deliveryAddress.province || order.deliveryAddress.state || '-'}</span></div>
+                    <div class="divider"></div>
+                    <table>
+                        <thead><tr><th>Product</th><th>Qty</th><th>Price</th></tr></thead>
+                        <tbody>
+                            ${order.products.map(p => `<tr><td>${p.name}</td><td>${p.quantity}</td><td>PKR ${(p.offerPrice || p.price).toFixed(2)}</td></tr>`).join('')}
+                        </tbody>
+                    </table>
+                    <div class="divider"></div>
+                    <div class="info-row"><span>Subtotal:</span><span>PKR ${order.subTotal.toFixed(2)}</span></div>
+                    <div class="info-row"><span>Delivery:</span><span>PKR ${(order.totalDeliveryCharges || 0).toFixed(2)}</span></div>
+                    <div class="info-row total-row"><span>Total:</span><span>PKR ${order.total.toFixed(2)}</span></div>
+                    <div class="info-row"><span>Payment:</span><span>${order.paymentType === 'cod' ? 'COD' : 'Online Payment ✅'}</span></div>
+                    <div class="info-row"><span>Status:</span><span>${order.status}</span></div>
+                    <div class="footer">
+                        Thank you for shopping with OUS Collection!<br>
+                        OusCollection All Rights Reserved By MHK
+                    </div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            setTimeout(() => printWindow.print(), 500);
+        })
+        .catch(err => {
+            console.error(err);
+            toastr.error('Error loading order for print');
+        });
+}

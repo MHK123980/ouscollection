@@ -1,0 +1,282 @@
+<div class="container-fluid px-4">
+  <h1 class="mt-4">Add Order</h1>
+  <%- include("../partials/errorMessage") %>
+  
+  <div class="card mb-4 mt-3">
+    <div class="card-header">
+      <i class="fas fa-plus me-1"></i>
+      Create New Order
+    </div>
+    <div class="card-body">
+      <form action="/admin/addOrder" method="POST" id="addOrderForm" onsubmit="return submitOrderForm(this)">
+        
+        <h5 class="mb-3"><i class="fas fa-box me-2"></i>Products</h5>
+        <div class="row mb-3 align-items-end">
+          <div class="col-md-6">
+            <label class="form-label">Select Product</label>
+            <select id="productSelect" class="form-select product-select2">
+              <option value="">Search product...</option>
+              <% products.forEach(product => { %>
+                <option value="<%= product.id %>" 
+                  data-price="<%= product.offerPrice || product.price %>"
+                  data-name="<%= product.name %>"
+                  data-stock="<%= product.quantity %>"
+                  data-delivery="<%= product.deliveryCharges || 0 %>"
+                  data-delivery-increase="<%= product.increaseDeliveryChargesWithQuantity ? 'true' : 'false' %>">
+                  <%= product.name %> - PKR <%= product.offerPrice || product.price %> (Stock: <%= product.quantity %>)
+                </option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Quantity</label>
+            <input type="number" id="productQuantity" class="form-control" min="1" value="1">
+          </div>
+          <div class="col-md-4">
+            <button type="button" class="btn btn-outline-dark w-100" onclick="addProductToTable()">Add to Order</button>
+          </div>
+        </div>
+
+        <div class="table-responsive mb-4">
+          <table class="table table-bordered" id="orderProductsTable">
+            <thead class="table-light">
+              <tr>
+                <th>Product</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Subtotal</th>
+                <th>Delivery</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr id="emptyRow">
+                <td colspan="6" class="text-center text-muted">No products added yet</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <th colspan="3" class="text-end">Product Total:</th>
+                <th>PKR <span id="productTotal">0.00</span></th>
+                <th></th>
+                <th></th>
+              </tr>
+              <tr>
+                <th colspan="3" class="text-end">Delivery Charges:</th>
+                <th>PKR <span id="deliveryTotal">0.00</span></th>
+                <th></th>
+                <th></th>
+              </tr>
+              <tr class="table-dark">
+                <th colspan="3" class="text-end">Grand Total:</th>
+                <th>PKR <span id="grandTotal">0.00</span></th>
+                <th></th>
+                <th></th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <hr>
+        <h5 class="mb-3"><i class="fas fa-user me-2"></i>Customer Information</h5>
+        <div class="row mb-4">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Email <span class="text-muted">(Optional)</span></label>
+            <input type="email" name="email" class="form-control" placeholder="customer@example.com">
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Phone <span class="text-danger">*</span></label>
+            <input type="text" name="phone" class="form-control" required>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">First Name <span class="text-danger">*</span></label>
+            <input type="text" name="firstName" class="form-control" required>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Last Name <span class="text-danger">*</span></label>
+            <input type="text" name="lastName" class="form-control" required>
+          </div>
+          <div class="col-md-12 mb-3">
+            <label class="form-label">Address <span class="text-danger">*</span></label>
+            <input type="text" name="address" class="form-control" required>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">City <span class="text-danger">*</span></label>
+            <input type="text" name="city" class="form-control" required>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Province <span class="text-danger">*</span></label>
+            <select name="province" class="form-select" required>
+              <option value="">Select Province...</option>
+              <option value="Punjab">Punjab</option>
+              <option value="Sindh">Sindh</option>
+              <option value="KPK">Khyber Pakhtunkhwa (KPK)</option>
+              <option value="Balochistan">Balochistan</option>
+              <option value="Islamabad">Islamabad Capital Territory</option>
+              <option value="Gilgit-Baltistan">Gilgit-Baltistan</option>
+              <option value="AJK">Azad Jammu & Kashmir</option>
+            </select>
+          </div>
+        </div>
+
+        <hr>
+        <h5 class="mb-3"><i class="fas fa-credit-card me-2"></i>Payment</h5>
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <div class="card border-success">
+              <div class="card-body text-center">
+                <i class="fas fa-check-circle text-success fs-3 mb-2"></i>
+                <h6 class="card-title">Online Payment <span class="text-success">✅</span></h6>
+                <p class="card-text text-muted small">Payment received</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hidden inputs -->
+        <input type="hidden" name="orderProducts" id="orderProductsInput" required>
+
+        <div class="text-end mt-4">
+          <a href="/admin/orders" class="btn btn-secondary me-2">Cancel</a>
+          <button type="submit" class="btn btn-dark" id="submitOrderBtn">
+            <i class="fas fa-check me-1"></i> Create Order
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  let orderItems = [];
+  let productsData = {};
+
+  // Build a lookup of products for stock/delivery data
+  <% products.forEach(product => { %>
+    productsData['<%= product.id %>'] = {
+      stock: <%= product.quantity %>,
+      delivery: <%= product.deliveryCharges || 0 %>,
+      increaseWithQty: <%= product.increaseDeliveryChargesWithQuantity ? 'true' : 'false' %>
+    };
+  <% }) %>
+
+  $(document).ready(function() {
+    $('.product-select2').select2({
+      theme: 'bootstrap-5',
+      width: '100%'
+    });
+  });
+
+  function addProductToTable() {
+    const select = document.getElementById('productSelect');
+    const qtyInput = document.getElementById('productQuantity');
+    
+    if (!select.value) {
+      alert("Please select a product");
+      return;
+    }
+    
+    const productId = select.value;
+    const qty = parseInt(qtyInput.value);
+    const pData = productsData[productId];
+    
+    if (qty < 1 || isNaN(qty)) {
+      alert("Quantity must be at least 1");
+      return;
+    }
+
+    // Check stock limit
+    const existingItem = orderItems.find(item => item.productId === productId);
+    const existingQty = existingItem ? existingItem.quantity : 0;
+    if (existingQty + qty > pData.stock) {
+      alert(`Cannot add ${qty} more. Only ${pData.stock - existingQty} left in stock.`);
+      return;
+    }
+
+    if (existingItem) {
+      existingItem.quantity += qty;
+    } else {
+      const selectedOption = select.options[select.selectedIndex];
+      const price = parseFloat(selectedOption.getAttribute('data-price'));
+      const name = selectedOption.getAttribute('data-name');
+      
+      orderItems.push({
+        productId: productId,
+        name: name,
+        price: price,
+        quantity: qty,
+        delivery: pData.delivery,
+        increaseWithQty: pData.increaseWithQty
+      });
+    }
+
+    renderTable();
+    $('#productSelect').val(null).trigger('change');
+    qtyInput.value = 1;
+  }
+
+  function removeProduct(index) {
+    orderItems.splice(index, 1);
+    renderTable();
+  }
+
+  function renderTable() {
+    const tbody = document.querySelector('#orderProductsTable tbody');
+    tbody.innerHTML = '';
+    
+    let productTotal = 0;
+    let deliveryTotal = 0;
+
+    if (orderItems.length === 0) {
+      tbody.innerHTML = '<tr id="emptyRow"><td colspan="6" class="text-center text-muted">No products added yet</td></tr>';
+      document.getElementById('productTotal').innerText = '0.00';
+      document.getElementById('deliveryTotal').innerText = '0.00';
+      document.getElementById('grandTotal').innerText = '0.00';
+      document.getElementById('orderProductsInput').value = '';
+      return;
+    }
+
+    orderItems.forEach((item, index) => {
+      const subtotal = item.price * item.quantity;
+      productTotal += subtotal;
+      
+      let deliveryCharge = item.delivery || 0;
+      if (item.increaseWithQty) {
+        deliveryCharge = deliveryCharge * item.quantity;
+      }
+      deliveryTotal += deliveryCharge;
+      
+      tbody.innerHTML += `
+        <tr>
+          <td>${item.name}</td>
+          <td>PKR ${item.price.toFixed(2)}</td>
+          <td>${item.quantity}</td>
+          <td>PKR ${subtotal.toFixed(2)}</td>
+          <td>PKR ${deliveryCharge.toFixed(2)}</td>
+          <td class="text-center">
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeProduct(${index})">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+    });
+
+    const grandTotal = productTotal + deliveryTotal;
+    document.getElementById('productTotal').innerText = productTotal.toFixed(2);
+    document.getElementById('deliveryTotal').innerText = deliveryTotal.toFixed(2);
+    document.getElementById('grandTotal').innerText = grandTotal.toFixed(2);
+    document.getElementById('orderProductsInput').value = JSON.stringify(orderItems);
+  }
+
+  function submitOrderForm(form) {
+    if (orderItems.length === 0) {
+      alert("Please add at least one product to the order.");
+      return false;
+    }
+    const btn = document.getElementById('submitOrderBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...';
+    return true;
+  }
+</script>

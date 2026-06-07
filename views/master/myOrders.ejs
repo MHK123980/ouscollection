@@ -31,7 +31,7 @@
                   <div class="d-flex justify-content-between align-items-center">
                     <div class="d-flex flex-column">
                       <!-- <span class="lead fw-normal">Your order has been delivered</span> -->
-                      <span class="text-muted small bold mb-1">orderId: #<%= order.id %></span>
+                      <span class="text-muted small bold mb-1">orderId: #<%= order.orderIdStr || order.id %></span>
                       <% order.products.forEach(product=>{%>
                         <span class="text-muted mb-2"><img
                             src="<%= product.productId.productImagePath[0].startsWith('http') ? product.productId.productImagePath[0] : '/files/' + product.productId.productImagePath[0] %>"
@@ -148,3 +148,81 @@
       <%}%>
 
         <script src="/js/sweet-alert.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+socket.on('orderStatusUpdated', function(data) {
+    const { orderId, status } = data;
+    const roadEl = document.getElementById('orderStatusRoad-' + orderId);
+    const labelEl = document.getElementById('orderStatusUpdate-' + orderId);
+    if (!roadEl || !labelEl) return;
+
+    // Build tracking road HTML
+    let roadHTML = '';
+    if (status === 'Pending') {
+        roadHTML = `<span class="d-flex justify-content-center align-items-center big-dot dot"><i class="fa fa-check text-white"></i></span>
+            <hr class="flex-fill"><span class="blank-dot"></span>
+            <hr class="flex-fill"><span class="blank-dot"></span>
+            <hr class="flex-fill"><span class="blank-dot"></span>
+            <hr class="flex-fill"><span class="blank-dot"></span>`;
+    } else if (status === 'Packed') {
+        roadHTML = `<span class="dot"></span>
+            <hr class="flex-fill track-line"><span class="d-flex justify-content-center align-items-center big-dot dot"><i class="fa fa-check text-white"></i></span>
+            <hr class="flex-fill"><span class="blank-dot"></span>
+            <hr class="flex-fill"><span class="blank-dot"></span>
+            <hr class="flex-fill"><span class="blank-dot"></span>`;
+    } else if (status === 'Shipped') {
+        roadHTML = `<span class="dot"></span>
+            <hr class="flex-fill track-line"><span class="dot"></span>
+            <hr class="flex-fill track-line"><span class="d-flex justify-content-center align-items-center big-dot dot"><i class="fa fa-check text-white"></i></span>
+            <hr class="flex-fill"><span class="blank-dot"></span>
+            <hr class="flex-fill"><span class="blank-dot"></span>`;
+    } else if (status === 'Out for delivery') {
+        roadHTML = `<span class="dot"></span>
+            <hr class="flex-fill track-line"><span class="dot"></span>
+            <hr class="flex-fill track-line"><span class="dot"></span>
+            <hr class="flex-fill track-line"><span class="d-flex justify-content-center align-items-center big-dot dot"><i class="fa fa-check text-white"></i></span>
+            <hr class="flex-fill"><span class="blank-dot"></span>`;
+    } else if (status === 'Delivered') {
+        roadHTML = `<span class="dot"></span>
+            <hr class="flex-fill track-line"><span class="dot"></span>
+            <hr class="flex-fill track-line"><span class="dot"></span>
+            <hr class="flex-fill track-line"><span class="dot"></span>
+            <hr class="flex-fill track-line"><span class="d-flex justify-content-center align-items-center big-dot dot"><i class="fa fa-check text-white"></i></span>`;
+    } else {
+        // Cancelled
+        roadHTML = `<span class="dot-danger"></span>
+            <hr class="flex-fill track-line-danger"><span class=""></span>
+            <hr class="flex-fill track-line-danger"><span class=""></span>
+            <hr class="flex-fill track-line-danger"><span class=""></span>
+            <hr class="flex-fill track-line-danger"><span class="d-flex justify-content-center align-items-center big-dot-danger dot"><i class="fa-sharp fa-solid fa-xmark"></i></span>`;
+    }
+    roadEl.innerHTML = roadHTML;
+
+    // Build label HTML
+    let labelHTML = '';
+    if (status !== 'Cancelled') {
+        labelHTML = `<div class="d-flex flex-column justify-content-center"><span>Order placed</span></div>
+            <div class="d-flex flex-column justify-content-center align-items-center"><span>Order Packed</span></div>
+            <div class="d-flex flex-column justify-content-center align-items-center"><span>Order Dispatched</span></div>
+            <div class="d-flex flex-column justify-content-center align-items-center"><span>Out for delivery</span></div>
+            <div class="d-flex flex-column align-items-end"><span>Delivered</span></div>`;
+    } else {
+        labelHTML = `<div class="d-flex flex-column justify-content-center"></div>
+            <div class="d-flex flex-column justify-content-center align-items-center"></div>
+            <div class="d-flex flex-column justify-content-center align-items-center"></div>
+            <div class="d-flex flex-column justify-content-center align-items-center"></div>
+            <div class="d-flex flex-column align-items-end"><span>Cancelled</span></div>`;
+    }
+    labelEl.innerHTML = labelHTML;
+
+    // Hide cancel button if Delivered or Cancelled
+    if (status === 'Delivered' || status === 'Cancelled') {
+        const orderCard = document.getElementById('order-' + orderId);
+        if (orderCard) {
+            const cancelBtn = orderCard.querySelector('.btn-outline-danger');
+            if (cancelBtn) cancelBtn.style.display = 'none';
+        }
+    }
+});
+</script>

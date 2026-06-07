@@ -51,9 +51,18 @@
                         <td class="shoping__cart__price">
                           <del class="text-muted">Rs <%= item.price %></del>
                           Rs <%= item.offerPrice.toFixed(2) %>
+                          <% if(item.productId && item.productId.isWholesaleSet) { %>
+                            <br><span style="font-size: 14px; color: #b2b2b2;">piece cost: Rs <%= (item.offerPrice / item.productId.piecesPerSet).toFixed(2) %></span>
+                            <br><span style="font-size: 14px; font-weight: bold;">Set Costs: Rs <%= item.offerPrice.toFixed(2) %></span>
+                          <% } %>
                         </td>
                         <% }else{ %>
-                          <td class="shoping__cart__price">Rs <%= item.price %>
+                          <td class="shoping__cart__price">
+                            Rs <%= item.price %>
+                            <% if(item.productId && item.productId.isWholesaleSet) { %>
+                              <br><span style="font-size: 14px; color: #b2b2b2;">piece cost: Rs <%= (item.price / item.productId.piecesPerSet).toFixed(2) %></span>
+                              <br><span style="font-size: 14px; font-weight: bold;">Set Costs: Rs <%= item.price.toFixed(2) %></span>
+                            <% } %>
                           </td>
                           <% } %>
                             <td class="shoping__cart__quantity">
@@ -123,7 +132,11 @@
               <ul id="total-list">
                 <li>
                   Subtotal
-                  <span><del>Rs <%= findCart.subTotal.toFixed(2) %></del></span>
+                  <% if(findCart.subTotal !== findCart.total) { %>
+                    <span><del>Rs <%= findCart.subTotal.toFixed(2) %></del></span>
+                  <% } else { %>
+                    <span>Rs <%= findCart.subTotal.toFixed(2) %></span>
+                  <% } %>
                 </li>
                 <% let discount=findCart.subTotal - findCart.total %>
                   <li>
@@ -183,7 +196,7 @@
         <script>
           // Initialize cart totals on page load
           document.addEventListener('DOMContentLoaded', function () {
-            if (window.location.pathname === '/cart' || window.location.pathname === '/checkout') {
+            if (window.location.pathname === '/user/cart' || window.location.pathname === '/user/checkout') {
               updateCartTotals();
             }
           });

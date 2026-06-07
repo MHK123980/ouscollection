@@ -128,9 +128,20 @@ app.use((err, req, res, next) => {
   }
 });
 
+const http = require('http');
+const server = http.createServer(app);
+const { Server } = require("socket.io");
+const io = new Server(server, { cors: { origin: "*" } });
+
+app.set('io', io);
+
+io.on('connection', (socket) => {
+  console.log('A user connected via socket.io');
+});
+
 if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
   const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => console.log("server is up and running on port " + PORT));
+  server.listen(PORT, () => console.log("server is up and running on port " + PORT));
 }
 
 // Ensure category index allows same name across different divisions

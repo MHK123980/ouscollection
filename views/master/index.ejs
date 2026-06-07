@@ -38,12 +38,27 @@
       <div class="categories__slider owl-carousel">
         <div class="col-lg-3">
           <div class="categories__item set-bg" data-setbg="/img/categories/cat-1.jpg">
-            <h5><a href="/shop/category/men/1">Men</a></h5>
+            <h5><a href="/shop/category/mens/1">Mens</a></h5>
           </div>
         </div>
         <div class="col-lg-3">
           <div class="categories__item set-bg" data-setbg="/img/categories/cat-2.jpg">
-            <h5><a href="/shop/category/women/1">Women</a></h5>
+            <h5><a href="/shop/category/womens/1">Womens</a></h5>
+          </div>
+        </div>
+        <div class="col-lg-3">
+          <div class="categories__item set-bg" data-setbg="/img/categories/cat-1.jpg">
+            <h5><a href="/shop/category/mens/1">Mens</a></h5>
+          </div>
+        </div>
+        <div class="col-lg-3">
+          <div class="categories__item set-bg" data-setbg="/img/categories/cat-2.jpg">
+            <h5><a href="/shop/category/womens/1">Womens</a></h5>
+          </div>
+        </div>
+        <div class="col-lg-3">
+          <div class="categories__item set-bg" data-setbg="/img/categories/cat-1.jpg">
+            <h5><a href="/shop/category/mens/1">Mens</a></h5>
           </div>
         </div>
       </div>
@@ -73,30 +88,68 @@
 
       <% featuredProducts.forEach((product)=> { %>
       <div class="col-lg-3 col-md-4 col-sm-6 mix <%= product.category.categoryName %>">
-        <div class="featured__item">
-          <div class="featured__item__pic set-bg" data-setbg="<%= product.productImagePath[0].startsWith('http') ? product.productImagePath[0] : '/files/' + product.productImagePath[0] %>">
-            <ul class="featured__item__pic__hover">
-              <li><a onclick="addToCart('<%=product.id%>','<%=product.name%>','<%=product.price%>',1,'<%=product?.offerPrice%>')"><i class="fa fa-shopping-cart"></i></a></li>
-            </ul>
-          </div>
-          <% if(product.discount){ %>
-          <div class="product__discount__item__text">
-            <h5><a href="/product/<%= product.id %>"><%= product.name %> </a></h5>
-            <div class="product__item__price"> Rs <%= product.offerPrice.toFixed(2)%><span>Rs <%= product.price %> </span></div>
-          </div>
-          <%  } else{ %>
-          <div class="product__item__text">
-            <h6><a href="/product/<%= product.id %>"><%= product.name %></a></h6>
-            <h5>Rs <%= product.price %></h5>
-          </div>
-          <%  } %>
-        </div>
+        <%- include('../partials/_productCard', { product: product }) %>
       </div>
       <% }) %>
     </div>
   </div>
 </section>
 <!-- Featured Section End -->
+
+<!-- All Products Section Begin -->
+<section class="featured spad" style="padding-top: 30px;">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="section-title">
+          <h2>All Products</h2>
+        </div>
+      </div>
+    </div>
+    <div class="row" id="allProductsContainer">
+      <% if(allProducts && allProducts.length > 0) { %>
+        <% allProducts.forEach((product) => { %>
+        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+          <%- include('../partials/_productCard', { product: product }) %>
+        </div>
+        <% }) %>
+      <% } else { %>
+        <div class="col-12 text-center">
+          <p class="text-muted">No products available yet.</p>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</section>
+<!-- All Products Section End -->
+
+<!-- Sets Products Section Begin -->
+<section class="featured spad" style="padding-top: 30px;">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="section-title">
+          <h2>Sets Products</h2>
+        </div>
+      </div>
+    </div>
+    <div class="row" id="setsProductsContainer">
+      <% const setProducts = allProducts ? allProducts.filter(p => p.isWholesaleSet) : []; %>
+      <% if(setProducts && setProducts.length > 0) { %>
+        <% setProducts.forEach((product) => { %>
+        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+          <%- include('../partials/_productCard', { product: product }) %>
+        </div>
+        <% }) %>
+      <% } else { %>
+        <div class="col-12 text-center">
+          <p class="text-muted">No Sets Products available yet.</p>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</section>
+<!-- Sets Products Section End -->
 
 <% if(secondaryBanner){%>
 <!-- Banner Begin -->
@@ -126,42 +179,12 @@
           <div class="latest-product__slider owl-carousel">
             <div class="latest-prdouct__slider__item">
               <% latestProducts.slice(0,3).forEach((product)=> { %>
-              <a href="/product/<%= product.id %>" class="latest-product__item">
-                <div class="latest-product__item__pic">
-                  <img src="<%= product.productImagePath[0].startsWith('http') ? product.productImagePath[0] : '/files/' + product.productImagePath[0] %>" alt="">
-                </div>
-                <% if(product.discount){%>
-                <div class="latest-product__item__text">
-                  <h6><%= product.name %></h6>
-                  <h6><del><%=product.price  %></del></h6> <span>Rs <%= product.offerPrice.toFixed(2) %></span>
-                </div>
-                <% }else{%>
-                <div class="latest-product__item__text">
-                  <h6><%= product.name %></h6>
-                  <span>Rs <%= product.price %></span>
-                </div>
-                <% } %>
-              </a>
+              <%- include('../partials/_smallProductCard', { product: product }) %>
               <% }) %>
             </div>
             <div class="latest-prdouct__slider__item">
               <% latestProducts.slice(3,6).forEach((product)=> { %>
-              <a href="/product/<%= product.id %>" class="latest-product__item">
-                <div class="latest-product__item__pic">
-                  <img src="<%= product.productImagePath[0].startsWith('http') ? product.productImagePath[0] : '/files/' + product.productImagePath[0] %>" alt="">
-                </div>
-                <% if(product.discount){%>
-                <div class="latest-product__item__text">
-                  <h6><%= product.name %></h6>
-                  <h6><del><%=product.price  %></del></h6> <span>Rs <%= product.offerPrice.toFixed(2) %></span>
-                </div>
-                <% }else{%>
-                <div class="latest-product__item__text">
-                  <h6><%= product.name %></h6>
-                  <span>Rs <%= product.price %></span>
-                </div>
-                <% } %>
-              </a>
+              <%- include('../partials/_smallProductCard', { product: product }) %>
               <% }) %>
             </div>
           </div>
@@ -175,43 +198,13 @@
 
             <div class="latest-prdouct__slider__item">
               <% topRatedProducts.slice(0,3).forEach((product)=>{ %>
-              <a href="/product/<%= product.id %>" class="latest-product__item">
-                <div class="latest-product__item__pic">
-                  <img src="/files/<%= product.productImagePath[0]%>" alt="">
-                </div>
-                <% if(product.discount){%>
-                <div class="latest-product__item__text">
-                  <h6><%= product.name %></h6>
-                  <h6><del><%=product.price  %></del></h6> <span>Rs <%= product.offerPrice.toFixed(2) %></span>
-                </div>
-                <% }else{%>
-                <div class="latest-product__item__text">
-                  <h6><%= product.name %></h6>
-                  <span>Rs <%= product.price %></span>
-                </div>
-                <% } %>
-              </a>
+              <%- include('../partials/_smallProductCard', { product: product }) %>
               <% }) %>
             </div>
 
             <div class="latest-prdouct__slider__item">
               <% topRatedProducts.slice(3,6).forEach((product)=>{ %>
-              <a href="/product/<%= product.id %>" class="latest-product__item">
-                <div class="latest-product__item__pic">
-                  <img src="/files/<%= product.productImagePath[0]%>" alt="">
-                </div>
-                <% if(product.discount){%>
-                <div class="latest-product__item__text">
-                  <h6><%= product.name %></h6>
-                  <h6><del><%=product.price  %></del></h6> <span>Rs <%= product.offerPrice.toFixed(2) %></span>
-                </div>
-                <% }else{%>
-                <div class="latest-product__item__text">
-                  <h6><%= product.name %></h6>
-                  <span>Rs <%= product.price %></span>
-                </div>
-                <% } %>
-              </a>
+              <%- include('../partials/_smallProductCard', { product: product }) %>
               <% }) %>
             </div>
 
@@ -225,44 +218,14 @@
             <div class="latest-prdouct__slider__item">
 
               <% topReviewedProducts.slice(0,3).forEach((product)=>{ %>
-              <a href="/product/<%= product.id %>" class="latest-product__item">
-                <div class="latest-product__item__pic">
-                  <img src="/files/<%= product.productImagePath[0]%>" alt="">
-                </div>
-                <% if(product.discount){%>
-                <div class="latest-product__item__text">
-                  <h6><%= product.name %></h6>
-                  <h6><del><%=product.price  %></del></h6> <span>Rs <%= product.offerPrice.toFixed(2) %></span>
-                </div>
-                <% }else{%>
-                <div class="latest-product__item__text">
-                  <h6><%= product.name %></h6>
-                  <span>Rs <%= product.price %></span>
-                </div>
-                <% } %>
-              </a>
+              <%- include('../partials/_smallProductCard', { product: product }) %>
               <% }) %>
             </div>
 
             <div class="latest-prdouct__slider__item">
 
               <% topReviewedProducts.slice(3,6).forEach((product)=>{ %>
-              <a href="/product/<%= product.id %>" class="latest-product__item">
-                <div class="latest-product__item__pic">
-                  <img src="/files/<%= product.productImagePath[0]%>" alt="">
-                </div>
-                <% if(product.discount){%>
-                <div class="latest-product__item__text">
-                  <h6><%= product.name %></h6>
-                  <h6><del><%=product.price  %></del></h6> <span>Rs <%= product.offerPrice.toFixed(2) %></span>
-                </div>
-                <% }else{%>
-                <div class="latest-product__item__text">
-                  <h6><%= product.name %></h6>
-                  <span>Rs <%= product.price %></span>
-                </div>
-                <% } %>
-              </a>
+              <%- include('../partials/_smallProductCard', { product: product }) %>
               <% }) %>
             </div>
           </div>
@@ -273,3 +236,62 @@
 </section>
 
 <!-- Latest Product Section End -->
+
+<script>
+  if (typeof io !== 'undefined') {
+    const socket = io();
+    socket.on('new_product', (product) => {
+      console.log('New product received:', product);
+      toastr.success('New product added! ' + product.name);
+      
+      const container = document.getElementById('allProductsContainer');
+      if (!container) return;
+      
+      // Remove "No products" message if exists
+      const emptyMsg = container.querySelector('p.text-muted');
+      if (emptyMsg && emptyMsg.innerText.includes('No products')) {
+        container.innerHTML = '';
+      }
+
+      const imgPath = product.productImagePath && product.productImagePath.length > 0 
+        ? (product.productImagePath[0].startsWith('http') ? product.productImagePath[0] : '/files/' + product.productImagePath[0])
+        : '/img/no-image.png';
+        
+      let priceHtml = '';
+      if (product.discount) {
+        priceHtml = `
+          <div class="product__discount__item__text">
+            <h5><a href="/product/${product._id}">${product.name}</a></h5>
+            <div class="product__item__price"> Rs ${product.offerPrice.toFixed(2)}<span>Rs ${product.price}</span></div>
+          </div>`;
+      } else {
+        priceHtml = `
+          <div class="product__item__text">
+            <h6><a href="/product/${product._id}">${product.name}</a></h6>
+            <h5>Rs ${product.price}</h5>
+          </div>`;
+      }
+      
+      let featuredHtml = product.isFeatured 
+        ? `<span class="badge bg-warning text-dark" style="position:absolute; top:10px; left:10px; z-index:5; font-size:0.75rem;"><i class="fa fa-star"></i> Featured</span>` 
+        : '';
+
+      const html = `
+        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+          <div class="featured__item" style="animation: fadeIn 1s ease-in;">
+            <div class="featured__item__pic set-bg" style="background-image: url('${imgPath}'); cursor: pointer;" onclick="window.location.href='/product/${product._id}'">
+              ${featuredHtml}
+              <ul class="featured__item__pic__hover">
+                <li><a onclick="event.stopPropagation(); addToCart('${product._id}','${product.name}','${product.price}',1,'${product.offerPrice}')"><i class="fa fa-shopping-cart"></i></a></li>
+              </ul>
+            </div>
+            ${priceHtml}
+          </div>
+        </div>
+      `;
+      
+      // Prepend the new product HTML
+      container.insertAdjacentHTML('afterbegin', html);
+    });
+  }
+</script>

@@ -1,0 +1,200 @@
+<!-- Add Set Product Modal -->
+<div class="modal fade" id="addSetProduct" tabindex="-1" aria-labelledby="addSetProductLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title" id="addSetProductLabel"><i class="fa-solid fa-boxes-stacked me-2"></i>Add Sets Product (Wholesale)</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info small">
+          <i class="fas fa-info-circle me-1"></i>
+          Set products are wholesale items sold in sets. Enter the <strong>price per piece</strong> and the <strong>number of pieces per set</strong>. The total set price will be calculated automatically.
+        </div>
+        <form action="/admin/addProduct" method="post" enctype="multipart/form-data" onsubmit="return handleSetSubmit(this)">
+          <!-- Hidden fields to mark as set -->
+          <input type="hidden" name="isWholesaleSet" value="on">
+          
+          <div class="mb-3">
+            <label class="form-label fw-bold">Product Name <span class="text-danger">*</span></label>
+            <input type="text" name="name" required class="form-control" placeholder="e.g., Premium Cotton Kurta Set">
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label fw-bold">Category</label>
+            <select name="category" class="form-select category-select-set">
+              <option value="">Select category...</option>
+              <% const mensCatsSet = allCategories.filter(c => c.division === 'Mens'); %>
+              <% const womensCatsSet = allCategories.filter(c => c.division === 'Womens'); %>
+              <% if(mensCatsSet.length > 0) { %>
+                <optgroup label="Men's">
+                  <% mensCatsSet.forEach(cat => { %>
+                  <option value="<%=cat._id %>"><%= cat.categoryName %></option>
+                  <% }); %>
+                </optgroup>
+              <% } %>
+              <% if(womensCatsSet.length > 0) { %>
+                <optgroup label="Women's">
+                  <% womensCatsSet.forEach(cat => { %>
+                  <option value="<%=cat._id %>"><%= cat.categoryName %></option>
+                  <% }); %>
+                </optgroup>
+              <% } %>
+            </select>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Number of Sets in Stock <span class="text-danger">*</span></label>
+              <input type="number" name="quantity" min="1" required class="form-control" placeholder="e.g., 20" id="setStockInput">
+              <small class="text-muted">How many complete sets are available</small>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Pieces per Set <span class="text-danger">*</span></label>
+              <input type="number" name="piecesPerSet" min="1" value="1" required class="form-control" placeholder="e.g., 5" id="piecesPerSetInput" oninput="calcSetTotal()">
+              <small class="text-muted">e.g., 5 pieces, 7 pieces, 10 pieces</small>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Price per Piece (PKR) <span class="text-danger">*</span></label>
+              <input type="number" name="price" min="1" required class="form-control" placeholder="e.g., 2250" id="pricePerPieceInput" oninput="calcSetTotal()">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Total Set Price</label>
+              <div class="form-control bg-light" id="totalSetPrice" style="font-size: 1.1rem; font-weight: bold; color: #198754;">PKR 0.00</div>
+              <small class="text-muted">Auto-calculated: Price × Pieces</small>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Delivery Charges (PKR)</label>
+              <input type="number" name="deliveryCharges" min="0" step="0.01" value="0" class="form-control">
+            </div>
+            <div class="col-md-6">
+              <div class="form-check mt-4">
+                <input class="form-check-input" type="checkbox" name="increaseDeliveryChargesWithQuantity" id="setDeliveryIncrease">
+                <label class="form-check-label" for="setDeliveryIncrease">Increase delivery with quantity</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Discount <span class="text-muted">(percentage)</span></label>
+            <input type="number" name="discount" min="0" max="100" step="0.01" class="form-control" placeholder="Optional">
+          </div>
+
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" name="isFeatured" id="setFeaturedCheck">
+            <label class="form-check-label" for="setFeaturedCheck">Is Featured?</label>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold">Description <span class="text-danger">*</span></label>
+            <textarea name="description" rows="4" class="form-control" required placeholder="Describe the set product, fabric, colors, sizes included etc."></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold">Upload Product Images <span class="text-danger">*</span></label>
+            <input type="file" multiple name="productImages" required class="form-control" onchange="previewSetImage(event)" id="setProductImagesInput">
+            <div class="mt-2" id="previewSetImages"></div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-dark" id="addSetSubmitBtn"><i class="fa-solid fa-boxes-stacked me-1"></i>Add Sets Product</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function calcSetTotal() {
+    const price = parseFloat(document.getElementById('pricePerPieceInput').value) || 0;
+    const pieces = parseInt(document.getElementById('piecesPerSetInput').value) || 0;
+    const total = price * pieces;
+    document.getElementById('totalSetPrice').innerHTML = 'PKR ' + total.toFixed(2);
+  }
+
+  function handleSetSubmit(form) {
+    const btn = form.querySelector('#addSetSubmitBtn');
+    btn.disabled = true;
+    // Show beautiful loader overlay
+    const overlay = document.getElementById('productLoaderOverlay');
+    if (overlay) overlay.style.display = 'flex';
+    // Hide modal to focus on loader
+    $('#addSetProduct').modal('hide');
+    return true;
+  }
+
+  // Advanced Image Upload Logic
+  let setProductDataTransfer = new DataTransfer();
+
+  function previewSetImage(event) {
+    const input = event.target;
+    for (let file of input.files) {
+      setProductDataTransfer.items.add(file);
+    }
+    input.files = setProductDataTransfer.files;
+    renderSetProductPreview();
+  }
+
+  function renderSetProductPreview() {
+    const container = document.getElementById("previewSetImages");
+    container.innerHTML = "";
+    
+    if (setProductDataTransfer.files.length > 0) {
+      container.innerHTML = `<div class="mb-2"><button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteAllSetProductImages()">Delete All Images</button></div>`;
+    }
+
+    Array.from(setProductDataTransfer.files).forEach((file, index) => {
+      let src = URL.createObjectURL(file);
+      container.innerHTML += `
+        <div class="d-inline-block position-relative m-1 border rounded p-1">
+          <img src='${src}' alt='' width='70' height='70' class='rounded' style='object-fit:cover;'>
+          <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 p-0 rounded-circle" style="width:20px; height:20px; line-height:1; transform: translate(50%, -50%);" onclick="deleteSetProductImage(${index})">&times;</button>
+        </div>
+      `;
+    });
+  }
+
+  function deleteSetProductImage(index) {
+    const dt = new DataTransfer();
+    Array.from(setProductDataTransfer.files).forEach((file, i) => {
+      if (i !== index) dt.items.add(file);
+    });
+    setProductDataTransfer = dt;
+    document.getElementById("setProductImagesInput").files = setProductDataTransfer.files;
+    renderSetProductPreview();
+  }
+
+  function deleteAllSetProductImages() {
+    setProductDataTransfer = new DataTransfer();
+    document.getElementById("setProductImagesInput").files = setProductDataTransfer.files;
+    renderSetProductPreview();
+  }
+
+  // Initialize Select2 for set product modal
+  $('#addSetProduct').on('show.bs.modal', function () {
+    $(this).find('.category-select-set').select2({
+      placeholder: "Search and select category...",
+      allowClear: true,
+      theme: "bootstrap-5",
+      width: '100%',
+      dropdownParent: $('#addSetProduct')
+    });
+  });
+
+  $('#addSetProduct').on('hidden.bs.modal', function() {
+    $(this).find('form').trigger('reset');
+    setProductDataTransfer = new DataTransfer();
+    document.getElementById("setProductImagesInput").files = setProductDataTransfer.files;
+    document.getElementById('previewSetImages').innerHTML = '';
+    document.getElementById('totalSetPrice').innerHTML = 'PKR 0.00';
+    $(this).find('.category-select-set').select2('destroy');
+  });
+</script>

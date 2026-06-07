@@ -6,9 +6,11 @@
         <i class="fas fa-table me-1"></i>
         Products
         <%- include("_modal_product") %>
+        <%- include("_modal_set_product") %>
           <div class=" float-end">
             <button class="btn btn-dark btn-sm" onclick="exportCsv()">Export <i
                 class="fa-solid fa-download"></i></button>
+            <button class="btn btn-dark btn-sm" data-bs-toggle="modal" data-bs-target="#addSetProduct"><i class="fa-solid fa-boxes-stacked"></i> Add Sets Product</button>
             <button class="btn btn-dark btn-sm" data-bs-toggle="modal" data-bs-target="#addProduct">New Product <i
                 class="fa-solid fa-circle-plus"></i></button>
           </div>
@@ -114,7 +116,7 @@
                     </div>
                     <div class="modal-body">
                       <form action="/admin/editProduct/<%= product.id %>?_method=PUT" method="post"
-                        enctype="multipart/form-data">
+                        enctype="multipart/form-data" onsubmit="return handleEditSubmit(this)">
                         <div>
                           <label class="form-label">name</label>
                           <input type="text" value="<%=product.name %>" name="name" required class="form-control">
@@ -182,6 +184,14 @@
                             value="<%=product.discount %>" class="form-control" placeholder="Optional">
                         </div>
                         <div class="form-check form-switch mt-2">
+                          <input class="form-check-input" type="checkbox" name="isWholesaleSet" id="isWholesaleSetCheck-<%= product.id %>" <%= product.isWholesaleSet ? 'checked' : '' %> onchange="document.getElementById('piecesPerSetContainer-<%= product.id %>').style.display = this.checked ? 'block' : 'none'">
+                          <label class="form-check-label" for="isWholesaleSetCheck-<%= product.id %>">Is Wholesale Set?</label>
+                        </div>
+                        <div id="piecesPerSetContainer-<%= product.id %>" style="display: <%= product.isWholesaleSet ? 'block' : 'none' %>;" class="mt-2 mb-2">
+                          <label class="form-label">Pieces per Set</label>
+                          <input type="number" name="piecesPerSet" min="1" value="<%= product.piecesPerSet || 1 %>" class="form-control">
+                        </div>
+                        <div class="form-check form-switch mt-2">
                           <% if(product.isFeatured){%>
                             <input class="form-check-input" checked type="checkbox" name="isFeatured"
                               id="flexSwitchCheckDefault">
@@ -194,13 +204,29 @@
                         <div><label class="form-label">Description</label></div>
                         <div><textarea name="description" rows="5" class="form-control" placeholder="Add description"
                             required><%=product.description %></textarea></div>
-                        <div">
-                          <label class="form-label">Upload Product Image</label>
+                        <div>
+                          <label class="form-label mt-2">Manage Images</label>
+                          <div class="d-flex flex-wrap gap-2 mb-2">
+                            <% if(product.productImagePath && product.productImagePath.length > 0) { %>
+                              <% product.productImagePath.forEach((img, i) => { %>
+                                <div class="position-relative border p-1 rounded">
+                                  <img src="<%= img.startsWith('http') ? img : '/files/' + img %>" width="60" class="img-fluid rounded">
+                                  <div class="form-check mt-1">
+                                    <input class="form-check-input" type="checkbox" name="deletedImages" value="<%= img %>" id="deleteImg<%= product.id %>_<%= i %>">
+                                    <label class="form-check-label text-danger small" for="deleteImg<%= product.id %>_<%= i %>">Delete</label>
+                                  </div>
+                                </div>
+                              <% }) %>
+                            <% } else { %>
+                              <span class="text-muted small">No images available</span>
+                            <% } %>
+                          </div>
+                          <label class="form-label mt-2">Upload New Images <span class="text-muted">(Optional)</span></label>
                           <input type="file" multiple name="productImages" class="form-control">
-                    </div>
-                    <div class="modal-footer">
+                        </div>
+                    <div class="modal-footer mt-3">
                       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                      <button type="submit" class="btn btn-dark">Save changes</button>
+                      <button type="submit" class="btn btn-dark submit-btn">Save changes</button>
                     </div>
                     </form>
                   </div>
@@ -213,6 +239,64 @@
     </div>
 </div>
 
+<style>
+.product-loader-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(255, 255, 255, 0.95);
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.animation-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  color: #333;
+  margin-bottom: 20px;
+  position: relative;
+  width: 300px;
+  height: 120px;
+}
+.box-icon {
+  position: absolute;
+  left: 20px;
+  color: #8b5a2b;
+}
+.computer-icon {
+  position: absolute;
+  right: 20px;
+  color: #273952;
+}
+.flying-product {
+  position: absolute;
+  left: 50px;
+  font-size: 2.5rem;
+  color: #198754;
+  animation: flyToComputer 2s infinite ease-in-out;
+}
+@keyframes flyToComputer {
+  0% { transform: translate(0, 20px) scale(0.5); opacity: 0; }
+  20% { transform: translate(0, -40px) scale(1); opacity: 1; }
+  80% { transform: translate(140px, -40px) scale(1); opacity: 1; }
+  100% { transform: translate(140px, 20px) scale(0.5); opacity: 0; }
+}
+</style>
+
+<div id="productLoaderOverlay" class="product-loader-overlay" style="display: none;">
+  <div class="animation-container">
+    <i class="fa-solid fa-box-open box-icon"></i>
+    <i class="fa-solid fa-shirt flying-product"></i>
+    <i class="fa-solid fa-cloud-arrow-up computer-icon"></i>
+  </div>
+  <h4 style="font-family: 'Cairo', sans-serif; font-weight: bold; color: #273952; letter-spacing: 2px;">UPLOADING PRODUCT...</h4>
+  <p class="text-muted">Please wait while we save your product and images.</p>
+</div>
+
+
 <script>
   function exportCsv() {
     myTable.export({
@@ -220,6 +304,13 @@
       skipColumn: [0, 8],
       filename: "product_details",
     });
+  }
+
+  function handleEditSubmit(form) {
+    const btn = form.querySelector('.submit-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+    return true; // continue submission
   }
 
   // Initialize Select2 for category dropdown in edit modals
@@ -234,14 +325,16 @@
   });
 
   // Re-initialize Select2 when any edit modal is shown
-  $(document).on('show.bs.modal', function () {
-    $(this).find('.category-select').each(function () {
+  $(document).on('show.bs.modal', function (e) {
+    const modal = $(e.target);
+    modal.find('.category-select').each(function () {
       if (!$(this).data('select2')) {
         $(this).select2({
           placeholder: "Search and select category...",
           allowClear: true,
           theme: "bootstrap-5",
-          width: '100%'
+          width: '100%',
+          dropdownParent: modal
         });
       }
     });

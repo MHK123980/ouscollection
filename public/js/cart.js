@@ -28,7 +28,7 @@ async function deleteItem(productId) {
             $(".cart-item-count").html(itemCount)
             
                 // Update cart totals in real-time instead of reloading
-                if (window.location.pathname === '/cart' || window.location.pathname === '/checkout') {
+                if (window.location.pathname === '/user/cart' || window.location.pathname === '/user/checkout') {
                     // Use setTimeout to ensure DOM is updated before recalculating
                     setTimeout(updateCartTotals, 100);
                 }
@@ -36,10 +36,11 @@ async function deleteItem(productId) {
             toastr.warning('item removed from cart.')
 
         } else {
-            // Only reload if on cart/checkout page, otherwise show message
-            if (window.location.pathname === '/cart' || window.location.pathname === '/checkout') {
+            // Cart is now empty - reload to show empty cart view
+            if (window.location.pathname === '/user/cart' || window.location.pathname === '/user/checkout') {
                 window.location.reload()
             } else {
+                $(".cart-item-count").html(0)
                 toastr.options = { "positionClass": "toast-bottom-right" }
                 toastr.warning('item removed from cart.')
             }
@@ -96,7 +97,7 @@ async function addToCart(productId, productName, productPrice, quantity, offerPr
                     timer: 2000
                 })
                 // Only reload on cart page if out of stock
-                if (window.location.pathname === '/cart' || window.location.pathname === '/checkout') {
+                if (window.location.pathname === '/user/cart' || window.location.pathname === '/user/checkout') {
                     window.location.reload()
                 }
             } else {
@@ -127,7 +128,7 @@ async function addToCart(productId, productName, productPrice, quantity, offerPr
                 }
 
                 // Update cart totals in real-time instead of reloading
-                if (window.location.pathname === '/cart' || window.location.pathname === '/checkout') {
+                if (window.location.pathname === '/user/cart' || window.location.pathname === '/user/checkout') {
                     updateCartTotals();
                 }
             }
@@ -278,7 +279,12 @@ function updateCartTotals() {
                 console.log('Found subtotal li');
                 const span = li.querySelector('span');
                 if (span) {
-                    span.innerHTML = `<del>Rs ${subTotal.toFixed(2)}</del>`;
+                    const discount = subTotal - totalCartValue;
+                    if (discount > 0) {
+                        span.innerHTML = `<del>Rs ${subTotal.toFixed(2)}</del>`;
+                    } else {
+                        span.innerHTML = `Rs ${subTotal.toFixed(2)}`;
+                    }
                     console.log('Updated subtotal');
                 }
             }

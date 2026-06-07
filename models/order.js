@@ -50,6 +50,14 @@ const orderSchema = new mongoose.Schema({
     status: {
         type: String,
         default: "Pending"
+    },
+    orderIdStr: {
+        type: String,
+        unique: true
+    },
+    isDeleted: {
+        type: Boolean,
+        default: false
     }
 
 }, { timestamps: true })

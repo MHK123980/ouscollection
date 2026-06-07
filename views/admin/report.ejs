@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>OUS Collection - Sales Report</title>
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+      body { font-size: 12px; }
+    }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; color: #333; }
+    .report-header { text-align: center; border-bottom: 3px solid #333; padding-bottom: 15px; margin-bottom: 25px; }
+    .report-header h1 { margin: 0; font-size: 28px; }
+    .report-header p { color: #666; margin: 5px 0; }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
+    .stat-card { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; text-align: center; }
+    .stat-card h3 { margin: 0; font-size: 24px; color: #212529; }
+    .stat-card p { margin: 5px 0 0; color: #6c757d; font-size: 14px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 13px; }
+    th, td { border: 1px solid #dee2e6; padding: 8px 12px; text-align: left; }
+    th { background: #212529; color: white; }
+    tr:nth-child(even) { background: #f8f9fa; }
+    .section-title { font-size: 20px; margin: 25px 0 10px; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+    .btn-print { position: fixed; top: 20px; right: 20px; background: #212529; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; z-index: 1000; }
+    .btn-print:hover { background: #495057; }
+  </style>
+</head>
+<body>
+  <button class="btn-print no-print" onclick="window.print()">🖨 Print / Save as PDF</button>
+
+  <div class="report-header">
+    <h1>OUS Collection</h1>
+    <p>Sales Report - Generated on <%= now.toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' }) %></p>
+  </div>
+
+  <% 
+    function calcStats(orders) {
+      let total = 0, completed = 0, pending = 0, cancelled = 0;
+      orders.forEach(o => {
+        if (o.status !== 'Cancelled') total += o.total;
+        if (o.status === 'Delivered') completed++;
+        else if (o.status === 'Cancelled') cancelled++;
+        else pending++;
+      });
+      return { total, completed, pending, cancelled, count: orders.length };
+    }
+    const thisStats = calcStats(thisMonthOrders);
+    const lastStats = calcStats(lastMonthOrders);
+  %>
+
+  <h2 class="section-title">This Month Summary</h2>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <h3><%= thisStats.count %></h3>
+      <p>Total Orders</p>
+    </div>
+    <div class="stat-card">
+      <h3>PKR <%= thisStats.total.toFixed(2) %></h3>
+      <p>Total Sales</p>
+    </div>
+    <div class="stat-card">
+      <h3><%= thisStats.completed %></h3>
+      <p>Completed</p>
+    </div>
+    <div class="stat-card">
+      <h3><%= thisStats.cancelled %></h3>
+      <p>Cancelled</p>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Order ID</th>
+        <th>Customer</th>
+        <th>Products</th>
+        <th>Total (PKR)</th>
+        <th>Date</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% thisMonthOrders.forEach((order, i) => { %>
+      <tr>
+        <td><%= i + 1 %></td>
+        <td><%= order.orderIdStr || order._id %></td>
+        <td><%= order.deliveryAddress.firstName %> <%= order.deliveryAddress.lastName || '' %></td>
+        <td><%= order.products.map(p => p.name + ' x' + p.quantity).join(', ') %></td>
+        <td>PKR <%= order.total.toFixed(2) %></td>
+        <td><%= order.createdAt.toLocaleDateString() %></td>
+        <td><%= order.status %></td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <h2 class="section-title">Last Month Summary</h2>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <h3><%= lastStats.count %></h3>
+      <p>Total Orders</p>
+    </div>
+    <div class="stat-card">
+      <h3>PKR <%= lastStats.total.toFixed(2) %></h3>
+      <p>Total Sales</p>
+    </div>
+    <div class="stat-card">
+      <h3><%= lastStats.completed %></h3>
+      <p>Completed</p>
+    </div>
+    <div class="stat-card">
+      <h3><%= lastStats.cancelled %></h3>
+      <p>Cancelled</p>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Order ID</th>
+        <th>Customer</th>
+        <th>Products</th>
+        <th>Total (PKR)</th>
+        <th>Date</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% lastMonthOrders.forEach((order, i) => { %>
+      <tr>
+        <td><%= i + 1 %></td>
+        <td><%= order.orderIdStr || order._id %></td>
+        <td><%= order.deliveryAddress.firstName %> <%= order.deliveryAddress.lastName || '' %></td>
+        <td><%= order.products.map(p => p.name + ' x' + p.quantity).join(', ') %></td>
+        <td>PKR <%= order.total.toFixed(2) %></td>
+        <td><%= order.createdAt.toLocaleDateString() %></td>
+        <td><%= order.status %></td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</body>
+</html>

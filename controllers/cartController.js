@@ -6,12 +6,18 @@ const Product = require("../models/product")
 module.exports = {
     addToCart: async (req, res) => {
         const productId = req.params.id
-        const { name, price, quantity, offerPrice } = req.body;
+        let { quantity } = req.body;
+        quantity = Number(quantity);
         try {
             const findProduct = await Product.findById(productId)
             if (!findProduct || findProduct.quantity < quantity) {
                 return res.status(200).json({ message: "item not available" })
             }
+            
+            const name = findProduct.name;
+            const multiplier = findProduct.isWholesaleSet ? (findProduct.piecesPerSet || 1) : 1;
+            const price = findProduct.price * multiplier;
+            const offerPrice = findProduct.offerPrice ? findProduct.offerPrice * multiplier : null;
             // Stock will be decreased only when order is confirmed, not when adding to cart
 
             let itemTotal

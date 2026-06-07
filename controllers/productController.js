@@ -8,12 +8,21 @@ module.exports = {
             const discount = req.body.discount ? parseFloat(req.body.discount) : null
             const offerPrice = req.body.discount ? price - ((price / 100) * discount) : null;
             const isFeatured = req.body.isFeatured == 'on' ? true : false
+            const isWholesaleSet = req.body.isWholesaleSet == 'on' ? true : false
+            const piecesPerSet = req.body.piecesPerSet ? Number(req.body.piecesPerSet) : 1
 
             let productImages = [];
             if (req.files && req.files.length > 0) {
-                // Upload each file to ImgBB
-                const uploadPromises = req.files.map(file => uploadToImgBB(file.buffer));
-                productImages = await Promise.all(uploadPromises);
+                // Upload sequentially to prevent memory/timeout crashes with ImgBB
+                for (const file of req.files) {
+                    try {
+                        const url = await uploadToImgBB(file.buffer);
+                        productImages.push(url);
+                    } catch(uploadErr) {
+                        console.error("ImgBB upload error:", uploadErr);
+                        throw new Error("Image upload failed. Try uploading fewer or smaller images. " + uploadErr.message);
+                    }
+                }
             }
 
             const product = new Product({
@@ -27,10 +36,20 @@ module.exports = {
                 deliveryCharges: req.body.deliveryCharges ? Number(req.body.deliveryCharges) : 0,
                 increaseDeliveryChargesWithQuantity: req.body.increaseDeliveryChargesWithQuantity == 'on' ? true : false,
                 isFeatured: isFeatured,
+                isWholesaleSet: isWholesaleSet,
+                piecesPerSet: piecesPerSet,
                 description: req.body.description,
                 productImagePath: productImages.length > 0 ? productImages : null
             })
             await product.save()
+            
+            // Emit new_product event
+            const io = req.app.get('io');
+            if (io) {
+                const populatedProduct = await Product.findById(product._id).populate('category').exec();
+                io.emit('new_product', populatedProduct);
+            }
+
             res.redirect("/admin/products")
 
         } catch (err) {
@@ -49,12 +68,29 @@ module.exports = {
             const discount = req.body.discount ? parseFloat(req.body.discount) : null
             const offerPrice = req.body.discount ? price - ((price / 100) * discount) : null;
             const isFeatured = req.body.isFeatured == "on" ? true : false
+            const isWholesaleSet = req.body.isWholesaleSet == 'on' ? true : false
+            const piecesPerSet = req.body.piecesPerSet ? Number(req.body.piecesPerSet) : 1
             const oldProductImages = product.productImagePath
 
-            let productImages = oldProductImages;
+            let productImages = oldProductImages || [];
+            
+            // Handle deleted images
+            if (req.body.deletedImages) {
+                let deleted = Array.isArray(req.body.deletedImages) ? req.body.deletedImages : [req.body.deletedImages];
+                productImages = productImages.filter(img => !deleted.includes(img));
+            }
+
             if (req.files && req.files.length > 0) {
-                const uploadPromises = req.files.map(file => uploadToImgBB(file.buffer));
-                productImages = await Promise.all(uploadPromises);
+                // Upload sequentially
+                for (const file of req.files) {
+                    try {
+                        const url = await uploadToImgBB(file.buffer);
+                        productImages.push(url); // Append new images to existing ones
+                    } catch(uploadErr) {
+                        console.error("ImgBB upload error:", uploadErr);
+                        throw new Error("Image upload failed. Try uploading fewer or smaller images. " + uploadErr.message);
+                    }
+                }
             }
 
             await Product.findByIdAndUpdate(req.params.id, {
@@ -68,6 +104,8 @@ module.exports = {
                 deliveryCharges: req.body.deliveryCharges ? Number(req.body.deliveryCharges) : 0,
                 increaseDeliveryChargesWithQuantity: req.body.increaseDeliveryChargesWithQuantity == 'on' ? true : false,
                 isFeatured: isFeatured,
+                isWholesaleSet: isWholesaleSet,
+                piecesPerSet: piecesPerSet,
                 description: req.body.description,
                 productImagePath: productImages
             })

@@ -64,6 +64,14 @@ const productSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    isWholesaleSet: {
+        type: Boolean,
+        default: false
+    },
+    piecesPerSet: {
+        type: Number,
+        default: 1
+    },
     brand: String,
     rating: {
         type: [Number]
