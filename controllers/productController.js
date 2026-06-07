@@ -48,14 +48,15 @@ module.exports = {
             if (io) {
                 const populatedProduct = await Product.findById(product._id).populate('category').exec();
                 io.emit('new_product', populatedProduct);
+                io.emit('site_updated');
             }
 
-            const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/products")
+            res.redirect("/admin/products")
 
         } catch (err) {
             console.log(err)
             req.flash("message", "Error Adding product: " + err.message)
-            const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/products")
+            res.redirect("/admin/products")
         }
 
     },
@@ -113,11 +114,13 @@ module.exports = {
             // Note: On Vercel we don't delete files from disk because no files are stored on disk.
             // Old ImgBB links will just remain active.
 
-            const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/products")
+            const io = req.app.get('io');
+            if (io) { io.emit('site_updated'); }
+            res.redirect("/admin/products")
         } catch (err) {
             console.log(err)
             req.flash("message", "Error updating product: " + err.message)
-            const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/products")
+            res.redirect("/admin/products")
         }
     },
 
@@ -125,11 +128,13 @@ module.exports = {
         try {
             const product = await Product.findById(req.params.id)
             await product.remove()
-            const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/products")
+            const io = req.app.get('io');
+            if (io) { io.emit('site_updated'); }
+            res.redirect("/admin/products")
         } catch (err) {
             console.log(err)
             req.flash("message", "Error deleting product")
-            const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/products")
+            res.redirect("/admin/products")
         }
     },
 

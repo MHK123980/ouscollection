@@ -62,7 +62,7 @@ module.exports = {
       });
     } catch (err) {
       console.log(err.message);
-      const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin");
+      res.redirect("/admin");
     }
   },
 
@@ -150,7 +150,7 @@ module.exports = {
       });
     } catch (err) {
       console.log(err.message);
-      const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin");
+      res.redirect("/admin");
     }
   },
 
@@ -167,7 +167,7 @@ module.exports = {
       });
     } catch (err) {
       console.log(err.message);
-      const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin");
+      res.redirect("/admin");
     }
   },
 
@@ -189,7 +189,7 @@ module.exports = {
       });
     } catch (err) {
       console.log(err.message);
-      const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin");
+      res.redirect("/admin");
     }
   },
 
@@ -217,7 +217,7 @@ module.exports = {
     } catch (err) {
       console.log(err);
       req.flash("message", "Error getting order details");
-      const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin");
+      res.redirect("/admin");
     }
   },
 
@@ -266,7 +266,7 @@ module.exports = {
           res.status(404).json({ error: "Order not found" });
         } else {
           req.flash("message", "Invalid orderId");
-          const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/orders");
+          res.redirect("/admin/orders");
         }
       }
     } catch (err) {
@@ -276,7 +276,7 @@ module.exports = {
         res.status(500).json({ error: "Server error" });
       } else {
         req.flash("message", "Invalid orderId");
-        const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/orders");
+        res.redirect("/admin/orders");
       }
     }
   },
@@ -290,7 +290,7 @@ module.exports = {
       const exists = await Category.findOne({ categoryName: normalizedName, division: division }).exec();
       if (exists) {
         req.flash("message", "Category already exists in the selected division");
-        return const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/categories");
+        return res.redirect("/admin/categories");
       }
 
       // Create and save
@@ -299,7 +299,9 @@ module.exports = {
         division: division,
       });
       await category.save();
-      const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/categories");
+      const io = req.app.get('io');
+      if (io) { io.emit('site_updated'); }
+      res.redirect("/admin/categories");
     } catch (err) {
       console.log(err.message);
       // Friendly handling for duplicate key index errors
@@ -308,7 +310,7 @@ module.exports = {
       } else {
         req.flash("message", "Error adding category");
       }
-      const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/categories");
+      res.redirect("/admin/categories");
     }
   },
 
@@ -321,14 +323,16 @@ module.exports = {
       const conflict = await Category.findOne({ categoryName: normalizedName, division: division, _id: { $ne: req.params.id } }).exec();
       if (conflict) {
         req.flash("message", "Another category with the same name exists in the selected division");
-        return const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/categories");
+        return res.redirect("/admin/categories");
       }
 
       await Category.findByIdAndUpdate(req.params.id, {
         categoryName: normalizedName,
         division: division
       });
-      const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/categories");
+      const io = req.app.get('io');
+      if (io) { io.emit('site_updated'); }
+      res.redirect("/admin/categories");
     } catch (err) {
       console.log(err.message);
       if (err.code === 11000) {
@@ -336,7 +340,7 @@ module.exports = {
       } else {
         req.flash("message", "Error editing in category");
       }
-      const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/categories");
+      res.redirect("/admin/categories");
     }
   },
 
@@ -345,14 +349,16 @@ module.exports = {
     try {
       category = await Category.findById(req.params.id);
       await category.remove();
-      const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/categories");
+      const io = req.app.get('io');
+      if (io) { io.emit('site_updated'); }
+      res.redirect("/admin/categories");
     } catch (err) {
       console.log(err.message);
       if (category == null) {
-        const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin");
+        res.redirect("/admin");
       } else {
         req.flash("message", err.message);
-        const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/categories");
+        res.redirect("/admin/categories");
       }
     }
   },
@@ -360,22 +366,26 @@ module.exports = {
   blockUser: async (req, res) => {
     try {
       await User.findByIdAndUpdate(req.params.id, { isActive: false });
-      const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/users");
+      const io = req.app.get('io');
+      if (io) { io.emit('site_updated'); }
+      res.redirect("/admin/users");
     } catch (err) {
       console.log(err.message);
       req.flash("message", "Error blocking User");
-      const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/users");
+      res.redirect("/admin/users");
     }
   },
 
   unblockUser: async (req, res) => {
     try {
       await User.findByIdAndUpdate(req.params.id, { isActive: true });
-      const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/users");
+      const io = req.app.get('io');
+      if (io) { io.emit('site_updated'); }
+      res.redirect("/admin/users");
     } catch (error) {
       console.log(err.message);
       req.flash("message", "Error un blocking User");
-      const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/users");
+      res.redirect("/admin/users");
     }
   },
 
@@ -392,6 +402,8 @@ module.exports = {
       order.isDeleted = true;
       await order.save();
 
+      const io = req.app.get('io');
+      if (io) { io.emit('site_updated'); }
       return res.status(200).json({ message: "Order deleted successfully" });
     } catch (err) {
       console.log(err.message);
@@ -411,7 +423,7 @@ module.exports = {
     } catch (err) {
       console.log(err);
       req.flash("message", "Error loading add order page");
-      const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/orders");
+      res.redirect("/admin/orders");
     }
   },
 
@@ -423,7 +435,7 @@ module.exports = {
       const items = JSON.parse(orderProducts);
       if (!items || items.length === 0) {
         req.flash("message", "No products selected");
-        return const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/addOrder");
+        return res.redirect("/admin/addOrder");
       }
 
       let totalAmount = 0;
@@ -459,7 +471,7 @@ module.exports = {
           await product.save();
         } else {
           req.flash("message", `Insufficient stock for ${item.name}`);
-          return const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/addOrder");
+          return res.redirect("/admin/addOrder");
         }
       }
 
@@ -489,12 +501,14 @@ module.exports = {
 
       await newOrder.save();
       req.flash("message", "Order " + orderIdStr + " created successfully");
-      const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/orders");
+      const io = req.app.get('io');
+      if (io) { io.emit('site_updated'); }
+      res.redirect("/admin/orders");
       
     } catch (err) {
       console.log(err);
       req.flash("message", "Error creating order: " + err.message);
-      const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/addOrder");
+      res.redirect("/admin/addOrder");
     }
   },
 
@@ -523,7 +537,7 @@ module.exports = {
       });
     } catch (err) {
       console.log(err);
-      const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin");
+      res.redirect("/admin");
     }
   }
 };
