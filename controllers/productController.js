@@ -50,12 +50,12 @@ module.exports = {
                 io.emit('new_product', populatedProduct);
             }
 
-            res.redirect("/admin/products")
+            const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/products")
 
         } catch (err) {
             console.log(err)
             req.flash("message", "Error Adding product: " + err.message)
-            res.redirect("/admin/products")
+            const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/products")
         }
 
     },
@@ -113,11 +113,11 @@ module.exports = {
             // Note: On Vercel we don't delete files from disk because no files are stored on disk.
             // Old ImgBB links will just remain active.
 
-            res.redirect("/admin/products")
+            const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/products")
         } catch (err) {
             console.log(err)
             req.flash("message", "Error updating product: " + err.message)
-            res.redirect("/admin/products")
+            const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/products")
         }
     },
 
@@ -125,11 +125,11 @@ module.exports = {
         try {
             const product = await Product.findById(req.params.id)
             await product.remove()
-            res.redirect("/admin/products")
+            const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/products")
         } catch (err) {
             console.log(err)
             req.flash("message", "Error deleting product")
-            res.redirect("/admin/products")
+            const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/admin/products")
         }
     },
 

@@ -343,7 +343,7 @@ module.exports = {
       });
     } catch (err) {
       console.log(err);
-      res.redirect("/");
+      const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/");
     }
   },
 
@@ -390,7 +390,7 @@ module.exports = {
       });
     } catch (err) {
       console.log(err);
-      res.redirect("/");
+      const io = req.app.get('io'); if (io) { io.emit('site_updated'); } res.redirect("/");
     }
   },
 
