@@ -47,6 +47,7 @@ module.exports = {
       const allProductsPromise = Product.find()
         .populate("category")
         .sort({ createdAt: -1 })
+        .limit(24) // Limit added to massively improve load time
         .exec();
 
       const [

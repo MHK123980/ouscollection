@@ -369,9 +369,23 @@
           const newEl = newDoc.querySelector(selector);
           if (oldEl && newEl) {
             oldEl.innerHTML = newEl.innerHTML;
+            
+            // Re-apply background images for new lazy-loaded elements
+            const setBgs = oldEl.querySelectorAll('.set-bg');
+            setBgs.forEach(el => {
+              const bg = el.getAttribute('data-setbg');
+              if (bg) el.style.backgroundImage = 'url(' + bg + ')';
+            });
+            
             updated = true;
           }
         });
+        
+        // Re-initialize MixItUp if the filter container was updated
+        if (updated && document.querySelector('.featured__filter') && typeof mixitup !== 'undefined') {
+          // mixitup handles re-instantiation internally if we call it again on the same container
+          mixitup('.featured__filter');
+        }
         
         if (updated && typeof toastr !== 'undefined') {
           toastr.success('Website content updated live!');
