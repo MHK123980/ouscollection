@@ -74,7 +74,22 @@ async function addToCart(productId, productName, productPrice, quantity, offerPr
     }
     else {
         try {
-            document.getElementById("waiter").innerHTML =`<div class="waiting"></div>`
+            // OPTIMISTIC UI UPDATE: Instantly show success and update cart count to give zero-delay feel
+            let itemCount = Number($(".cart-item-count").html())
+            if (quantity == -1) {
+                toastr.options = { "positionClass": "toast-bottom-right" }
+                toastr.warning('item removed from cart.')
+            } else {
+                toastr.options = { "positionClass": "toast-bottom-right" }
+                toastr.success('item added to cart.')
+            }
+            $(".cart-item-count").html(itemCount + Number.parseInt(quantity))
+            
+            // Update displayed quantity for this item if present on page
+            const qtyInput = document.getElementById(`currentQuantity-${productId}`)
+            if (qtyInput) qtyInput.value = newQuantity
+
+            // Run the actual API call in the background without blocking the UI with a waiter
             const response = await axios({
                 method: "put",
                 url: `/user/addToCart/${productId}`,
@@ -85,8 +100,13 @@ async function addToCart(productId, productName, productPrice, quantity, offerPr
                     offerPrice: Number.parseFloat(offerPrice),
                 }
             })
-            document.getElementById("waiter").innerHTML =""
+            
+            // If the item was actually out of stock on the server side
             if (response.status == 200) {
+                // Revert the optimistic UI update
+                $(".cart-item-count").html(itemCount)
+                if (qtyInput) qtyInput.value = currentQuantity
+                
                 toastr.options = { "positionClass": "toast-bottom-right" }
                 await Swal.fire({
                     icon: 'error',
@@ -96,26 +116,10 @@ async function addToCart(productId, productName, productPrice, quantity, offerPr
                     width: "25em",
                     timer: 2000
                 })
-                // Only reload on cart page if out of stock
                 if (window.location.pathname === '/user/cart' || window.location.pathname === '/user/checkout') {
                     window.location.reload()
                 }
             } else {
-                if (quantity == -1) {
-                    toastr.options = { "positionClass": "toast-bottom-right" }
-                    toastr.warning('item removed from cart.')
-                } else {
-                    toastr.options = { "positionClass": "toast-bottom-right" }
-                    toastr.success('item added to cart.')
-                }
-                let itemCount = Number($(".cart-item-count").html())
-                itemCount += Number.parseInt(quantity)
-                $(".cart-item-count").html(itemCount)
-
-                // Update displayed quantity for this item if present on page
-                const qtyInput = document.getElementById(`currentQuantity-${productId}`)
-                if (qtyInput) qtyInput.value = newQuantity
-
                 // If item total element exists, update it using returned itemTotal
                 if (response.data && response.data.itemTotal) {
                     const itemTotalEl = document.getElementById(`item-${productId}`)
@@ -134,6 +138,10 @@ async function addToCart(productId, productName, productPrice, quantity, offerPr
             }
         }
         catch (err) {
+            // Revert optimistic update on error
+            let currentCount = Number($(".cart-item-count").html())
+            $(".cart-item-count").html(currentCount - Number.parseInt(quantity))
+            
             await Swal.fire({
                 icon: 'warning',
                 title: 'Oops...',
