@@ -74,22 +74,11 @@ async function addToCart(productId, productName, productPrice, quantity, offerPr
     }
     else {
         try {
-            // OPTIMISTIC UI UPDATE: Instantly show success and update cart count to give zero-delay feel
-            let itemCount = Number($(".cart-item-count").html())
-            if (quantity == -1) {
-                toastr.options = { "positionClass": "toast-bottom-right" }
-                toastr.warning('item removed from cart.')
-            } else {
-                toastr.options = { "positionClass": "toast-bottom-right" }
-                toastr.success('item added to cart.')
-            }
-            $(".cart-item-count").html(itemCount + Number.parseInt(quantity))
-            
-            // Update displayed quantity for this item if present on page
-            const qtyInput = document.getElementById(`currentQuantity-${productId}`)
-            if (qtyInput) qtyInput.value = newQuantity
+            // Disable the button briefly to prevent double-clicks
+            const btns = document.querySelectorAll(`[onclick*="${productId}"]`)
+            btns.forEach(b => b.style.pointerEvents = 'none')
 
-            // Run the actual API call in the background without blocking the UI with a waiter
+            // Fire the API call (fast now - no extra DB queries)
             const response = await axios({
                 method: "put",
                 url: `/user/addToCart/${productId}`,
@@ -101,16 +90,15 @@ async function addToCart(productId, productName, productPrice, quantity, offerPr
                 }
             })
             
-            // If the item was actually out of stock on the server side
+            // Re-enable buttons
+            btns.forEach(b => b.style.pointerEvents = '')
+
             if (response.status == 200) {
-                // Revert the optimistic UI update
-                $(".cart-item-count").html(itemCount)
-                if (qtyInput) qtyInput.value = currentQuantity
-                
+                // Out of stock
                 toastr.options = { "positionClass": "toast-bottom-right" }
-                await Swal.fire({
+                Swal.fire({
                     icon: 'error',
-                    title: 'Oops...',
+                    title: 'Out of Stock',
                     text: 'This product is out of stock',
                     confirmButtonColor: '#273952',
                     width: "25em",
@@ -119,12 +107,28 @@ async function addToCart(productId, productName, productPrice, quantity, offerPr
                 if (window.location.pathname === '/user/cart' || window.location.pathname === '/user/checkout') {
                     window.location.reload()
                 }
-            } else {
+            } else if (response.status == 201) {
+                // SUCCESS - confirmed by server, now update UI
+                if (quantity == -1) {
+                    toastr.options = { "positionClass": "toast-bottom-right" }
+                    toastr.warning('Item removed from cart.')
+                } else {
+                    toastr.options = { "positionClass": "toast-bottom-right" }
+                    toastr.success('Item added to cart!')
+                }
+                
+                // Update cart count badge
+                let itemCount = Number($(".cart-item-count").html()) || 0
+                $(".cart-item-count").html(itemCount + Number.parseInt(quantity))
+
+                // Update displayed quantity for this item if present on page
+                const qtyInput = document.getElementById(`currentQuantity-${productId}`)
+                if (qtyInput) qtyInput.value = newQuantity
+
                 // If item total element exists, update it using returned itemTotal
                 if (response.data && response.data.itemTotal) {
                     const itemTotalEl = document.getElementById(`item-${productId}`)
                     if (itemTotalEl) {
-                        // Preserve delivery info HTML if present
                         const deliveryNode = itemTotalEl.querySelector('.text-muted')
                         const deliveryHtml = deliveryNode ? deliveryNode.outerHTML : ''
                         itemTotalEl.innerHTML = ` Rs ${Number(response.data.itemTotal).toFixed(2)}` + (deliveryHtml ? `<div class="text-muted small">${deliveryHtml}</div>` : '')
@@ -138,11 +142,10 @@ async function addToCart(productId, productName, productPrice, quantity, offerPr
             }
         }
         catch (err) {
-            // Revert optimistic update on error
-            let currentCount = Number($(".cart-item-count").html())
-            $(".cart-item-count").html(currentCount - Number.parseInt(quantity))
+            // Re-enable buttons
+            document.querySelectorAll(`[onclick*="${productId}"]`).forEach(b => b.style.pointerEvents = '')
             
-            await Swal.fire({
+            Swal.fire({
                 icon: 'warning',
                 title: 'Oops...',
                 text: 'Please login to add items to cart',

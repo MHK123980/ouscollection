@@ -14,9 +14,18 @@
     /*------------------
         Preloader
     --------------------*/
+    // Safety timeout: always dismiss preloader after max 1.5 seconds
+    var preloaderDismissed = false;
+    function dismissPreloader() {
+        if (!preloaderDismissed) {
+            preloaderDismissed = true;
+            $(".loader").fadeOut();
+            $("#preloder").delay(100).fadeOut("fast");
+        }
+    }
+    setTimeout(dismissPreloader, 1500);
     $(window).on('load', function () {
-        $(".loader").fadeOut();
-        $("#preloder").delay(200).fadeOut("slow");
+        dismissPreloader();
 
         /*------------------
             Gallery filter

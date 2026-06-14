@@ -40,7 +40,10 @@ app.use(cors({
 
 // Handle preflight OPTIONS requests
 app.options('*', cors());
-app.use(express.static("public"));
+app.use(express.static("public", {
+  maxAge: '7d', // Cache static files for 7 days - huge speed improvement
+  etag: true
+}));
 app.use(expressLayout);
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
@@ -53,11 +56,14 @@ app.use(methodOverride("_method"));
 //   next();
 // });
 
+const { MongoStore } = require("connect-mongo");
 app.use(
   session({
     secret: process.env.SECRET,
     resave: false,
     saveUninitialized: false,
+    store: MongoStore.create({ mongoUrl: process.env.DATABASE_URL }),
+    cookie: { maxAge: 1000 * 60 * 60 * 24 * 7 } // 7 days
   })
 );
 

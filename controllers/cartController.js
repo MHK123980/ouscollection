@@ -36,37 +36,22 @@ module.exports = {
                     }
                     cart.subTotal = cart.products.reduce((acc, curr) => acc + (curr.quantity * curr.price), 0)
                     cart.total = cart.products.reduce((acc, curr) => acc + curr.quantity * (curr.offerPrice || curr.price), 0)
-                    // compute total delivery charges for cart
-                    {
-                        const prodIds = cart.products.map(p => p.productId)
-                        const prods = await Product.find({ _id: { $in: prodIds } })
-                        let totalDelivery = 0
-                        cart.products.forEach(item => {
-                            const prod = prods.find(p => p.id == item.productId)
-                            if (prod) {
-                                const charge = Number(prod.deliveryCharges || 0)
-                                totalDelivery += prod.increaseDeliveryChargesWithQuantity ? charge * item.quantity : charge
-                            }
-                        })
-                        cart.totalDeliveryCharges = totalDelivery
-                    }
+                    // NOTE: Delivery charges are recalculated when viewing cart, not on every addToCart
+                    // This significantly speeds up the addToCart response
                     await cart.save();
                 } else {
                     const subTotal = (quantity * price)
                     const total = offerPrice ? (quantity * offerPrice) : subTotal
+                    // NOTE: deliveryCharges computed on cart page view only (speeds up addToCart)
+                    const deliveryCharge = Number(findProduct.deliveryCharges || 0)
+                    const totalDelivery = findProduct.increaseDeliveryChargesWithQuantity ? deliveryCharge * quantity : deliveryCharge
                     cart = await Cart.create({
                         userId,
                         products: [{ productId, quantity, name, price, offerPrice }],
                         subTotal: subTotal,
-                        total: total
+                        total: total,
+                        totalDeliveryCharges: totalDelivery
                     });
-                    // compute delivery for newly created cart
-                    {
-                        const prod = await Product.findById(productId)
-                        const charge = Number(prod.deliveryCharges || 0)
-                        cart.totalDeliveryCharges = prod.increaseDeliveryChargesWithQuantity ? charge * quantity : charge
-                        await cart.save()
-                    }
                     itemTotal = offerPrice ? offerPrice * quantity : price * quantity
                 }
             } else {
@@ -83,20 +68,7 @@ module.exports = {
                 }
                 cart.subTotal = cart.products.reduce((acc, curr) => acc + (curr.quantity * curr.price), 0)
                 cart.total = cart.products.reduce((acc, curr) => acc + curr.quantity * (curr.offerPrice || curr.price), 0)
-                // compute session cart delivery charges
-                {
-                    const prodIds = cart.products.map(p => p.productId)
-                    const prods = await Product.find({ _id: { $in: prodIds } })
-                    let totalDelivery = 0
-                    cart.products.forEach(item => {
-                        const prod = prods.find(p => p.id == item.productId)
-                        if (prod) {
-                            const charge = Number(prod.deliveryCharges || 0)
-                            totalDelivery += prod.increaseDeliveryChargesWithQuantity ? charge * item.quantity : charge
-                        }
-                    })
-                    cart.totalDeliveryCharges = totalDelivery
-                }
+                // NOTE: Session cart delivery charges computed on cart page view only
             }
             //removing coupon from session if exist
             req.session.coupon = null
