@@ -234,15 +234,26 @@ async function viewOrderDetails(orderId) {
         if (response.status == 200) {
             const order = response.data.myOrder;
             const fullName = `${order.deliveryAddress.firstName} ${order.deliveryAddress.lastName || ''}`.trim();
+
+            // Calculate correct amounts
+            // subTotal = sum of product prices (without delivery)
+            const subTotal = order.subTotal || order.products.reduce((acc, p) => acc + ((p.offerPrice || p.price) * p.quantity), 0);
+            // totalDeliveryCharges from DB (set at checkout time)
+            const deliveryCharges = order.totalDeliveryCharges || 0;
+            // coupon discount if any
+            const couponDiscount = order.coupon?.discount || 0;
+            // grand total = subTotal + delivery - coupon
+            const grandTotal = order.total || (subTotal + deliveryCharges - couponDiscount);
+
             const content = `
                 <div class="row">
                     <div class="col-md-6">
                         <h6>Customer Full Name: ${fullName}</h6>
                         <h6>Customer Mobile No: ${order.deliveryAddress.phone || ''}</h6>
-                        <h6>Customer Another Mobile No: </h6>
+                        <h6>Customer Another Mobile No: ${order.deliveryAddress.phone2 || ''}</h6>
                         <h6>Customer House No: ${order.deliveryAddress.house || ''}</h6>
                         <h6>Customer Street Name/no: ${order.deliveryAddress.address || ''}</h6>
-                        <h6>Customer Area Name: </h6>
+                        <h6>Customer Area Name: ${order.deliveryAddress.areaName || ''}</h6>
                         <h6>Customer City: ${order.deliveryAddress.city || ''}</h6>
                         <h6>Customer Province: ${order.deliveryAddress.state || ''}</h6>
                         <h6>Customer PinCode: ${order.deliveryAddress.pincode || ''}</h6>
@@ -251,13 +262,34 @@ async function viewOrderDetails(orderId) {
                     <div class="col-md-6">
                         <h6>Product Details:</h6>
                         <ul>
-                            ${order.products.map(product => `<li>${product.name} x${product.quantity} - Rs ${product.offerPrice || product.price}</li>`).join('')}
+                            ${order.products.map(product => {
+                                const unitPrice = product.offerPrice || product.price;
+                                const lineTotal = unitPrice * product.quantity;
+                                return `<li>${product.name} x${product.quantity} — Rs ${unitPrice.toFixed(2)} = <strong>Rs ${lineTotal.toFixed(2)}</strong></li>`;
+                            }).join('')}
                         </ul>
                         <h6>Payment Detail: ${order.paymentType === 'cod' ? 'COD' : 'Online Payment'}</h6>
+                        <hr style="margin: 8px 0;">
                         <h6>Summary:</h6>
-                        <p>Product Price: Rs ${order.subTotal.toFixed(2)}</p>
-                        <p>Delivery Charges: Rs ${order.totalDeliveryCharges.toFixed(2)}</p>
-                        <p><strong>Total Amount: Rs ${order.total.toFixed(2)}</strong></p>
+                        <table style="width:100%; font-size:14px;">
+                            <tr>
+                                <td>Product Price (Subtotal):</td>
+                                <td style="text-align:right;"><strong>Rs ${subTotal.toFixed(2)}</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Delivery Charges:</td>
+                                <td style="text-align:right;"><strong>Rs ${deliveryCharges.toFixed(2)}</strong></td>
+                            </tr>
+                            ${couponDiscount > 0 ? `
+                            <tr style="color:green;">
+                                <td>Coupon Discount (${order.coupon?.code || ''}):</td>
+                                <td style="text-align:right;"><strong>- Rs ${couponDiscount.toFixed(2)}</strong></td>
+                            </tr>` : ''}
+                            <tr style="border-top: 2px solid #333; font-size:16px;">
+                                <td><strong>Total Amount:</strong></td>
+                                <td style="text-align:right;"><strong>Rs ${grandTotal.toFixed(2)}</strong></td>
+                            </tr>
+                        </table>
                     </div>
                 </div>
             `;
