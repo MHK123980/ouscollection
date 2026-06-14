@@ -162,6 +162,7 @@ module.exports = {
         current: page,
         limit: Math.ceil(count / limit),
         count: count,
+        pageTitle: "Shop"
       });
     } catch (err) {
       console.log(err);
@@ -473,6 +474,7 @@ module.exports = {
         minPrice: minPrice, maxPrice: maxPrice,
         sortOrder: sortOrder, current: page,
         limit: Math.ceil(count / limit), count: count,
+        pageTitle: "Featured Products"
       });
     } catch (err) {
       console.log(err);
@@ -523,6 +525,7 @@ module.exports = {
         minPrice: minPrice, maxPrice: maxPrice,
         sortOrder: sortOrder, current: page,
         limit: Math.ceil(count / limit), count: count,
+        pageTitle: "Set Products"
       });
     } catch (err) {
       console.log(err);

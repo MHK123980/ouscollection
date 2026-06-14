@@ -106,13 +106,20 @@
     const btn = document.getElementById('addSubmitBtn');
     if(btn) btn.disabled = true;
 
+    // Limit to 40 images to prevent Vercel Payload Too Large error
+    let filesToProcess = Array.from(input.files);
+    if (filesToProcess.length > 40) {
+      alert("Maximum 40 images allowed per product. Only the first 40 will be uploaded.");
+      filesToProcess = filesToProcess.slice(0, 40);
+    }
+
     const options = {
-      maxSizeMB: 0.5,
-      maxWidthOrHeight: 1080,
+      maxSizeMB: 0.08, // 80KB max to ensure 40 images fit within 4.5MB Vercel limit
+      maxWidthOrHeight: 800,
       useWebWorker: true
     };
     
-    for (let file of input.files) {
+    for (let file of filesToProcess) {
       try {
         const compressedFile = await imageCompression(file, options);
         const newFile = new File([compressedFile], file.name, { type: file.type });

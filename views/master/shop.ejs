@@ -9,10 +9,10 @@
       <div class="row">
         <div class="col-lg-12 text-center">
           <div class="breadcrumb__text">
-            <h2>OUS Collection Shop</h2>
+            <h2><%= typeof pageTitle !== 'undefined' ? pageTitle : 'OUS Collection Shop' %></h2>
             <div class="breadcrumb__option">
               <a href="/">Home</a>
-              <span>Shop</span>
+              <span><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Shop' %></span>
             </div>
           </div>
         </div>
