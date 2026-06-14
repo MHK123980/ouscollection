@@ -523,17 +523,19 @@ module.exports = {
         createdAt: { $gte: thisMonthStart },
         isDeleted: { $ne: true }
       }).populate('products.productId').exec();
-
-      const lastMonthOrders = await Order.find({
+      const lastMonthOrders = await Order.find({
         createdAt: { $gte: lastMonthStart, $lte: lastMonthEnd },
         isDeleted: { $ne: true }
       }).populate('products.productId').exec();
+
+      const reportMonth = req.query.month || 'both';
 
       res.render("admin/report", {
         layout: false,
         thisMonthOrders,
         lastMonthOrders,
-        now
+        now,
+        reportMonth
       });
     } catch (err) {
       console.log(err);

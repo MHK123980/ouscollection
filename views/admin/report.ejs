@@ -47,6 +47,7 @@
     const lastStats = calcStats(lastMonthOrders);
   %>
 
+  <% if (reportMonth === 'this_month' || reportMonth === 'both') { %>
   <h2 class="section-title">This Month Summary</h2>
   <div class="stats-grid">
     <div class="stat-card">
@@ -93,7 +94,9 @@
       <% }) %>
     </tbody>
   </table>
+  <% } %>
 
+  <% if (reportMonth === 'last_month' || reportMonth === 'both') { %>
   <h2 class="section-title">Last Month Summary</h2>
   <div class="stats-grid">
     <div class="stat-card">
@@ -140,5 +143,6 @@
       <% }) %>
     </tbody>
   </table>
+  <% } %>
 </body>
 </html>
