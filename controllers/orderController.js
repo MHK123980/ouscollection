@@ -60,28 +60,41 @@ module.exports = {
             }
 
             // 3. Handle Cart Data
+            let cartProducts = [];
             if (userId) {
                 const cart = await Cart.findOne({ userId: userId })
                 if (!cart || !cart.products || cart.products.length === 0) {
                     return res.status(400).json({ message: "Cart is empty" })
                 }
+                cartProducts = cart.products;
                 products = cart.products;
                 quantity = cart.quantity;
                 subTotal = cart.subTotal;
                 total = cart.total;
-                totalDeliveryCharges = cart.totalDeliveryCharges || 0;
             } else {
                 const cart = req.session.cart;
                 if (!cart || !cart.products || cart.products.length === 0) {
                     return res.status(400).json({ message: "Cart is empty" })
                 }
+                cartProducts = cart.products;
                 products = cart.products;
-                // Calculate quantity correctly for session cart
                 quantity = cart.products.reduce((acc, curr) => acc + Number(curr.quantity), 0);
                 subTotal = cart.subTotal;
                 total = cart.total;
-                totalDeliveryCharges = cart.totalDeliveryCharges || 0;
             }
+
+            // Always recalculate delivery charges fresh from DB to ensure correctness
+            const productIds = cartProducts.map(p => p.productId._id ? p.productId._id : p.productId);
+            const dbProducts = await Product.find({ _id: { $in: productIds } });
+            totalDeliveryCharges = 0;
+            cartProducts.forEach(item => {
+                const pId = item.productId._id ? item.productId._id.toString() : item.productId.toString();
+                const prod = dbProducts.find(p => p._id.toString() === pId);
+                if (prod) {
+                    const charge = Number(prod.deliveryCharges || 0);
+                    totalDeliveryCharges += prod.increaseDeliveryChargesWithQuantity ? charge * item.quantity : charge;
+                }
+            });
 
             // 4. Calculate Final Total (with Coupons)
             const couponDiscount = req.session.coupon?.discount || 0
