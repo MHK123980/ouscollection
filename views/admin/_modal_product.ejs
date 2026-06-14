@@ -101,13 +101,30 @@
   // Advanced Image Upload Logic
   let productDataTransfer = new DataTransfer();
 
-  function previewProductImage(event) {
+  async function previewProductImage(event) {
     const input = event.target;
+    const btn = document.getElementById('addSubmitBtn');
+    if(btn) btn.disabled = true;
+
+    const options = {
+      maxSizeMB: 0.5,
+      maxWidthOrHeight: 1080,
+      useWebWorker: true
+    };
+    
     for (let file of input.files) {
-      productDataTransfer.items.add(file);
+      try {
+        const compressedFile = await imageCompression(file, options);
+        const newFile = new File([compressedFile], file.name, { type: file.type });
+        productDataTransfer.items.add(newFile);
+      } catch (err) {
+        console.error("Image compression error:", err);
+        productDataTransfer.items.add(file); // fallback
+      }
     }
     input.files = productDataTransfer.files;
     renderProductPreview();
+    if(btn) btn.disabled = false;
   }
 
   function renderProductPreview() {

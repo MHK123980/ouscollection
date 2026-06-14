@@ -222,7 +222,7 @@
                             <% } %>
                           </div>
                           <label class="form-label mt-2">Upload New Images <span class="text-muted">(Optional)</span></label>
-                          <input type="file" multiple name="productImages" class="form-control">
+                          <input type="file" multiple name="productImages" class="form-control" onchange="compressEditImages(event)">
                         </div>
                     <div class="modal-footer mt-3">
                       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -298,6 +298,39 @@
 
 
 <script>
+  async function compressEditImages(event) {
+    const input = event.target;
+    const form = input.closest('form');
+    const btn = form.querySelector('.submit-btn');
+    if(btn) {
+      btn.disabled = true;
+      btn.innerHTML = 'Compressing Images...';
+    }
+
+    const dataTransfer = new DataTransfer();
+    const options = {
+      maxSizeMB: 0.5,
+      maxWidthOrHeight: 1080,
+      useWebWorker: true
+    };
+    
+    for (let file of input.files) {
+      try {
+        const compressedFile = await imageCompression(file, options);
+        const newFile = new File([compressedFile], file.name, { type: file.type });
+        dataTransfer.items.add(newFile);
+      } catch (err) {
+        console.error("Image compression error:", err);
+        dataTransfer.items.add(file); // fallback
+      }
+    }
+    input.files = dataTransfer.files;
+    if(btn) {
+      btn.disabled = false;
+      btn.innerHTML = 'Save changes';
+    }
+  }
+
   function exportCsv() {
     myTable.export({
       type: "csv",

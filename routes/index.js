@@ -24,6 +24,16 @@ router.get(
   shopControl.getAllProducts
 );
 router.get(
+  "/shop/featured/:page",
+  authentication.checkAccountVerifiedInIndex,
+  shopControl.getFeaturedProducts
+);
+router.get(
+  "/shop/sets/:page",
+  authentication.checkAccountVerifiedInIndex,
+  shopControl.getSetsProducts
+);
+router.get(
   "/product/:id",
   authentication.checkAccountVerifiedInIndex,
   shopControl.getProductById

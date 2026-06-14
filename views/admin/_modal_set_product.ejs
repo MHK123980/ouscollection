@@ -134,13 +134,31 @@
   // Advanced Image Upload Logic
   let setProductDataTransfer = new DataTransfer();
 
-  function previewSetImage(event) {
+  async function previewSetImage(event) {
     const input = event.target;
+    const btn = document.getElementById('addSetSubmitBtn');
+    if(btn) btn.disabled = true;
+
+    const options = {
+      maxSizeMB: 0.5,
+      maxWidthOrHeight: 1080,
+      useWebWorker: true
+    };
+    
     for (let file of input.files) {
-      setProductDataTransfer.items.add(file);
+      try {
+        const compressedFile = await imageCompression(file, options);
+        // Cast back to File object for FormData compatibility
+        const newFile = new File([compressedFile], file.name, { type: file.type });
+        setProductDataTransfer.items.add(newFile);
+      } catch (err) {
+        console.error("Image compression error:", err);
+        setProductDataTransfer.items.add(file); // fallback
+      }
     }
     input.files = setProductDataTransfer.files;
     renderSetProductPreview();
+    if(btn) btn.disabled = false;
   }
 
   function renderSetProductPreview() {

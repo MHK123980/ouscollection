@@ -429,4 +429,104 @@ module.exports = {
       res.render("errorPage/error", { layout: false });
     }
   },
+
+  getFeaturedProducts: async (req, res) => {
+    try {
+      const limit = 9;
+      const page = req.params.page || 1;
+      const minPrice = req.query.minPrice || 100;
+      const maxPrice = req.query.maxPrice || 5000;
+      const sortOrder = req.query.sort || "latest";
+      let sort;
+      const priceRange = { $gt: minPrice, $lt: maxPrice };
+      if (sortOrder == "asc") { sort = { price: 1 }; } 
+      else if (sortOrder == "dsc") { sort = { price: -1 }; } 
+      else { sort = { createdAt: -1 }; }
+
+      const allCategoriesPromise = Category.find();
+      const latestProductsPromise = Product.find().sort({ createdAt: -1 }).limit(6);
+      const offerProductsPromise = Product.find({ offerPrice: { $ne: null } }).limit(6);
+      
+      const allProductsPromise = Product.find({ isFeatured: true })
+        .populate("category")
+        .where("price").equals(priceRange)
+        .sort(sort)
+        .skip(limit * page - limit)
+        .limit(limit)
+        .exec();
+
+      const countPromise = Product.find({ isFeatured: true })
+        .where("price").equals(priceRange)
+        .sort(sort)
+        .countDocuments();
+
+      const [allCategories, allProducts, offerProducts, latestProducts, count] =
+        await Promise.all([
+          allCategoriesPromise, allProductsPromise, offerProductsPromise,
+          latestProductsPromise, countPromise,
+        ]);
+      res.render("master/shop", {
+        allCategories: allCategories,
+        allProducts: allProducts,
+        offerProducts: offerProducts,
+        latestProducts: latestProducts,
+        minPrice: minPrice, maxPrice: maxPrice,
+        sortOrder: sortOrder, current: page,
+        limit: Math.ceil(count / limit), count: count,
+      });
+    } catch (err) {
+      console.log(err);
+      res.render("errorPage/error", { layout: false });
+    }
+  },
+  
+  getSetsProducts: async (req, res) => {
+    try {
+      const limit = 9;
+      const page = req.params.page || 1;
+      const minPrice = req.query.minPrice || 100;
+      const maxPrice = req.query.maxPrice || 5000;
+      const sortOrder = req.query.sort || "latest";
+      let sort;
+      const priceRange = { $gt: minPrice, $lt: maxPrice };
+      if (sortOrder == "asc") { sort = { price: 1 }; } 
+      else if (sortOrder == "dsc") { sort = { price: -1 }; } 
+      else { sort = { createdAt: -1 }; }
+
+      const allCategoriesPromise = Category.find();
+      const latestProductsPromise = Product.find().sort({ createdAt: -1 }).limit(6);
+      const offerProductsPromise = Product.find({ offerPrice: { $ne: null } }).limit(6);
+      
+      const allProductsPromise = Product.find({ isWholesaleSet: true })
+        .populate("category")
+        .where("price").equals(priceRange)
+        .sort(sort)
+        .skip(limit * page - limit)
+        .limit(limit)
+        .exec();
+
+      const countPromise = Product.find({ isWholesaleSet: true })
+        .where("price").equals(priceRange)
+        .sort(sort)
+        .countDocuments();
+
+      const [allCategories, allProducts, offerProducts, latestProducts, count] =
+        await Promise.all([
+          allCategoriesPromise, allProductsPromise, offerProductsPromise,
+          latestProductsPromise, countPromise,
+        ]);
+      res.render("master/shop", {
+        allCategories: allCategories,
+        allProducts: allProducts,
+        offerProducts: offerProducts,
+        latestProducts: latestProducts,
+        minPrice: minPrice, maxPrice: maxPrice,
+        sortOrder: sortOrder, current: page,
+        limit: Math.ceil(count / limit), count: count,
+      });
+    } catch (err) {
+      console.log(err);
+      res.render("errorPage/error", { layout: false });
+    }
+  }
 };

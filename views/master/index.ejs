@@ -75,22 +75,22 @@
         <div class="section-title">
           <h2>Featured Product</h2>
         </div>
-        <div class="featured__controls">
-          <ul>
-              <li class="active" data-filter="*">All</li>
-              <li data-filter=.Men>Men</li>
-              <li data-filter=.Women>Women</li>
-          </ul>
-        </div>
       </div>
     </div>
     <div class="row featured__filter">
-
-      <% featuredProducts.forEach((product)=> { %>
+      <% const featuredLimit = featuredProducts.slice(0, 7); %>
+      <% featuredLimit.forEach((product)=> { %>
       <div class="col-lg-3 col-md-4 col-sm-6 mix <%= product.category ? product.category.categoryName : 'Uncategorized' %>">
         <%- include('../partials/_productCard', { product: product }) %>
       </div>
       <% }) %>
+      <div class="col-lg-3 col-md-4 col-sm-6 mb-4 d-flex align-items-stretch">
+        <a href="/shop/featured/1" class="w-100 d-flex flex-column align-items-center justify-content-center text-decoration-none" style="background: #f8f9fa; border: 2px dashed #ddd; min-height: 350px; border-radius: 10px; transition: all 0.3s ease;">
+          <i class="fa fa-arrow-right fa-3x mb-3" style="color: #7fad39;"></i>
+          <h4 style="color: #1c1c1c; font-weight: 700;">Show All</h4>
+          <span style="color: #666;">Featured Products</span>
+        </a>
+      </div>
     </div>
   </div>
 </section>
@@ -108,11 +108,19 @@
     </div>
     <div class="row" id="allProductsContainer">
       <% if(allProducts && allProducts.length > 0) { %>
-        <% allProducts.forEach((product) => { %>
+        <% const allLimit = allProducts.slice(0, 7); %>
+        <% allLimit.forEach((product) => { %>
         <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
           <%- include('../partials/_productCard', { product: product }) %>
         </div>
         <% }) %>
+        <div class="col-lg-3 col-md-4 col-sm-6 mb-4 d-flex align-items-stretch">
+          <a href="/shop/1" class="w-100 d-flex flex-column align-items-center justify-content-center text-decoration-none" style="background: #f8f9fa; border: 2px dashed #ddd; min-height: 350px; border-radius: 10px; transition: all 0.3s ease;">
+            <i class="fa fa-arrow-right fa-3x mb-3" style="color: #7fad39;"></i>
+            <h4 style="color: #1c1c1c; font-weight: 700;">Show All</h4>
+            <span style="color: #666;">Products</span>
+          </a>
+        </div>
       <% } else { %>
         <div class="col-12 text-center">
           <p class="text-muted">No products available yet.</p>
@@ -136,11 +144,19 @@
     <div class="row" id="setsProductsContainer">
       <% const setProducts = allProducts ? allProducts.filter(p => p.isWholesaleSet) : []; %>
       <% if(setProducts && setProducts.length > 0) { %>
-        <% setProducts.forEach((product) => { %>
+        <% const setsLimit = setProducts.slice(0, 7); %>
+        <% setsLimit.forEach((product) => { %>
         <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
           <%- include('../partials/_productCard', { product: product }) %>
         </div>
         <% }) %>
+        <div class="col-lg-3 col-md-4 col-sm-6 mb-4 d-flex align-items-stretch">
+          <a href="/shop/sets/1" class="w-100 d-flex flex-column align-items-center justify-content-center text-decoration-none" style="background: #f8f9fa; border: 2px dashed #ddd; min-height: 350px; border-radius: 10px; transition: all 0.3s ease;">
+            <i class="fa fa-arrow-right fa-3x mb-3" style="color: #7fad39;"></i>
+            <h4 style="color: #1c1c1c; font-weight: 700;">Show All</h4>
+            <span style="color: #666;">Sets Products</span>
+          </a>
+        </div>
       <% } else { %>
         <div class="col-12 text-center">
           <p class="text-muted">No Sets Products available yet.</p>
