@@ -229,23 +229,22 @@
   <script src="https://cdn.jsdelivr.net/npm/vanilla-datatables-exportable@latest/datatable.exportable.min.js" type="text/javascript"></script>
   <script src="/js/datatables-simple-demo.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://js.pusher.com/8.0/pusher.min.js"></script>
 
-  <!-- Global Admin Socket.io: notify on new orders from any admin page -->
+  <!-- Global Admin Pusher: notify on new orders from any admin page -->
   <script>
-    if (typeof io !== 'undefined') {
-      const adminSocket = io();
-      adminSocket.on('new_order', (order) => {
-        // Only show toast if we're NOT already on the orders page (that page handles its own reload)
-        if (!window.location.pathname.includes('/admin/orders')) {
-          toastr.info(
-            '<i class="fa-solid fa-bell"></i> New order from <strong>' + (order.deliveryAddress.firstName || 'Customer') + '</strong> - PKR ' + (order.total ? order.total.toFixed(2) : '0') + '<br><a href="/admin/orders" class="btn btn-sm btn-dark mt-2">View Orders</a>',
-            'New Order!',
-            { timeOut: 10000, extendedTimeOut: 5000, closeButton: true, progressBar: true, enableHtml: true }
-          );
-        }
-      });
-    }
+    const adminPusher = new Pusher('f869c5f1434c09e3d729', { cluster: 'ap2' });
+    const adminChannel = adminPusher.subscribe('ecommerce-channel');
+    adminChannel.bind('new_order', (order) => {
+      // Only show toast if we're NOT already on the orders page (that page handles its own reload)
+      if (!window.location.pathname.includes('/admin/orders')) {
+        toastr.info(
+          '<i class="fa-solid fa-bell"></i> New order from <strong>' + (order.deliveryAddress.firstName || 'Customer') + '</strong> - PKR ' + (order.total ? order.total.toFixed(2) : '0') + '<br><a href="/admin/orders" class="btn btn-sm btn-dark mt-2">View Orders</a>',
+          'New Order!',
+          { timeOut: 10000, extendedTimeOut: 5000, closeButton: true, progressBar: true, enableHtml: true }
+        );
+      }
+    });
   </script>
 
 

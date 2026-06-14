@@ -44,11 +44,11 @@ module.exports = {
             await product.save()
             
             // Emit new_product event
-            const io = req.app.get('io');
-            if (io) {
+            const pusher = req.app.get('pusher');
+            if (pusher) {
                 const populatedProduct = await Product.findById(product._id).populate('category').exec();
-                io.emit('new_product', populatedProduct);
-                io.emit('site_updated');
+                pusher.trigger('ecommerce-channel', 'new_product', populatedProduct);
+                pusher.trigger('ecommerce-channel', 'site_updated', {});
             }
 
             res.redirect("/admin/products")
@@ -114,8 +114,8 @@ module.exports = {
             // Note: On Vercel we don't delete files from disk because no files are stored on disk.
             // Old ImgBB links will just remain active.
 
-            const io = req.app.get('io');
-            if (io) { io.emit('site_updated'); }
+            const pusher = req.app.get('pusher');
+      if (pusher) { pusher.trigger('ecommerce-channel', 'site_updated', {}); }
             res.redirect("/admin/products")
         } catch (err) {
             console.log(err)
@@ -128,8 +128,8 @@ module.exports = {
         try {
             const product = await Product.findById(req.params.id)
             await product.remove()
-            const io = req.app.get('io');
-            if (io) { io.emit('site_updated'); }
+            const pusher = req.app.get('pusher');
+      if (pusher) { pusher.trigger('ecommerce-channel', 'site_updated', {}); }
             res.redirect("/admin/products")
         } catch (err) {
             console.log(err)

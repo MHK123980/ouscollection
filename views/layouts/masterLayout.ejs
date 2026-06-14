@@ -344,43 +344,42 @@
   <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.js"></script>
   <script src="/js/searchAutoFill.js"></script>
-  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://js.pusher.com/8.0/pusher.min.js"></script>
   <script>
-    if (typeof io !== 'undefined') {
-      const globalSocket = io();
-      globalSocket.on('site_updated', async () => {
-        try {
-          const response = await fetch(window.location.href);
-          const html = await response.text();
-          const parser = new DOMParser();
-          const newDoc = parser.parseFromString(html, 'text/html');
-          
-          // Safe containers that can be updated without breaking slider plugins
-          const safeContainers = [
-            '#allProductsContainer',
-            '#setsProductsContainer',
-            '.featured__filter',
-            '#product-grid-container'
-          ];
-          
-          let updated = false;
-          safeContainers.forEach(selector => {
-            const oldEl = document.querySelector(selector);
-            const newEl = newDoc.querySelector(selector);
-            if (oldEl && newEl) {
-              oldEl.innerHTML = newEl.innerHTML;
-              updated = true;
-            }
-          });
-          
-          if (updated && typeof toastr !== 'undefined') {
-            toastr.success('Website content updated live!');
+    const pusher = new Pusher('f869c5f1434c09e3d729', { cluster: 'ap2' });
+    const channel = pusher.subscribe('ecommerce-channel');
+    channel.bind('site_updated', async () => {
+      try {
+        const response = await fetch(window.location.href);
+        const html = await response.text();
+        const parser = new DOMParser();
+        const newDoc = parser.parseFromString(html, 'text/html');
+        
+        // Safe containers that can be updated without breaking slider plugins
+        const safeContainers = [
+          '#allProductsContainer',
+          '#setsProductsContainer',
+          '.featured__filter',
+          '#product-grid-container'
+        ];
+        
+        let updated = false;
+        safeContainers.forEach(selector => {
+          const oldEl = document.querySelector(selector);
+          const newEl = newDoc.querySelector(selector);
+          if (oldEl && newEl) {
+            oldEl.innerHTML = newEl.innerHTML;
+            updated = true;
           }
-        } catch (err) {
-          console.error('Live update failed:', err);
+        });
+        
+        if (updated && typeof toastr !== 'undefined') {
+          toastr.success('Website content updated live!');
         }
-      });
-    }
+      } catch (err) {
+        console.error('Live update failed:', err);
+      }
+    });
   </script>
 
 

@@ -119,11 +119,10 @@
     }
   </script>
 
-  <script src="/socket.io/socket.io.js"></script>
   <script>
-    if (typeof io !== 'undefined') {
-      const socket = io();
-      socket.on('new_order', (order) => {
+    // Use the adminChannel already created in adminLayout.ejs
+    if (typeof adminChannel !== 'undefined') {
+      adminChannel.bind('new_order', (order) => {
         console.log('New order received:', order);
         toastr.info('New order received from ' + (order.deliveryAddress.firstName || 'Customer') + '!');
         

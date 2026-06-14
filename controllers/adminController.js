@@ -299,8 +299,8 @@ module.exports = {
         division: division,
       });
       await category.save();
-      const io = req.app.get('io');
-      if (io) { io.emit('site_updated'); }
+      const pusher = req.app.get('pusher');
+      if (pusher) { pusher.trigger('ecommerce-channel', 'site_updated', {}); }
       res.redirect("/admin/categories");
     } catch (err) {
       console.log(err.message);
@@ -330,8 +330,8 @@ module.exports = {
         categoryName: normalizedName,
         division: division
       });
-      const io = req.app.get('io');
-      if (io) { io.emit('site_updated'); }
+      const pusher = req.app.get('pusher');
+      if (pusher) { pusher.trigger('ecommerce-channel', 'site_updated', {}); }
       res.redirect("/admin/categories");
     } catch (err) {
       console.log(err.message);
@@ -349,8 +349,8 @@ module.exports = {
     try {
       category = await Category.findById(req.params.id);
       await category.remove();
-      const io = req.app.get('io');
-      if (io) { io.emit('site_updated'); }
+      const pusher = req.app.get('pusher');
+      if (pusher) { pusher.trigger('ecommerce-channel', 'site_updated', {}); }
       res.redirect("/admin/categories");
     } catch (err) {
       console.log(err.message);
@@ -366,8 +366,8 @@ module.exports = {
   blockUser: async (req, res) => {
     try {
       await User.findByIdAndUpdate(req.params.id, { isActive: false });
-      const io = req.app.get('io');
-      if (io) { io.emit('site_updated'); }
+      const pusher = req.app.get('pusher');
+      if (pusher) { pusher.trigger('ecommerce-channel', 'site_updated', {}); }
       res.redirect("/admin/users");
     } catch (err) {
       console.log(err.message);
@@ -379,8 +379,8 @@ module.exports = {
   unblockUser: async (req, res) => {
     try {
       await User.findByIdAndUpdate(req.params.id, { isActive: true });
-      const io = req.app.get('io');
-      if (io) { io.emit('site_updated'); }
+      const pusher = req.app.get('pusher');
+      if (pusher) { pusher.trigger('ecommerce-channel', 'site_updated', {}); }
       res.redirect("/admin/users");
     } catch (error) {
       console.log(err.message);
@@ -402,8 +402,8 @@ module.exports = {
       order.isDeleted = true;
       await order.save();
 
-      const io = req.app.get('io');
-      if (io) { io.emit('site_updated'); }
+      const pusher = req.app.get('pusher');
+      if (pusher) { pusher.trigger('ecommerce-channel', 'site_updated', {}); }
       return res.status(200).json({ message: "Order deleted successfully" });
     } catch (err) {
       console.log(err.message);
@@ -501,8 +501,8 @@ module.exports = {
 
       await newOrder.save();
       req.flash("message", "Order " + orderIdStr + " created successfully");
-      const io = req.app.get('io');
-      if (io) { io.emit('site_updated'); }
+      const pusher = req.app.get('pusher');
+      if (pusher) { pusher.trigger('ecommerce-channel', 'site_updated', {}); }
       res.redirect("/admin/orders");
       
     } catch (err) {

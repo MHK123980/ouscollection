@@ -147,11 +147,10 @@
       </section>
       <%}%>
 
-        <script src="/js/sweet-alert.js"></script>
-<script src="/socket.io/socket.io.js"></script>
+<script src="/js/sweet-alert.js"></script>
 <script>
-const socket = io();
-socket.on('orderStatusUpdated', function(data) {
+// Use the Pusher channel already created in masterLayout.ejs
+channel.bind('orderStatusUpdated', function(data) {
     const { orderId, status } = data;
     const roadEl = document.getElementById('orderStatusRoad-' + orderId);
     const labelEl = document.getElementById('orderStatusUpdate-' + orderId);

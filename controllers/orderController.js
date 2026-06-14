@@ -141,11 +141,11 @@ module.exports = {
 
             await newOrder.save()
 
-            // Emit new_order event
-            const io = req.app.get('io');
-            if (io) {
+            // Emit new_order event via Pusher
+            const pusher = req.app.get('pusher');
+            if (pusher) {
                 const populatedOrder = await Order.findById(newOrder._id).populate('userId').exec();
-                io.emit('new_order', populatedOrder);
+                pusher.trigger('ecommerce-channel', 'new_order', JSON.parse(JSON.stringify(populatedOrder)));
             }
 
             // 7. Clear Cart
@@ -174,8 +174,8 @@ module.exports = {
             if (myOrder.status != "Cancelled") {
                 myOrder.status = "Packed"
                 await myOrder.save()
-                const io = req.app.get('io');
-                if (io) io.emit('orderStatusUpdated', { orderId, status: 'Packed' });
+                const pusher = req.app.get('pusher');
+                if (pusher) pusher.trigger('ecommerce-channel', 'orderStatusUpdated', { orderId, status: 'Packed' });
                 return res.status(201).json({ message: "order Packed" })
             } else {
                 return res.status(400).json({ message: "cant update status, Item is cancelled" })
@@ -194,8 +194,8 @@ module.exports = {
             if (myOrder.status != "Cancelled") {
                 myOrder.status = "Shipped"
                 await myOrder.save()
-                const io = req.app.get('io');
-                if (io) io.emit('orderStatusUpdated', { orderId, status: 'Shipped' });
+                const pusher = req.app.get('pusher');
+                if (pusher) pusher.trigger('ecommerce-channel', 'orderStatusUpdated', { orderId, status: 'Shipped' });
                 return res.status(201).json({ message: "order shipped" })
             } else {
                 return res.status(400).json({ message: "cant update status, Item is cancelled" })
@@ -214,8 +214,8 @@ module.exports = {
             if (myOrder.status != "Cancelled") {
                 myOrder.status = "Out for delivery"
                 await myOrder.save()
-                const io = req.app.get('io');
-                if (io) io.emit('orderStatusUpdated', { orderId, status: 'Out for delivery' });
+                const pusher = req.app.get('pusher');
+                if (pusher) pusher.trigger('ecommerce-channel', 'orderStatusUpdated', { orderId, status: 'Out for delivery' });
                 return res.status(201).json({ message: "out for delivery" })
             } else {
                 return res.status(400).json({ message: "cant update status, Item is cancelled" })
@@ -234,8 +234,8 @@ module.exports = {
             if (myOrder.status != "Cancelled") {
                 myOrder.status = "Delivered"
                 await myOrder.save()
-                const io = req.app.get('io');
-                if (io) io.emit('orderStatusUpdated', { orderId, status: 'Delivered' });
+                const pusher = req.app.get('pusher');
+                if (pusher) pusher.trigger('ecommerce-channel', 'orderStatusUpdated', { orderId, status: 'Delivered' });
                 return res.status(201).json({ message: "order delivered" })
             } else {
                 return res.status(400).json({ message: "cant update status, Item is cancelled" })
@@ -260,8 +260,8 @@ module.exports = {
                 })
                 myOrder.status = "Cancelled"
                 await myOrder.save()
-                const io = req.app.get('io');
-                if (io) io.emit('orderStatusUpdated', { orderId, status: 'Cancelled' });
+                const pusher = req.app.get('pusher');
+                if (pusher) pusher.trigger('ecommerce-channel', 'orderStatusUpdated', { orderId, status: 'Cancelled' });
                 return res.status(201).json({ message: "order cancelled and stock updated" })
             } else {
                 return res.status(400).json({ message: "cant update status, Item already cancelled" })

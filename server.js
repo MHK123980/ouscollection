@@ -130,14 +130,17 @@ app.use((err, req, res, next) => {
 
 const http = require('http');
 const server = http.createServer(app);
-const { Server } = require("socket.io");
-const io = new Server(server, { cors: { origin: "*" } });
+const Pusher = require('pusher');
 
-app.set('io', io);
-
-io.on('connection', (socket) => {
-  console.log('A user connected via socket.io');
+const pusher = new Pusher({
+  appId: process.env.PUSHER_APP_ID,
+  key: process.env.PUSHER_KEY,
+  secret: process.env.PUSHER_SECRET,
+  cluster: process.env.PUSHER_CLUSTER,
+  useTLS: true
 });
+
+app.set('pusher', pusher);
 
 if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
   const PORT = process.env.PORT || 3000;
