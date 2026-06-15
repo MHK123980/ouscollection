@@ -384,5 +384,37 @@
         }
     }, 500);
 
+    // Touch swipe logic for mobile users
+    let touchstartX = 0;
+    let touchendX = 0;
+
+    function handleGesture() {
+        if (touchendX < touchstartX - 50) {
+            // Swiped left (go to next image)
+            if(currentImageIndex < productImages.length - 1) {
+                currentImageIndex++;
+                updateMainImage();
+            }
+        }
+        if (touchendX > touchstartX + 50) {
+            // Swiped right (go to previous image)
+            if(currentImageIndex > 0) {
+                currentImageIndex--;
+                updateMainImage();
+            }
+        }
+    }
+
+    if(mainImage) {
+        mainImage.addEventListener('touchstart', e => {
+            touchstartX = e.changedTouches[0].screenX;
+        }, {passive: true});
+
+        mainImage.addEventListener('touchend', e => {
+            touchendX = e.changedTouches[0].screenX;
+            handleGesture();
+        }, {passive: true});
+    }
+
     updateMainImage();
   </script>
