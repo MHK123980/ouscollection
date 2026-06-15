@@ -371,18 +371,20 @@
         });
     }
 
-    setInterval(() => {
-        if(mainImage) {
-            const currentSrc = mainImage.src;
-            const filename = currentSrc.substring(currentSrc.lastIndexOf('/') + 1);
-            
-            const realIndex = productImages.findIndex(img => img.includes(filename));
-            if(realIndex !== -1 && realIndex !== currentImageIndex) {
-                currentImageIndex = realIndex;
-                updateMainImage();
-            }
-        }
-    }, 500);
+    // Update currentImageIndex when a thumbnail is clicked via the Ogani main.js template
+    setTimeout(() => {
+        const thumbnails = document.querySelectorAll('.product__details__pic__slider img');
+        thumbnails.forEach((thumb) => {
+            thumb.addEventListener('click', function() {
+                const src = this.getAttribute('data-imgbigurl');
+                const index = productImages.indexOf(src);
+                if(index !== -1) {
+                    currentImageIndex = index;
+                    updateMainImage();
+                }
+            });
+        });
+    }, 1000);
 
     // Touch swipe logic for mobile users
     let touchstartX = 0;

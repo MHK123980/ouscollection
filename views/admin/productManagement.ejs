@@ -119,7 +119,7 @@
                     </div>
                     <div class="modal-body">
                       <form action="/admin/editProduct/<%= product.id %>?_method=PUT" method="post"
-                        enctype="multipart/form-data" onsubmit="return handleEditSubmit(this)">
+                        enctype="multipart/form-data" onsubmit="return handleEditSubmit(this, '<%= product.id %>')">
                         <div>
                           <label class="form-label">name</label>
                           <input type="text" value="<%=product.name %>" name="name" required class="form-control">
@@ -186,13 +186,11 @@
                           <input type="number" name="discount" min="0" max="100" step="0.01"
                             value="<%=product.discount %>" class="form-control" placeholder="Optional">
                         </div>
-                        <div class="form-check form-switch mt-2">
-                          <input class="form-check-input" type="checkbox" name="isWholesaleSet" id="isWholesaleSetCheck-<%= product.id %>" <%= product.isWholesaleSet ? 'checked' : '' %> onchange="document.getElementById('piecesPerSetContainer-<%= product.id %>').style.display = this.checked ? 'block' : 'none'">
-                          <label class="form-check-label" for="isWholesaleSetCheck-<%= product.id %>">Is Wholesale Set?</label>
-                        </div>
-                        <div id="piecesPerSetContainer-<%= product.id %>" style="display: <%= product.isWholesaleSet ? 'block' : 'none' %>;" class="mt-2 mb-2">
-                          <label class="form-label">Pieces per Set</label>
-                          <input type="number" name="piecesPerSet" min="1" value="<%= product.piecesPerSet || 1 %>" class="form-control">
+                        <div class="mt-2">
+                          <% if(product.isWholesaleSet) { %>
+                            <input type="hidden" name="isWholesaleSet" value="on">
+                            <input type="hidden" name="piecesPerSet" value="<%= product.piecesPerSet || 1 %>">
+                          <% } %>
                         </div>
                         <div class="form-check form-switch mt-2">
                           <% if(product.isFeatured){%>
@@ -208,24 +206,30 @@
                         <div><textarea name="description" rows="5" class="form-control" placeholder="Add description"
                             required><%=product.description %></textarea></div>
                         <div>
-                          <label class="form-label mt-2">Manage Images</label>
-                          <div class="d-flex flex-wrap gap-2 mb-2">
+                          <label class="form-label mt-2">Manage Existing Images</label>
+                          <div class="mb-2" id="existingImagesContainer-<%= product.id %>">
                             <% if(product.productImagePath && product.productImagePath.length > 0) { %>
-                              <% product.productImagePath.forEach((img, i) => { %>
-                                <div class="position-relative border p-1 rounded">
-                                  <img src="<%= img.startsWith('http') ? img : '/files/' + img %>" width="60" class="img-fluid rounded">
-                                  <div class="form-check mt-1">
-                                    <input class="form-check-input" type="checkbox" name="deletedImages" value="<%= img %>" id="deleteImg<%= product.id %>_<%= i %>">
-                                    <label class="form-check-label text-danger small" for="deleteImg<%= product.id %>_<%= i %>">Delete</label>
+                              <div class="mb-2" id="deleteAllBtnContainer-<%= product.id %>">
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteAllExistingImages('<%= product.id %>')">Delete All Images</button>
+                              </div>
+                              <div class="d-flex flex-wrap gap-2" id="existingImagesList-<%= product.id %>">
+                                <% product.productImagePath.forEach((img, i) => { %>
+                                  <div class="d-inline-block position-relative m-1 border rounded p-1 existing-image-wrapper-<%= product.id %>" data-img="<%= img %>">
+                                    <img src="<%= img.startsWith('http') ? img : '/files/' + img %>" width="70" height="70" class="rounded" style="object-fit:cover;">
+                                    <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 p-0 rounded-circle" style="width:20px; height:20px; line-height:1; transform: translate(50%, -50%);" onclick="deleteExistingImage(this, '<%= product.id %>', '<%= img %>')">&times;</button>
                                   </div>
-                                </div>
-                              <% }) %>
+                                <% }) %>
+                              </div>
                             <% } else { %>
-                              <span class="text-muted small">No images available</span>
+                              <span class="text-muted small" id="noImagesText-<%= product.id %>">No images available</span>
                             <% } %>
                           </div>
+                          <!-- Hidden inputs for deleted images will be appended here -->
+                          <div id="deletedImagesInputs-<%= product.id %>"></div>
+
                           <label class="form-label mt-2">Upload New Images <span class="text-muted">(Optional)</span></label>
-                          <input type="file" multiple name="productImages" class="form-control" onchange="compressEditImages(event)">
+                          <input type="file" multiple name="productImages" class="form-control edit-product-images-input" data-product-id="<%= product.id %>" onchange="compressEditImages(event, '<%= product.id %>')" id="editProductImagesInput-<%= product.id %>">
+                          <div class="mt-2" id="previewEditProductImages-<%= product.id %>"></div>
                         </div>
                     <div class="modal-footer mt-3">
                       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -301,44 +305,102 @@
 
 
 <script>
-  async function compressEditImages(event) {
+  const editProductDataTransfers = {};
+
+  function deleteExistingImage(btn, productId, imgName) {
+    const container = document.getElementById(`deletedImagesInputs-${productId}`);
+    container.innerHTML += `<input type="hidden" name="deletedImages" value="${imgName}">`;
+    const wrapper = btn.closest(`.existing-image-wrapper-${productId}`);
+    wrapper.remove();
+    const remaining = document.querySelectorAll(`.existing-image-wrapper-${productId}`);
+    if(remaining.length === 0) {
+        const btnContainer = document.getElementById(`deleteAllBtnContainer-${productId}`);
+        if(btnContainer) btnContainer.style.display = 'none';
+    }
+  }
+
+  function deleteAllExistingImages(productId) {
+    const wrappers = document.querySelectorAll(`.existing-image-wrapper-${productId}`);
+    wrappers.forEach(wrapper => {
+      const imgName = wrapper.getAttribute('data-img');
+      const container = document.getElementById(`deletedImagesInputs-${productId}`);
+      container.innerHTML += `<input type="hidden" name="deletedImages" value="${imgName}">`;
+      wrapper.remove();
+    });
+    const btnContainer = document.getElementById(`deleteAllBtnContainer-${productId}`);
+    if(btnContainer) btnContainer.style.display = 'none';
+  }
+
+  async function compressEditImages(event, productId) {
     const input = event.target;
     const form = input.closest('form');
     const btn = form.querySelector('.submit-btn');
     if(btn) {
       btn.disabled = true;
-      btn.innerHTML = 'Compressing Images...';
+      btn.innerHTML = 'Compressing...';
     }
 
-    // Limit to 40 images to prevent Vercel Payload Too Large error
+    if (!editProductDataTransfers[productId]) {
+        editProductDataTransfers[productId] = new DataTransfer();
+    }
+    const dt = editProductDataTransfers[productId];
+
     let filesToProcess = Array.from(input.files);
     if (filesToProcess.length > 40) {
-      alert("Maximum 40 images allowed per product. Only the first 40 will be uploaded.");
+      alert("Maximum 40 images allowed per product. Only the first 40 will be added.");
       filesToProcess = filesToProcess.slice(0, 40);
     }
 
-    const dataTransfer = new DataTransfer();
-    const options = {
-      maxSizeMB: 0.08, // 80KB max to ensure 40 images fit within 4.5MB Vercel limit
-      maxWidthOrHeight: 800,
-      useWebWorker: true
-    };
-    
+    const options = { maxSizeMB: 0.08, maxWidthOrHeight: 800, useWebWorker: true };
     for (let file of filesToProcess) {
       try {
         const compressedFile = await imageCompression(file, options);
-        const newFile = new File([compressedFile], file.name, { type: file.type });
-        dataTransfer.items.add(newFile);
+        dt.items.add(new File([compressedFile], file.name, { type: file.type }));
       } catch (err) {
-        console.error("Image compression error:", err);
-        dataTransfer.items.add(file); // fallback
+        dt.items.add(file);
       }
     }
-    input.files = dataTransfer.files;
+    input.files = dt.files;
+    renderEditProductPreview(productId);
+    
     if(btn) {
       btn.disabled = false;
       btn.innerHTML = 'Save changes';
     }
+  }
+
+  function renderEditProductPreview(productId) {
+    const container = document.getElementById(`previewEditProductImages-${productId}`);
+    container.innerHTML = "";
+    const dt = editProductDataTransfers[productId];
+    if(!dt || dt.files.length === 0) return;
+
+    container.innerHTML = `<div class="mb-2"><button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteAllNewEditImages('${productId}')">Remove All New Images</button></div>`;
+    Array.from(dt.files).forEach((file, index) => {
+      let src = URL.createObjectURL(file);
+      container.innerHTML += `
+        <div class="d-inline-block position-relative m-1 border rounded p-1">
+          <img src='${src}' alt='' width='70' height='70' class='rounded' style='object-fit:cover;'>
+          <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 p-0 rounded-circle" style="width:20px; height:20px; line-height:1; transform: translate(50%, -50%);" onclick="deleteNewEditImage('${productId}', ${index})">&times;</button>
+        </div>
+      `;
+    });
+  }
+
+  function deleteNewEditImage(productId, index) {
+    const dt = new DataTransfer();
+    Array.from(editProductDataTransfers[productId].files).forEach((file, i) => {
+      if (i !== index) dt.items.add(file);
+    });
+    editProductDataTransfers[productId] = dt;
+    document.getElementById(`editProductImagesInput-${productId}`).files = dt.files;
+    renderEditProductPreview(productId);
+  }
+
+  function deleteAllNewEditImages(productId) {
+    editProductDataTransfers[productId] = new DataTransfer();
+    document.getElementById(`editProductImagesInput-${productId}`).files = editProductDataTransfers[productId].files;
+    renderEditProductPreview(productId);
   }
 
   function exportCsv() {
@@ -349,11 +411,24 @@
     });
   }
 
-  function handleEditSubmit(form) {
+  function handleEditSubmit(form, productId) {
+    const existingImages = document.querySelectorAll(`.existing-image-wrapper-${productId}`);
+    const input = document.getElementById(`editProductImagesInput-${productId}`);
+    const newImagesCount = input && input.files ? input.files.length : 0;
+    
+    if (existingImages.length === 0 && newImagesCount === 0) {
+        alert("Minimum 1 image is required for a product. Please add an image before saving.");
+        return false;
+    }
+
     const btn = form.querySelector('.submit-btn');
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
-    return true; // continue submission
+    
+    const overlay = document.getElementById('productLoaderOverlay');
+    if (overlay) overlay.style.display = 'flex';
+    
+    return true; 
   }
 
   // Initialize Select2 for category dropdown in edit modals
