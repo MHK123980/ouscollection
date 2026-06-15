@@ -1,5 +1,24 @@
 const Product = require("../models/product")
+const Cart = require("../models/cart")
+const Wishlist = require("../models/wishlist")
 const { uploadToImgBB } = require("../services/imageService")
+
+// Helper function to upload images in batches
+async function uploadImagesInBatches(files, batchSize = 5) {
+    let uploadedUrls = [];
+    for (let i = 0; i < files.length; i += batchSize) {
+        const batch = files.slice(i, i + batchSize);
+        const batchPromises = batch.map(file => uploadToImgBB(file.buffer));
+        try {
+            const urls = await Promise.all(batchPromises);
+            uploadedUrls.push(...urls);
+        } catch (uploadErr) {
+            console.error("ImgBB upload error:", uploadErr);
+            throw new Error("Image upload failed. Try uploading fewer or smaller images. " + uploadErr.message);
+        }
+    }
+    return uploadedUrls;
+}
 
 module.exports = {
     addProduct: async (req, res) => {
@@ -13,16 +32,8 @@ module.exports = {
 
             let productImages = [];
             if (req.files && req.files.length > 0) {
-                // Upload sequentially to prevent memory/timeout crashes with ImgBB
-                for (const file of req.files) {
-                    try {
-                        const url = await uploadToImgBB(file.buffer);
-                        productImages.push(url);
-                    } catch(uploadErr) {
-                        console.error("ImgBB upload error:", uploadErr);
-                        throw new Error("Image upload failed. Try uploading fewer or smaller images. " + uploadErr.message);
-                    }
-                }
+                // Upload in batches concurrently to speed up the process
+                productImages = await uploadImagesInBatches(req.files);
             }
 
             const product = new Product({
@@ -82,16 +93,9 @@ module.exports = {
             }
 
             if (req.files && req.files.length > 0) {
-                // Upload sequentially
-                for (const file of req.files) {
-                    try {
-                        const url = await uploadToImgBB(file.buffer);
-                        productImages.push(url); // Append new images to existing ones
-                    } catch(uploadErr) {
-                        console.error("ImgBB upload error:", uploadErr);
-                        throw new Error("Image upload failed. Try uploading fewer or smaller images. " + uploadErr.message);
-                    }
-                }
+                // Upload in batches concurrently
+                const newUrls = await uploadImagesInBatches(req.files);
+                productImages.push(...newUrls);
             }
 
             await Product.findByIdAndUpdate(req.params.id, {
@@ -126,10 +130,25 @@ module.exports = {
 
     deleteProduct: async (req, res) => {
         try {
-            const product = await Product.findById(req.params.id)
-            await product.remove()
+            const productId = req.params.id;
+            
+            // Delete product completely from the database
+            await Product.findByIdAndDelete(productId);
+            
+            // Also remove this product from all user carts
+            await Cart.updateMany(
+                { "products.productId": productId },
+                { $pull: { products: { productId: productId } } }
+            );
+
+            // Also remove this product from all user wishlists
+            await Wishlist.updateMany(
+                { "myList.productId": productId },
+                { $pull: { myList: { productId: productId } } }
+            );
+
             const pusher = req.app.get('pusher');
-      if (pusher) { pusher.trigger('ecommerce-channel', 'site_updated', {}); }
+            if (pusher) { pusher.trigger('ecommerce-channel', 'site_updated', {}); }
             res.redirect("/admin/products")
         } catch (err) {
             console.log(err)
