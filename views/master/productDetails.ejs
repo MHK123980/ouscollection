@@ -259,31 +259,10 @@
       </div>
       <div class="row">
         <% relatedProducts.forEach((product)=>{ %>
-          <div class="col-lg-3 col-md-4 col-sm-6">
-            <div class="product__item">
-              <div class="product__item__pic set-bg"
-                data-setbg="<%= product.productImagePath[0].startsWith('http') ? product.productImagePath[0] : '/files/' + product.productImagePath[0] %>" style="cursor: pointer;" onclick="window.location.href='/product/<%= product.id %>'">
-                <ul class="product__item__pic__hover">
-                  <li><a
-                      onclick="event.stopPropagation(); addToCart('<%=product.id%>','<%=product.name%>','<%=product.price%>',1,'<%=product?.offerPrice%>')"><i
-                        class="fa fa-shopping-cart"></i></a></li>
-                </ul>
-              </div>
-              <div class="product__item__text">
-                <h6><a href="/product/<%= product.id %>">
-                    <%= product.name %>
-                  </a></h6>
-                <h5>Rs <%= product.price %>
-                </h5>
-                <% if(product.deliveryCharges && Number(product.deliveryCharges)> 0){ %>
-                  <p class="text-muted small">Delivery: Rs <%= Number(product.deliveryCharges).toFixed(2) %>
-                      <% if(product.increaseDeliveryChargesWithQuantity){ %> (per piece)<% } %>
-                  </p>
-                  <% } %>
-              </div>
-            </div>
+          <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+            <%- include('../partials/_productCard', { product: product }) %>
           </div>
-          <% }) %>
+        <% }) %>
       </div>
     </div>
   </section>
