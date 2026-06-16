@@ -247,6 +247,67 @@
       <div class="humberger__open">
         <i class="fa fa-bars"></i>
       </div>
+      <!-- Mobile Sticky Cart -->
+      <div class="mobile-header-cart d-block d-lg-none" id="mobileStickyCart">
+        <a href="/user/cart">
+          <i class="fa fa-shopping-bag"></i>
+          <span class="cart-item-count">0</span>
+        </a>
+      </div>
+      <style>
+        .mobile-header-cart {
+          position: absolute;
+          top: 65px;
+          right: 15px;
+          z-index: 99;
+          height: 35px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: top 0.2s ease-in-out;
+        }
+        .mobile-header-cart.scrolled {
+          position: fixed;
+          top: 22px;
+          right: 15px;
+          z-index: 999;
+        }
+        .mobile-header-cart a {
+          color: #1c1c1c;
+          font-size: 22px;
+          position: relative;
+          display: inline-block;
+        }
+        .mobile-header-cart a span {
+          position: absolute;
+          top: -6px;
+          right: -8px;
+          background: #7fad39;
+          color: white;
+          font-size: 10px;
+          font-weight: 700;
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+      </style>
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          const mobileCart = document.getElementById('mobileStickyCart');
+          if (mobileCart) {
+            window.addEventListener('scroll', function() {
+              if (window.scrollY > 40) {
+                mobileCart.classList.add('scrolled');
+              } else {
+                mobileCart.classList.remove('scrolled');
+              }
+            });
+          }
+        });
+      </script>
     </div>
   </header>
   <!-- Header Section End -->
@@ -409,46 +470,7 @@
   </script>
 
   <%- script %>
-  <!-- Mobile Sticky Cart Top Right -->
-  <div class="mobile-sticky-cart-top d-block d-lg-none">
-    <a href="/user/cart">
-      <i class="fa fa-shopping-bag"></i>
-      <span class="cart-item-count">0</span>
-    </a>
-  </div>
-  <style>
-    .mobile-sticky-cart-top {
-      position: fixed;
-      top: 22px;
-      right: 65px; /* Next to the hamburger menu icon (which is at right 15px with width 35px) */
-      z-index: 999;
-      height: 35px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .mobile-sticky-cart-top a {
-      color: #1c1c1c;
-      font-size: 22px;
-      position: relative;
-      display: inline-block;
-    }
-    .mobile-sticky-cart-top a span {
-      position: absolute;
-      top: -6px;
-      right: -8px;
-      background: #7fad39;
-      color: white;
-      font-size: 10px;
-      font-weight: 700;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-  </style>
+  <%- script %>
 
 </body>
 
