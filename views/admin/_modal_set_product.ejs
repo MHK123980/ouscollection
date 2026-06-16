@@ -139,15 +139,49 @@
     const btn = document.getElementById('addSetSubmitBtn');
     if(btn) btn.disabled = true;
 
-    // Limit to 40 images to prevent Vercel Payload Too Large error
-    let filesToProcess = Array.from(input.files);
-    if (filesToProcess.length > 40) {
-      alert("Maximum 40 images allowed per product. Only the first 40 will be uploaded.");
-      filesToProcess = filesToProcess.slice(0, 40);
+    let filesToProcess = [];
+    try {
+      for (let file of input.files) {
+        if (file.name.match(/\.zip$/i) || file.type === 'application/zip' || file.type === 'application/x-zip-compressed') {
+          const zip = await JSZip.loadAsync(file);
+          for (const [filename, zipEntry] of Object.entries(zip.files)) {
+            if (!zipEntry.dir && filename.match(/\.(jpg|jpeg|png|webp|gif)$/i)) {
+               const blob = await zipEntry.async("blob");
+               filesToProcess.push(new File([blob], filename, { type: blob.type }));
+            }
+          }
+        } else if (file.name.match(/\.pdf$/i) || file.type === 'application/pdf') {
+          const arrayBuffer = await file.arrayBuffer();
+          const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const viewport = page.getViewport({ scale: 1.5 });
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", 0.9));
+            filesToProcess.push(new File([blob], file.name.replace('.pdf','') + `-page-${i}.jpg`, { type: "image/jpeg" }));
+          }
+        } else if (file.type.startsWith("image/")) {
+          filesToProcess.push(file);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error processing files: " + e.message);
+    }
+
+    if (filesToProcess.length > 60) {
+      alert("cant upload images due to limit cross of images");
+      input.value = "";
+      if(btn) btn.disabled = false;
+      return;
     }
 
     const options = {
-      maxSizeMB: 0.08, // 80KB max to ensure 40 images fit within 4.5MB Vercel limit
+      maxSizeMB: 0.08,
       maxWidthOrHeight: 800,
       useWebWorker: true
     };

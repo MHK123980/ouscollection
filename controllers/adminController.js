@@ -173,26 +173,27 @@ module.exports = {
 
   products: async (req, res) => {
     try {
-      const errorMessage = req.flash("message");
-      const allCategories = await Category.find()
-        .sort({ categoryName: 1 })
-        .exec();
-      const allProducts = await Product.find()
-        .populate("category")
-        .sort({ createdAt: -1 })
-        .exec();
-      res.render("admin/productManagement", {
+      const errorMessage = req.flash('message');
+      const [allCategories, allProducts] = await Promise.all([
+        Category.find().sort({ categoryName: 1 }).lean().exec(),
+        Product.find()
+          .populate('category', 'categoryName')
+          .select('name category quantity price discount offerPrice isFeatured isWholesaleSet piecesPerSet productImagePath deliveryCharges increaseDeliveryChargesWithQuantity description createdAt')
+          .sort({ createdAt: -1 })
+          .lean()
+          .exec()
+      ]);
+      res.render('admin/productManagement', {
         allCategories: allCategories,
         allProducts: allProducts,
         errorMessage: errorMessage,
-        layout: "layouts/adminLayout",
+        layout: 'layouts/adminLayout',
       });
     } catch (err) {
       console.log(err.message);
-      res.redirect("/admin");
+      res.redirect('/admin');
     }
   },
-
   orders: async (req, res) => {
     try {
       const errorMessage = req.flash("message");

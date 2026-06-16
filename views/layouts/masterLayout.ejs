@@ -409,6 +409,53 @@
   </script>
 
   <%- script %>
+  <!-- Mobile Sticky Cart -->
+  <div class="mobile-sticky-cart d-block d-lg-none">
+    <a href="/user/cart">
+      <i class="fa fa-shopping-bag"></i>
+      <span class="cart-item-count">0</span>
+    </a>
+  </div>
+  <style>
+    .mobile-sticky-cart {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #8b5a2b;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+      z-index: 9999;
+    }
+    .mobile-sticky-cart a {
+      color: white;
+      font-size: 20px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .mobile-sticky-cart a span {
+      position: absolute;
+      top: -8px;
+      right: -12px;
+      background: #e53637;
+      color: white;
+      font-size: 12px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+    }
+  </style>
+
 </body>
 
 </html>
