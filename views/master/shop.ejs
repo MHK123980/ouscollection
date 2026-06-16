@@ -250,35 +250,9 @@
             </div>
             <div class="row">
 
-              <% allProducts.forEach((product)=>{%>
-                <div class="col-lg-4 col-md-6">
-                  <div class="product__item">
-                    <div class="product__item__pic set-bg"
-                      data-setbg="<%= product.productImagePath[0].startsWith('http') ? product.productImagePath[0] : '/files/' + product.productImagePath[0] %>">
-                      <ul class="product__item__pic__hover">
-                        <li><a
-                            onclick="addToCart('<%=product.id%>','<%=product.name%>','<%=product.price%>',1,'<%=product?.offerPrice%>')"><i
-                              class="fa fa-shopping-cart"></i></a></li>
-                      </ul>
-                    </div>
-                    <% if(product.discount){ %>
-                      <div class="product__discount__item__text">
-                        <h5><a href="/product/<%= product.id %>">
-                            <%= product.name %>
-                          </a></h5>
-                        <div class="product__item__price"> Rs <%= product.offerPrice.toFixed(2)%><span>Rs <%=
-                                product.price %> </span></div>
-                      </div>
-                      <% } else{ %>
-                        <div class="product__item__text">
-                          <h6><a href="/product/<%= product.id %>">
-                              <%= product.name %>
-                            </a></h6>
-                          <h5>Rs <%= product.price %>
-                          </h5>
-                        </div>
-                        <% } %>
-                  </div>
+              <% allProducts.forEach((product)=>{ %>
+                <div class="col-lg-4 col-md-6 mb-4">
+                  <%- include('../partials/_productCard', { product: product }) %>
                 </div>
                 <% }) %>
             </div>
