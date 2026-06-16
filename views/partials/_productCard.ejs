@@ -11,6 +11,14 @@
               <span class="badge bg-warning text-dark" style="position:absolute; top:10px; left:10px; z-index:5; font-size:0.75rem;"><i class="fa fa-star"></i> Featured</span>
               <% } %>
               
+              <% if(product.discount && product.price > 0 && product.offerPrice < product.price) { 
+                   let discountPercent = Math.round(((product.price - product.offerPrice) / product.price) * 100);
+              %>
+              <span class="badge" style="position:absolute; top:<%= product.isFeatured ? '35px' : '10px' %>; left:10px; z-index:5; background-color: #e53637; color: #ffffff; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">
+                -<%= discountPercent %>%
+              </span>
+              <% } %>
+              
               <ul class="featured__item__pic__hover">
                 <li><a onclick="event.stopPropagation(); addToCart('<%=product.id || product._id%>','<%=product.name%>','<%=product.price%>',1,'<%=product?.offerPrice%>')"><i class="fa fa-shopping-cart"></i></a></li>
               </ul>
