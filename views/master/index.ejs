@@ -108,7 +108,6 @@
       </div>
     </div>
     <div class="row" id="setsProductsContainer">
-      <% const setProducts = allProducts ? allProducts.filter(p => p.isWholesaleSet) : []; %>
       <% if(setProducts && setProducts.length > 0) { %>
         <% const setsLimit = setProducts.slice(0, 7); %>
         <% setsLimit.forEach((product) => { %>

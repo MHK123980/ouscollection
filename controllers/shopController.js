@@ -50,6 +50,12 @@ module.exports = {
         .limit(24) // Limit added to massively improve load time
         .exec();
 
+      const setProductsPromise = Product.find({ isWholesaleSet: true })
+        .populate("category")
+        .sort({ createdAt: -1 })
+        .limit(12)
+        .exec();
+
       const [
         allCategories,
         primaryBanner,
@@ -59,6 +65,7 @@ module.exports = {
         topReviewedProducts,
         secondaryBanner,
         allProducts,
+        setProducts,
       ] = await Promise.all([
         allCategoriesPromise,
         primaryBannerPromise,
@@ -68,6 +75,7 @@ module.exports = {
         topReviewedProductsPromise,
         secondaryBannerPromise,
         allProductsPromise,
+        setProductsPromise,
       ]);
 
       res.render("master/index", {
@@ -79,6 +87,7 @@ module.exports = {
         primaryBanner: primaryBanner,
         secondaryBanner: secondaryBanner,
         allProducts: allProducts,
+        setProducts: setProducts,
       });
     } catch (err) {
       console.log(err);
