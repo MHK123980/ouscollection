@@ -44,7 +44,7 @@
                    let discountPercent = Math.round(((findProduct.price - findProduct.offerPrice) / findProduct.price) * 100);
               %>
               <span class="badge" style="position:absolute; top:20px; right:20px; z-index:15; background-color: #e53637; color: #ffffff; padding: 6px 12px; border-radius: 4px; font-size: 1.1rem; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                -<%= discountPercent %>%
+                Sale <%= discountPercent %>%
               </span>
               <% } %>
               <% if(findProduct.productImagePath.length > 1) { %>

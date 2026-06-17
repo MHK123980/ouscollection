@@ -174,7 +174,7 @@ module.exports = {
   products: async (req, res) => {
     try {
       const errorMessage = req.flash('message');
-      const [allCategories, allProducts] = await Promise.all([
+      const [allCategories, rawProducts] = await Promise.all([
         Category.find().sort({ categoryName: 1 }).lean().exec(),
         Product.find()
           .populate('category', 'categoryName')
@@ -183,6 +183,7 @@ module.exports = {
           .lean()
           .exec()
       ]);
+      const allProducts = rawProducts.map(p => { p.id = p._id.toString(); return p; });
       res.render('admin/productManagement', {
         allCategories: allCategories,
         allProducts: allProducts,

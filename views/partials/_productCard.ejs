@@ -15,7 +15,7 @@
                    let discountPercent = Math.round(((product.price - product.offerPrice) / product.price) * 100);
               %>
               <span class="badge" style="position:absolute; top:<%= product.isFeatured ? '35px' : '10px' %>; left:10px; z-index:5; background-color: #e53637; color: #ffffff; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">
-                -<%= discountPercent %>%
+                Sale <%= discountPercent %>%
               </span>
               <% } %>
               
