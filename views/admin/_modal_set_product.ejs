@@ -180,10 +180,15 @@
       return;
     }
 
+    let maxSize = 3.5 / (filesToProcess.length || 1);
+    if (maxSize > 0.4) maxSize = 0.4; // max 400KB for high quality
+    if (maxSize < 0.05) maxSize = 0.05; // min 50KB
+
     const options = {
-      maxSizeMB: 0.08,
-      maxWidthOrHeight: 800,
-      useWebWorker: true
+      maxSizeMB: maxSize,
+      maxWidthOrHeight: 1200, // increased resolution
+      useWebWorker: true,
+      initialQuality: 0.85
     };
     
     for (let file of filesToProcess) {
