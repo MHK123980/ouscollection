@@ -45,6 +45,7 @@ router.get("/addOrder", adminControl.getAddOrder)
 router.get("/report", adminControl.getReport)
 
 router.post("/addOrder", adminControl.postAddOrder)
+router.post("/uploadSingleImage", multer.singleImage, productControl.uploadSingleImage)
 router.post("/addCategory", adminControl.addCategory)
 router.post("/addProduct", multer.productImage, productControl.addProduct)
 router.post("/addCoupon", couponControl.addCoupon)

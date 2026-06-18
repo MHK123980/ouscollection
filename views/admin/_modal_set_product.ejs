@@ -11,7 +11,7 @@
           <i class="fas fa-info-circle me-1"></i>
           Set products are wholesale items sold in sets. Enter the <strong>price per piece</strong> and the <strong>number of pieces per set</strong>. The total set price will be calculated automatically.
         </div>
-        <form action="/admin/addProduct" method="post" enctype="multipart/form-data" onsubmit="return handleSetSubmit(this)">
+        <form action="/admin/addProduct" method="post" enctype="multipart/form-data" onsubmit="return handleSetSubmit(event, this)">
           <!-- Hidden fields to mark as set -->
           <input type="hidden" name="isWholesaleSet" value="on">
           
@@ -120,15 +120,47 @@
     document.getElementById('totalSetPrice').innerHTML = 'PKR ' + total.toFixed(2);
   }
 
-  function handleSetSubmit(form) {
+  async function handleSetSubmit(event, form) {
+    event.preventDefault();
     const btn = form.querySelector('#addSetSubmitBtn');
-    btn.disabled = true;
-    // Show beautiful loader overlay
+    if(btn) btn.disabled = true;
+    
     const overlay = document.getElementById('productLoaderOverlay');
+    const loaderText = document.getElementById('loaderText');
     if (overlay) overlay.style.display = 'flex';
-    // Hide modal to focus on loader
-    $('#addSetProduct').modal('hide');
-    return true;
+    
+    try {
+        let files = setProductDataTransfer.files;
+        if (files.length > 0) {
+            for (let i = 0; i < files.length; i++) {
+                if(loaderText) loaderText.innerText = `Uploading HD Image ${i + 1} of ${files.length}...`;
+                let fd = new FormData();
+                fd.append('image', files[i]);
+                let res = await fetch('/admin/uploadSingleImage', { method: 'POST', body: fd });
+                let data = await res.json();
+                if (data.success) {
+                    let hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = 'uploadedImages';
+                    hiddenInput.value = data.url;
+                    form.appendChild(hiddenInput);
+                } else {
+                    throw new Error(data.message || "Upload failed");
+                }
+            }
+            // Clear the file input
+            document.getElementById("setProductImagesInput").value = "";
+        }
+        
+        $('#addSetProduct').modal('hide');
+        if(loaderText) loaderText.innerText = "Processing details...";
+        form.submit();
+    } catch (e) {
+        alert("Upload error: " + e.message);
+        if(overlay) overlay.style.display = 'none';
+        if(btn) btn.disabled = false;
+    }
+    return false;
   }
 
   // Advanced Image Upload Logic
@@ -180,15 +212,11 @@
       return;
     }
 
-    let maxSize = 3.5 / (filesToProcess.length || 1);
-    if (maxSize > 0.4) maxSize = 0.4; // max 400KB for high quality
-    if (maxSize < 0.05) maxSize = 0.05; // min 50KB
-
     const options = {
-      maxSizeMB: maxSize,
-      maxWidthOrHeight: 1200, // increased resolution
+      maxSizeMB: 1.5, // Relaxed compression for HD images!
+      maxWidthOrHeight: 1500, // HD resolution
       useWebWorker: true,
-      initialQuality: 0.85
+      initialQuality: 0.95
     };
     
     for (let file of filesToProcess) {

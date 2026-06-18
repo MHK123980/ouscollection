@@ -21,6 +21,19 @@ async function uploadImagesInBatches(files, batchSize = 5) {
 }
 
 module.exports = {
+    uploadSingleImage: async (req, res) => {
+        try {
+            if (!req.file) {
+                return res.status(400).json({ success: false, message: "No image provided" });
+            }
+            const url = await uploadToImgBB(req.file.buffer);
+            return res.json({ success: true, url: url });
+        } catch (error) {
+            console.error("Single image upload error:", error);
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    },
+
     addProduct: async (req, res) => {
         try {
             const price = parseFloat(req.body.price)
@@ -31,9 +44,14 @@ module.exports = {
             const piecesPerSet = req.body.piecesPerSet ? Number(req.body.piecesPerSet) : 1
 
             let productImages = [];
+            if (req.body.uploadedImages) {
+                let urls = Array.isArray(req.body.uploadedImages) ? req.body.uploadedImages : [req.body.uploadedImages];
+                productImages.push(...urls);
+            }
             if (req.files && req.files.length > 0) {
                 // Upload in batches concurrently to speed up the process
-                productImages = await uploadImagesInBatches(req.files);
+                const batchUrls = await uploadImagesInBatches(req.files);
+                productImages.push(...batchUrls);
             }
 
             const product = new Product({
@@ -90,6 +108,11 @@ module.exports = {
             if (req.body.deletedImages) {
                 let deleted = Array.isArray(req.body.deletedImages) ? req.body.deletedImages : [req.body.deletedImages];
                 productImages = productImages.filter(img => !deleted.includes(img));
+            }
+
+            if (req.body.uploadedImages) {
+                let urls = Array.isArray(req.body.uploadedImages) ? req.body.uploadedImages : [req.body.uploadedImages];
+                productImages.push(...urls);
             }
 
             if (req.files && req.files.length > 0) {

@@ -119,7 +119,7 @@
                     </div>
                     <div class="modal-body">
                       <form action="/admin/editProduct/<%= product.id %>?_method=PUT" method="post"
-                        enctype="multipart/form-data" onsubmit="return handleEditSubmit(this, '<%= product.id %>')">
+                        enctype="multipart/form-data" onsubmit="return handleEditSubmit(event, this, '<%= product.id %>')">
                         <div>
                           <label class="form-label">name</label>
                           <input type="text" value="<%=product.name %>" name="name" required class="form-control">
@@ -389,15 +389,11 @@
       return;
     }
 
-    let maxSize = 3.5 / (filesToProcess.length || 1);
-    if (maxSize > 0.4) maxSize = 0.4; // max 400KB for high quality
-    if (maxSize < 0.05) maxSize = 0.05; // min 50KB
-
     const options = { 
-      maxSizeMB: maxSize, 
-      maxWidthOrHeight: 1200, // increased resolution
+      maxSizeMB: 1.5, 
+      maxWidthOrHeight: 1500, // HD resolution
       useWebWorker: true,
-      initialQuality: 0.85
+      initialQuality: 0.95
     };
     for (let file of filesToProcess) {
       try {
@@ -458,7 +454,8 @@
     });
   }
 
-  function handleEditSubmit(form, productId) {
+  async function handleEditSubmit(event, form, productId) {
+    event.preventDefault();
     const existingImages = document.querySelectorAll(`.existing-image-wrapper-${productId}`);
     const input = document.getElementById(`editProductImagesInput-${productId}`);
     const newImagesCount = input && input.files ? input.files.length : 0;
@@ -469,13 +466,51 @@
     }
 
     const btn = form.querySelector('.submit-btn');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+    if(btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+    }
     
     const overlay = document.getElementById('productLoaderOverlay');
+    const loaderText = document.getElementById('loaderText');
     if (overlay) overlay.style.display = 'flex';
     
-    return true; 
+    try {
+        let dt = editProductDataTransfers[productId];
+        if (dt && dt.files.length > 0) {
+            let files = dt.files;
+            for (let i = 0; i < files.length; i++) {
+                if(loaderText) loaderText.innerText = `Uploading HD Image ${i + 1} of ${files.length}...`;
+                let fd = new FormData();
+                fd.append('image', files[i]);
+                let res = await fetch('/admin/uploadSingleImage', { method: 'POST', body: fd });
+                let data = await res.json();
+                if (data.success) {
+                    let hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = 'uploadedImages';
+                    hiddenInput.value = data.url;
+                    form.appendChild(hiddenInput);
+                } else {
+                    throw new Error(data.message || "Upload failed");
+                }
+            }
+            // Clear file input
+            if(input) input.value = "";
+        }
+        
+        $(`#editProduct-${productId}`).modal('hide');
+        if(loaderText) loaderText.innerText = "Processing details...";
+        form.submit();
+    } catch(e) {
+        alert("Upload error: " + e.message);
+        if(overlay) overlay.style.display = 'none';
+        if(btn) {
+            btn.disabled = false;
+            btn.innerHTML = 'Save changes';
+        }
+    }
+    return false; 
   }
 
   // Initialize Select2 for category dropdown in edit modals
