@@ -213,10 +213,10 @@
     }
 
     const options = {
-      maxSizeMB: 1.5, // Relaxed compression for HD images!
-      maxWidthOrHeight: 1500, // HD resolution
+      maxSizeMB: 0.8, // Target size around 800KB
+      maxWidthOrHeight: 1920, // Full HD resolution
       useWebWorker: true,
-      initialQuality: 0.95
+      initialQuality: 0.85 // Retain 85% of original iPhone image quality
     };
     
     for (let file of filesToProcess) {
