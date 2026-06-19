@@ -9,8 +9,13 @@
 
   @media (max-width: 768px) {
     body {
+      background-image: url('/img/home_bg_mobile.jpg');
       background-position: center top;
       background-size: cover;
+      background-attachment: fixed !important;
+      image-rendering: -webkit-optimize-contrast;
+      /* Optional fallback to improve blurriness */
+      filter: contrast(1.02) saturate(1.05);
     }
   }
 
@@ -19,8 +24,14 @@
     background-color: transparent !important;
   }
   
-  /* Add white background specifically to the hero search and banner to keep it readable if needed */
-  .hero__search, .hero__item {
+  /* Add white background specifically to the hero search form and banner */
+  .hero__search__form {
+    background-color: #ffffff;
+    border-radius: 5px; /* Match form default */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  }
+  
+  .hero__item {
     background-color: #ffffff;
     border-radius: 15px;
     padding: 15px;
