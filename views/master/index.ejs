@@ -14,15 +14,58 @@
     }
   }
 
-  /* Make sections slightly transparent so background is visible but text remains readable */
-  .spad, .hero {
-    background-color: rgba(255, 255, 255, 0.85) !important;
-    border-radius: 15px;
-    margin: 15px;
+  /* Make sections completely transparent so background is visible */
+  .spad, .hero, .categories {
+    background-color: transparent !important;
   }
   
+  /* Add white background specifically to the hero search and banner to keep it readable if needed */
+  .hero__search, .hero__item {
+    background-color: #ffffff;
+    border-radius: 15px;
+    padding: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  }
+  
+  /* Remove top/bottom extra spacing if any, but let's keep it clean */
   .hero {
-    padding: 20px;
+    padding-top: 30px;
+  }
+
+  /* White background for section headings */
+  .section-title h2 {
+    background-color: #ffffff;
+    display: inline-block;
+    padding: 10px 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  }
+
+  /* White background for individual product cards */
+  .featured__item, .product__item {
+    background-color: #ffffff;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .featured__item:hover, .product__item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  }
+
+  /* Ensure Show All boxes also have a solid white background matching the cards */
+  .show-all-box {
+    background-color: #ffffff !important;
+    border: none !important; /* Remove dashed border for a cleaner card look */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    border-radius: 12px !important;
+  }
+  
+  .show-all-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
   }
 </style>
 
@@ -79,7 +122,7 @@
       </div>
       <% }) %>
       <div class="col-lg-3 col-md-4 col-sm-6 mb-4 d-flex align-items-stretch">
-        <a href="/shop/featured/1" class="w-100 d-flex flex-column align-items-center justify-content-center text-decoration-none" style="background: #f8f9fa; border: 2px dashed #ddd; min-height: 350px; border-radius: 10px; transition: all 0.3s ease;">
+        <a href="/shop/featured/1" class="w-100 d-flex flex-column align-items-center justify-content-center text-decoration-none show-all-box" style="min-height: 350px;">
           <i class="fa fa-arrow-right fa-3x mb-3" style="color: #7fad39;"></i>
           <h4 style="color: #1c1c1c; font-weight: 700;">Show All</h4>
           <span style="color: #666;">Featured Products</span>
@@ -109,7 +152,7 @@
         </div>
         <% }) %>
         <div class="col-lg-3 col-md-4 col-sm-6 mb-4 d-flex align-items-stretch">
-          <a href="/shop/1" class="w-100 d-flex flex-column align-items-center justify-content-center text-decoration-none" style="background: #f8f9fa; border: 2px dashed #ddd; min-height: 350px; border-radius: 10px; transition: all 0.3s ease;">
+          <a href="/shop/1" class="w-100 d-flex flex-column align-items-center justify-content-center text-decoration-none show-all-box" style="min-height: 350px;">
             <i class="fa fa-arrow-right fa-3x mb-3" style="color: #7fad39;"></i>
             <h4 style="color: #1c1c1c; font-weight: 700;">Show All</h4>
             <span style="color: #666;">Products</span>
@@ -144,10 +187,10 @@
         </div>
         <% }) %>
         <div class="col-lg-3 col-md-4 col-sm-6 mb-4 d-flex align-items-stretch">
-          <a href="/shop/sets/1" class="w-100 d-flex flex-column align-items-center justify-content-center text-decoration-none" style="background: #f8f9fa; border: 2px dashed #ddd; min-height: 350px; border-radius: 10px; transition: all 0.3s ease;">
+          <a href="/shop/sets/1" class="w-100 d-flex flex-column align-items-center justify-content-center text-decoration-none show-all-box" style="min-height: 350px;">
             <i class="fa fa-arrow-right fa-3x mb-3" style="color: #7fad39;"></i>
             <h4 style="color: #1c1c1c; font-weight: 700;">Show All</h4>
-            <span style="color: #666;">Sets Products</span>
+            <span style="color: #666;">Set Products</span>
           </a>
         </div>
       <% } else { %>
