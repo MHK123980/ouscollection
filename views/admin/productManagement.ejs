@@ -424,6 +424,10 @@
 
   async function openEditModal(productId) {
     try {
+      if (typeof myTable !== 'undefined') {
+        sessionStorage.setItem('dt_saved_page', myTable.currentPage);
+      }
+      
       const overlay = document.getElementById('productLoaderOverlay');
       const loaderText = document.getElementById('loaderText');
       if(overlay) overlay.style.display = 'flex';
