@@ -195,6 +195,26 @@ module.exports = {
       res.redirect('/admin');
     }
   },
+  getEditProductModal: async (req, res) => {
+    try {
+      const [allCategories, rawProduct] = await Promise.all([
+        Category.find().sort({ categoryName: 1 }).lean().exec(),
+        Product.findById(req.params.id).populate('category', 'categoryName').lean().exec()
+      ]);
+      if (!rawProduct) {
+        return res.status(404).send("Product not found");
+      }
+      rawProduct.id = rawProduct._id.toString();
+      res.render('admin/_modal_edit_product_partial', {
+        allCategories: allCategories,
+        product: rawProduct,
+        layout: false
+      });
+    } catch (err) {
+      console.log(err.message);
+      res.status(500).send("Error loading product");
+    }
+  },
   orders: async (req, res) => {
     try {
       const errorMessage = req.flash("message");

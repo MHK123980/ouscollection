@@ -76,174 +76,36 @@
                     <td></td>
                     <% } %>
                       <td>
-                        <form action="/admin/deleteProduct/<%= product.id%>?_method=DELETE" method="post">
-                          <div>
-                            <button class="btn btn-sm btn-outline-dark" data-bs-toggle="modal"
-                              data-bs-target="#edit-<%= product.id %>" type="button"><i
-                                class="fa-solid fa-pen-to-square"></i></button>
-                            <a class="btn btn-sm btn-outline-danger" href="#deleteModal<%= product.id %>"
-                              data-bs-toggle="modal"><i class="fa-solid fa-trash-can"></i></a>
-                          </div>
-                          <!-- delete modal start -->
-                          <div class="modal modal-alert" tabindex="-1" role="dialog" id="deleteModal<%= product.id %>">
-                            <div class="modal-dialog modal-dialog-centered" role="document">
-                              <div class="modal-content rounded-3 shadow">
-                                <div class="modal-body p-4 text-center">
-                                  <h5 class="mb-2">Waring! Are you sure</h5>
-                                  <p class="mb-0">This change cant be undone.</p>
-                                </div>
-                                <div class="modal-footer flex-nowrap p-0">
-                                  <button type="submit"
-                                    class="btn btn-lg btn-link fs-6 text-decoration-none col-6 m-0 rounded-0 border-end"><strong>Yes</strong></button>
-                                  <button type="button"
-                                    class="btn btn-lg btn-link fs-6 text-decoration-none col-6 m-0 rounded-0"
-                                    data-bs-dismiss="modal">No</button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          <!-- delete modal end -->
-
-                        </form>
+                        <div>
+                          <button class="btn btn-sm btn-outline-dark" type="button" onclick="openEditModal('<%= product.id %>')"><i class="fa-solid fa-pen-to-square"></i></button>
+                          <button class="btn btn-sm btn-outline-danger" type="button" onclick="confirmDelete('<%= product.id %>')"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
                       </td>
               </tr>
-              <!-- modal body  -->
-              <div class="modal fade" id="edit-<%= product.id %>" tabindex="-1" aria-labelledby="exampleModalLabel"
-                aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h5 class="modal-title" id="exampleModalLabel">Edit Product</h5>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                      <form action="/admin/editProduct/<%= product.id %>?_method=PUT" method="post"
-                        enctype="multipart/form-data" onsubmit="return handleEditSubmit(event, this, '<%= product.id %>')">
-                        <div>
-                          <label class="form-label">name</label>
-                          <input type="text" value="<%=product.name %>" name="name" required class="form-control">
-                        </div>
-                        <div>
-                          <label class="form-label">Category <span class="text-muted">(Optional)</span></label>
-                          <select name="category" class="form-select category-select">
-                            <option value="">Select category...</option>
-                            <% const mensCats=allCategories.filter(c=> c.division === 'Mens'); %>
-                              <% const womensCats=allCategories.filter(c=> c.division === 'Womens'); %>
-                                <% if(mensCats.length> 0) { %>
-                                  <optgroup label="Men's">
-                                    <% mensCats.forEach(cat=> { %>
-                                      <option value="<%=cat._id %>" <%=product.category && product.category._id &&
-                                        product.category._id.toString()===cat._id.toString() ? 'selected' : '' %>><%=
-                                          cat.categoryName %>
-                                      </option>
-                                      <% }); %>
-                                  </optgroup>
-                                  <% } %>
-                                    <% if(womensCats.length> 0) { %>
-                                      <optgroup label="Women's">
-                                        <% womensCats.forEach(cat=> { %>
-                                          <option value="<%=cat._id %>" <%=product.category && product.category._id &&
-                                            product.category._id.toString()===cat._id.toString() ? 'selected' : '' %>>
-                                            <%= cat.categoryName %>
-                                          </option>
-                                          <% }); %>
-                                      </optgroup>
-                                      <% } %>
-                          </select>
-                        </div>
-                        <div>
-                          <label class="form-label">Stock</label>
-                          <input type="number" name="quantity" min="1" value="<%=product.quantity %>" required
-                            class="form-control">
-                        </div>
-                        <div>
-                          <label class="form-label">Price</label>
-                          <input type="number" name="price" min="1" value="<%=product.price %>" required
-                            class="form-control">
-                        </div>
-                        <div>
-                          <label class="form-label">Delivery Charges (Rs)</label>
-                          <input type="number" name="deliveryCharges" min="0" step="0.01"
-                            value="<%= typeof product.deliveryCharges !== 'undefined' ? product.deliveryCharges : 0 %>"
-                            required class="form-control">
-                        </div>
-                        <div class="form-check mt-2">
-                          <% if(product.increaseDeliveryChargesWithQuantity){ %>
-                            <input class="form-check-input" checked type="checkbox"
-                              name="increaseDeliveryChargesWithQuantity"
-                              id="increaseDeliveryChargesWithQuantity-<%= product.id %>">
-                            <% } else { %>
-                              <input class="form-check-input" type="checkbox" name="increaseDeliveryChargesWithQuantity"
-                                id="increaseDeliveryChargesWithQuantity-<%= product.id %>">
-                              <% } %>
-                                <label class="form-check-label"
-                                  for="increaseDeliveryChargesWithQuantity-<%= product.id %>">Increase delivery charges
-                                  with quantity</label>
-                        </div>
-                        <div>
-                          <label class="form-label">Discount <span class="text-muted">(in percentage)</span></label>
-                          <input type="number" name="discount" min="0" max="100" step="0.01"
-                            value="<%=product.discount %>" class="form-control" placeholder="Optional">
-                        </div>
-                        <div class="mt-2">
-                          <% if(product.isWholesaleSet) { %>
-                            <input type="hidden" name="isWholesaleSet" value="on">
-                            <input type="hidden" name="piecesPerSet" value="<%= product.piecesPerSet || 1 %>">
-                          <% } %>
-                        </div>
-                        <div class="form-check form-switch mt-2">
-                          <% if(product.isFeatured){%>
-                            <input class="form-check-input" checked type="checkbox" name="isFeatured"
-                              id="flexSwitchCheckDefault">
-                            <% }else{%>
-                              <input class="form-check-input" type="checkbox" name="isFeatured"
-                                id="flexSwitchCheckDefault">
-                              <% } %>
-                                <label class="form-check-label" for="flexSwitchCheckDefault">Is Featured ?</label>
-                        </div>
-                        <div><label class="form-label">Description</label></div>
-                        <div><textarea name="description" rows="5" class="form-control" placeholder="Add description"
-                            required><%=product.description %></textarea></div>
-                        <div>
-                          <label class="form-label mt-2">Manage Existing Images</label>
-                          <div class="mb-2" id="existingImagesContainer-<%= product.id %>">
-                            <% if(product.productImagePath && product.productImagePath.length > 0) { %>
-                              <div class="mb-2" id="deleteAllBtnContainer-<%= product.id %>">
-                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteAllExistingImages('<%= product.id %>')">Delete All Images</button>
-                              </div>
-                              <div class="d-flex flex-wrap gap-2" id="existingImagesList-<%= product.id %>">
-                                <% product.productImagePath.forEach((img, i) => { %>
-                                  <div class="d-inline-block position-relative m-1 border rounded p-1 existing-image-wrapper-<%= product.id %>" data-img="<%= img %>">
-                                    <img src="<%= img.startsWith('http') ? img : '/files/' + img %>" width="70" height="70" class="rounded" style="object-fit:cover;">
-                                    <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 p-0 rounded-circle" style="width:20px; height:20px; line-height:1; transform: translate(50%, -50%);" onclick="deleteExistingImage(this, '<%= product.id %>', '<%= img %>')">&times;</button>
-                                  </div>
-                                <% }) %>
-                              </div>
-                            <% } else { %>
-                              <span class="text-muted small" id="noImagesText-<%= product.id %>">No images available</span>
-                            <% } %>
-                          </div>
-                          <!-- Hidden inputs for deleted images will be appended here -->
-                          <div id="deletedImagesInputs-<%= product.id %>"></div>
-
-                          <label class="form-label mt-2">Upload New Images <span class="text-muted">(Optional)</span></label>
-                          <input type="file" multiple name="productImages" class="form-control edit-product-images-input" data-product-id="<%= product.id %>" onchange="compressEditImages(event, '<%= product.id %>')" id="editProductImagesInput-<%= product.id %>">
-                          <div class="mt-2" id="previewEditProductImages-<%= product.id %>"></div>
-                        </div>
-                    <div class="modal-footer mt-3">
-                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                      <button type="submit" class="btn btn-dark submit-btn">Save changes</button>
-                    </div>
-                    </form>
-                  </div>
-                </div>
-              </div>
               <% }) %>
           </tbody>
         </table>
       </div>
     </div>
+</div>
+
+<div id="dynamicEditModalContainer"></div>
+
+<div class="modal modal-alert" tabindex="-1" role="dialog" id="globalDeleteModal">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content rounded-3 shadow">
+      <div class="modal-body p-4 text-center">
+        <h5 class="mb-2">Warning! Are you sure?</h5>
+        <p class="mb-0">This change can't be undone.</p>
+      </div>
+      <div class="modal-footer flex-nowrap p-0">
+        <form id="globalDeleteForm" method="post" class="w-100 d-flex m-0">
+          <button type="submit" class="btn btn-lg btn-link fs-6 text-decoration-none col-6 m-0 rounded-0 border-end text-danger"><strong>Yes</strong></button>
+          <button type="button" class="btn btn-lg btn-link fs-6 text-decoration-none col-6 m-0 rounded-0" data-bs-dismiss="modal">No</button>
+        </form>
+      </div>
+    </div>
+  </div>
 </div>
 
 <style>
@@ -553,6 +415,49 @@
 
   // Destroy Select2 when modal is hidden to avoid memory leaks
   $(document).on('hidden.bs.modal', function () {
-    $(this).find('.category-select').select2('destroy');
+    $(this).find('.category-select').each(function() {
+      if ($(this).data('select2')) {
+        $(this).select2('destroy');
+      }
+    });
   });
+
+  async function openEditModal(productId) {
+    try {
+      const overlay = document.getElementById('productLoaderOverlay');
+      const loaderText = document.getElementById('loaderText');
+      if(overlay) overlay.style.display = 'flex';
+      if(loaderText) loaderText.innerText = "Loading product details...";
+
+      const response = await fetch(`/admin/editProductModal/${productId}`);
+      if (!response.ok) throw new Error("Failed to load");
+      const html = await response.text();
+      
+      const container = document.getElementById('dynamicEditModalContainer');
+      container.innerHTML = html;
+      
+      if(overlay) overlay.style.display = 'none';
+
+      const modalEl = document.getElementById(`edit-${productId}`);
+      const modal = new bootstrap.Modal(modalEl);
+      modal.show();
+
+      // Clear the container when hidden to prevent duplicate IDs in DOM
+      modalEl.addEventListener('hidden.bs.modal', () => {
+        container.innerHTML = '';
+        delete editProductDataTransfers[productId];
+      });
+      
+    } catch (e) {
+      alert("Error loading product data.");
+      const overlay = document.getElementById('productLoaderOverlay');
+      if(overlay) overlay.style.display = 'none';
+    }
+  }
+
+  function confirmDelete(productId) {
+    document.getElementById('globalDeleteForm').action = `/admin/deleteProduct/${productId}?_method=DELETE`;
+    const modal = new bootstrap.Modal(document.getElementById('globalDeleteModal'));
+    modal.show();
+  }
 </script>

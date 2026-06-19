@@ -107,7 +107,8 @@ module.exports = {
             // Handle deleted images
             if (req.body.deletedImages) {
                 let deleted = Array.isArray(req.body.deletedImages) ? req.body.deletedImages : [req.body.deletedImages];
-                productImages = productImages.filter(img => !deleted.includes(img));
+                deleted = deleted.map(d => String(d).trim());
+                productImages = productImages.filter(img => !deleted.includes(String(img).trim()));
             }
 
             if (req.body.uploadedImages) {

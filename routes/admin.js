@@ -53,6 +53,7 @@ router.post("/addBanner", multer.bannerImage, bannerControl.addBanner)
 
 router.put("/activateCoupon/:id", couponControl.activate)
 router.put("/deactivateCoupon/:id", couponControl.deactivate)
+router.get("/editProductModal/:id", adminControl.getEditProductModal)
 router.put("/editProduct/:id", multer.productImage, productControl.editProduct)
 router.put("/editCategory/:id", adminControl.editCategory)
 router.put("/blockUser/:id", adminControl.blockUser)
