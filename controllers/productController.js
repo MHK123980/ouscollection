@@ -76,8 +76,8 @@ module.exports = {
             const pusher = req.app.get('pusher');
             if (pusher) {
                 const populatedProduct = await Product.findById(product._id).populate('category').exec();
-                pusher.trigger('ecommerce-channel', 'new_product', populatedProduct);
-                pusher.trigger('ecommerce-channel', 'site_updated', {});
+                await pusher.trigger('ecommerce-channel', 'new_product', populatedProduct);
+                await pusher.trigger('ecommerce-channel', 'site_updated', {});
             }
 
             res.redirect("/admin/products")
@@ -144,9 +144,7 @@ module.exports = {
 
             const pusher = req.app.get('pusher');
             if (pusher) { 
-                setTimeout(() => {
-                    pusher.trigger('ecommerce-channel', 'site_updated', {});
-                }, 500);
+                await pusher.trigger('ecommerce-channel', 'site_updated', {});
             }
             if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
                 return res.json({ success: true, message: "Product updated successfully" });
@@ -165,7 +163,7 @@ module.exports = {
         try {
             await Product.findByIdAndUpdate(req.params.id, { quantity: 0 });
             const pusher = req.app.get('pusher');
-            if (pusher) { pusher.trigger('ecommerce-channel', 'site_updated', {}); }
+            if (pusher) { await pusher.trigger('ecommerce-channel', 'site_updated', {}); }
             res.json({ success: true, message: "Product marked as out of stock" });
         } catch (err) {
             console.log(err);
@@ -193,7 +191,7 @@ module.exports = {
             );
 
             const pusher = req.app.get('pusher');
-            if (pusher) { pusher.trigger('ecommerce-channel', 'site_updated', {}); }
+            if (pusher) { await pusher.trigger('ecommerce-channel', 'site_updated', {}); }
             res.redirect("/admin/products")
         } catch (err) {
             console.log(err)
