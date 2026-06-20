@@ -252,7 +252,7 @@
   <!-- Header Section End -->
 
   <!-- Mobile Sticky Cart (outside header so position:fixed works on all browsers) -->
-  <div class="mobile-header-cart d-block d-lg-none" id="mobileStickyCart">
+  <div class="mobile-header-cart absolute-state d-block d-lg-none" id="mobileStickyCart">
     <a href="/user/cart">
       <i class="fa fa-shopping-bag"></i>
       <span class="cart-item-count">0</span>
@@ -260,19 +260,19 @@
   </div>
   <style>
     .mobile-header-cart {
-      position: absolute;
-      top: 65px;
       right: 15px;
-      z-index: 9999;
+      z-index: 99999;
       height: 35px;
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: none; /* Ensure instant snap, no weird float animations */
     }
-    .mobile-header-cart.scrolled {
-      position: fixed;
-      top: 22px;
-      right: 15px;
+    .mobile-header-cart.absolute-state {
+      position: absolute;
+    }
+    .mobile-header-cart.fixed-state {
+      position: fixed !important;
     }
     .mobile-header-cart a {
       color: #1c1c1c;
@@ -299,16 +299,30 @@
   <script>
     (function() {
       var cart = document.getElementById('mobileStickyCart');
-      if (!cart) return;
-      function onScroll() {
-        if (window.scrollY > 40) {
-          cart.classList.add('scrolled');
+      var hamburger = document.querySelector('.humberger__open');
+      if (!cart || !hamburger) return;
+
+      function updateCart() {
+        if (window.scrollY > 50) {
+          cart.classList.remove('absolute-state');
+          cart.classList.add('fixed-state');
+          cart.style.top = '16px'; // Snaps to top right smoothly
         } else {
-          cart.classList.remove('scrolled');
+          cart.classList.remove('fixed-state');
+          cart.classList.add('absolute-state');
+          // Dynamically read the exact bottom position of the hamburger to ensure pixel-perfect stacking
+          var rect = hamburger.getBoundingClientRect();
+          cart.style.top = (rect.bottom + window.scrollY) + 'px';
         }
       }
-      window.addEventListener('scroll', onScroll, { passive: true });
-      onScroll();
+
+      window.addEventListener('scroll', updateCart, { passive: true });
+      window.addEventListener('resize', updateCart);
+      window.addEventListener('load', updateCart);
+      
+      // Ensure layout triggers correctly
+      setTimeout(updateCart, 50);
+      updateCart();
     })();
   </script>
 
