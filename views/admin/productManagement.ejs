@@ -424,7 +424,13 @@
 
   async function openEditModal(productId) {
     try {
-      if (typeof myTable !== 'undefined') {
+      // Robustly get current page from pagination DOM
+      const activePageEl = document.querySelector('.dataTable-pagination .active a');
+      if (activePageEl) {
+        let pageNum = activePageEl.dataset ? activePageEl.dataset.page : null;
+        if (!pageNum) pageNum = activePageEl.innerText.trim();
+        sessionStorage.setItem('dt_saved_page', pageNum);
+      } else if (typeof myTable !== 'undefined' && myTable.currentPage) {
         sessionStorage.setItem('dt_saved_page', myTable.currentPage);
       }
       
