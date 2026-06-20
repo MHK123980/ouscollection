@@ -28,6 +28,7 @@
 </head>
 
 <body>
+  <style> body { position: relative; min-height: 100vh; } </style>
   <!-- Page Preloder -->
   <style>
     #preloder {
@@ -244,12 +245,27 @@
           </div>
         </div>
       </div>
-      <div class="humberger__open">
-        <i class="fa fa-bars"></i>
-      </div>
     </div>
   </header>
   <!-- Header Section End -->
+
+  <!-- Pure CSS Sticky Mobile Sidebar Wrapper (Spans full page height to enable sticky behavior without Javascript) -->
+  <div class="mobile-action-sidebar d-flex d-lg-none flex-column align-items-center" style="position: absolute; right: 0; top: 0; bottom: 0; width: 60px; z-index: 999999; pointer-events: none;">
+    
+    <!-- Hamburger Icon (Moved here from header, overriding absolute positioning to participate in flex layout) -->
+    <div class="humberger__open" style="position: relative !important; right: auto !important; top: auto !important; margin-top: 22px; margin-bottom: 12px; pointer-events: auto;">
+      <i class="fa fa-bars"></i>
+    </div>
+
+    <!-- Sticky Cart Icon (Naturally sits below hamburger at top, sticks when scrolled past top-4) -->
+    <div class="mobile-header-cart" style="position: sticky; top: 16px; pointer-events: auto;">
+      <a href="/user/cart" style="color: #1c1c1c; font-size: 22px; position: relative; display: inline-block; text-decoration: none;">
+        <i class="fa fa-shopping-bag"></i>
+        <span class="cart-item-count" style="position: absolute; top: -6px; right: -8px; background: #7fad39; color: white; font-size: 10px; font-weight: 700; width: 18px; height: 18px; border-radius: 50%; display: flex; justify-content: center; align-items: center;">0</span>
+      </a>
+    </div>
+
+  </div>
 
 
 
@@ -418,90 +434,7 @@
   <%- script %>
 
   <!-- Mobile Sticky Cart (outside everything so position:fixed works on all browsers without clipping) -->
-  <div class="mobile-header-cart absolute-state d-block d-lg-none" id="mobileStickyCart">
-    <a href="/user/cart">
-      <i class="fa fa-shopping-bag"></i>
-      <span class="cart-item-count">0</span>
-    </a>
-  </div>
-  <style>
-    .mobile-header-cart {
-      right: 15px;
-      z-index: 999999 !important;
-      height: 35px;
-      width: 35px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: none; /* Ensure instant snap */
-      pointer-events: auto; /* Ensure clickable */
-    }
-    .mobile-header-cart.absolute-state {
-      position: absolute !important;
-    }
-    .mobile-header-cart.fixed-state {
-      position: fixed !important;
-      /* Fix iOS Safari disappearing elements bug */
-      -webkit-transform: translateZ(0);
-      transform: translateZ(0);
-      visibility: visible !important;
-      opacity: 1 !important;
-      display: flex !important;
-    }
-    .mobile-header-cart a {
-      color: #1c1c1c;
-      font-size: 22px;
-      position: relative;
-      display: inline-block;
-      text-decoration: none;
-    }
-    .mobile-header-cart a span {
-      position: absolute;
-      top: -6px;
-      right: -8px;
-      background: #7fad39;
-      color: white;
-      font-size: 10px;
-      font-weight: 700;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-  </style>
-  <script>
-    (function() {
-      var cart = document.getElementById('mobileStickyCart');
-      var hamburger = document.querySelector('.humberger__open');
-      if (!cart || !hamburger) return;
 
-      function updateCart() {
-        // Use pageYOffset for better cross-browser compatibility (e.g. older iOS)
-        var scrollPos = window.pageYOffset || document.documentElement.scrollTop;
-        if (scrollPos > 50) {
-          cart.classList.remove('absolute-state');
-          cart.classList.add('fixed-state');
-          cart.style.top = '16px'; // Snaps to top right smoothly
-        } else {
-          cart.classList.remove('fixed-state');
-          cart.classList.add('absolute-state');
-          // Dynamically read the exact bottom position of the hamburger to ensure pixel-perfect stacking
-          var rect = hamburger.getBoundingClientRect();
-          cart.style.top = (rect.bottom + scrollPos) + 'px';
-        }
-      }
-
-      window.addEventListener('scroll', updateCart, { passive: true });
-      window.addEventListener('resize', updateCart);
-      window.addEventListener('load', updateCart);
-      
-      // Ensure layout triggers correctly
-      setTimeout(updateCart, 50);
-      updateCart();
-    })();
-  </script>
 
 </body>
 
