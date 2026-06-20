@@ -143,7 +143,11 @@ module.exports = {
             // Old ImgBB links will just remain active.
 
             const pusher = req.app.get('pusher');
-      if (pusher) { pusher.trigger('ecommerce-channel', 'site_updated', {}); }
+            if (pusher) { 
+                setTimeout(() => {
+                    pusher.trigger('ecommerce-channel', 'site_updated', {});
+                }, 500);
+            }
             if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
                 return res.json({ success: true, message: "Product updated successfully" });
             }
