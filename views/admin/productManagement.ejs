@@ -372,7 +372,15 @@
         // CRITICAL: Remove the file input name so files are NOT sent with form.submit()
         if(input) input.removeAttribute('name');
         
-        $(`#editProduct-${productId}`).modal('hide');
+        const modalEl = document.getElementById(`edit-${productId}`);
+        if (modalEl) {
+            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+            if (modalInstance) {
+                modalInstance.hide();
+            } else {
+                $(`#edit-${productId}`).modal('hide');
+            }
+        }
         if(loaderText) loaderText.innerText = "Saving product details...";
         
         let finalFormData = new FormData(form);
