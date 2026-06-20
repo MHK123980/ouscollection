@@ -256,21 +256,14 @@
       </div>
       <style>
         .mobile-header-cart {
-          position: absolute;
-          top: 65px;
+          position: fixed;
+          top: 18px;
           right: 15px;
-          z-index: 99;
+          z-index: 9999;
           height: 35px;
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: top 0.2s ease-in-out;
-        }
-        .mobile-header-cart.scrolled {
-          position: fixed;
-          top: 22px;
-          right: 15px;
-          z-index: 999;
         }
         .mobile-header-cart a {
           color: #1c1c1c;
@@ -294,20 +287,6 @@
           align-items: center;
         }
       </style>
-      <script>
-        document.addEventListener('DOMContentLoaded', function() {
-          const mobileCart = document.getElementById('mobileStickyCart');
-          if (mobileCart) {
-            window.addEventListener('scroll', function() {
-              if (window.scrollY > 40) {
-                mobileCart.classList.add('scrolled');
-              } else {
-                mobileCart.classList.remove('scrolled');
-              }
-            });
-          }
-        });
-      </script>
     </div>
   </header>
   <!-- Header Section End -->
