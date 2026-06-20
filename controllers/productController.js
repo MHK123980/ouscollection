@@ -144,11 +144,28 @@ module.exports = {
 
             const pusher = req.app.get('pusher');
       if (pusher) { pusher.trigger('ecommerce-channel', 'site_updated', {}); }
+            if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
+                return res.json({ success: true, message: "Product updated successfully" });
+            }
             res.redirect("/admin/products")
         } catch (err) {
             console.log(err)
+            if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
+                return res.status(500).json({ success: false, message: "Error updating product: " + err.message });
+            }
             req.flash("message", "Error updating product: " + err.message)
             res.redirect("/admin/products")
+        }
+    },
+    markOutOfStock: async (req, res) => {
+        try {
+            await Product.findByIdAndUpdate(req.params.id, { quantity: 0 });
+            const pusher = req.app.get('pusher');
+            if (pusher) { pusher.trigger('ecommerce-channel', 'site_updated', {}); }
+            res.json({ success: true, message: "Product marked as out of stock" });
+        } catch (err) {
+            console.log(err);
+            res.status(500).json({ success: false, message: "Error updating stock" });
         }
     },
 

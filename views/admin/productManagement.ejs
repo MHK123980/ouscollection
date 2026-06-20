@@ -45,42 +45,43 @@
           </tfoot>
           <tbody>
             <% allProducts.forEach(product=>{ %>
-              <tr>
+              <tr id="product-row-<%= product.id %>">
                 <td><img
                     src="<%= product.productImagePath[0].startsWith('http') ? product.productImagePath[0] : '/files/' + product.productImagePath[0] %>"
                     alt="<%= product.name %>" width="60" class="img-fluid img-thumbnail"></td>
-                <td>
+                <td class="product-name">
                   <%= product.name %>
                   <% if(product.isWholesaleSet) { %>
                     <br><span class="badge text-white mt-1" style="background-color:#7fad39; font-size:0.7rem; letter-spacing:1px;"><i class="fa-solid fa-boxes-stacked me-1"></i>SET</span>
                   <% } %>
                 </td>
-                <td>
+                <td class="product-category">
                   <%= product.category ? product.category.categoryName : '-' %>
                 </td>
-                <td>
+                <td class="product-quantity">
                   <%= product.quantity %>
                 </td>
-                <td>
+                <td class="product-price">
                   <%= product.price %>
                 </td>
-                <td>
+                <td class="product-discount">
                   <%= product.discount %>
                 </td>
-                <td>
+                <td class="product-offerPrice">
                   <%= product.offerPrice %>
                 </td>
+                <td class="product-isFeatured">
                 <% if(product.isFeatured){%>
-                  <td><span class="badge bg-success">Featured</span></td>
-                  <%}else{%>
-                    <td></td>
-                    <% } %>
-                      <td>
-                        <div>
-                          <button class="btn btn-sm btn-outline-dark" type="button" onclick="openEditModal('<%= product.id %>')"><i class="fa-solid fa-pen-to-square"></i></button>
-                          <button class="btn btn-sm btn-outline-danger" type="button" onclick="confirmDelete('<%= product.id %>')"><i class="fa-solid fa-trash-can"></i></button>
-                        </div>
-                      </td>
+                  <span class="badge bg-success">Featured</span>
+                <%} %>
+                </td>
+                <td>
+                  <div>
+                    <button class="btn btn-sm btn-outline-dark" type="button" onclick="openEditModal('<%= product.id %>')"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button class="btn btn-sm btn-outline-warning" type="button" onclick="confirmMarkOutOfStock('<%= product.id %>')" title="Mark Out Of Stock"><i class="fa-solid fa-ban"></i></button>
+                    <button class="btn btn-sm btn-outline-danger" type="button" onclick="confirmDelete('<%= product.id %>')"><i class="fa-solid fa-trash-can"></i></button>
+                  </div>
+                </td>
               </tr>
               <% }) %>
           </tbody>
@@ -373,9 +374,52 @@
         
         $(`#editProduct-${productId}`).modal('hide');
         if(loaderText) loaderText.innerText = "Saving product details...";
-        form.submit();
+        
+        let finalFormData = new FormData(form);
+        let submitRes = await fetch(form.action, {
+            method: 'POST', // method-override handles ?_method=PUT
+            body: finalFormData,
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
+        let result = await submitRes.json();
+        if (result.success) {
+            // Update row dynamically
+            let row = document.getElementById(`product-row-${productId}`);
+            if (row) {
+                let nameHtml = finalFormData.get('name');
+                if (finalFormData.get('isWholesaleSet') === 'on') {
+                    nameHtml += '<br><span class="badge text-white mt-1" style="background-color:#7fad39; font-size:0.7rem; letter-spacing:1px;"><i class="fa-solid fa-boxes-stacked me-1"></i>SET</span>';
+                }
+                row.querySelector('.product-name').innerHTML = nameHtml;
+                row.querySelector('.product-quantity').innerText = finalFormData.get('quantity');
+                row.querySelector('.product-price').innerText = finalFormData.get('price');
+                
+                let discount = finalFormData.get('discount') ? parseFloat(finalFormData.get('discount')) : 0;
+                let price = parseFloat(finalFormData.get('price'));
+                row.querySelector('.product-discount').innerText = discount || '';
+                row.querySelector('.product-offerPrice').innerText = discount ? (price - (price/100)*discount).toFixed(2) : price;
+                
+                if (finalFormData.get('isFeatured') === 'on') {
+                    row.querySelector('.product-isFeatured').innerHTML = '<span class="badge bg-success">Featured</span>';
+                } else {
+                    row.querySelector('.product-isFeatured').innerHTML = '';
+                }
+            }
+            if (overlay) overlay.style.display = 'none';
+            if (progressBar) progressBar.style.display = 'none';
+            if(btn) {
+                btn.disabled = false;
+                btn.innerHTML = 'Save changes';
+            }
+        } else {
+            throw new Error(result.message || "Failed to update product");
+        }
+        
     } catch(e) {
-        alert("Upload error: " + e.message);
+        alert("Error: " + e.message);
         if(overlay) overlay.style.display = 'none';
         if(progressBar) progressBar.style.display = 'none';
         if(btn) {
@@ -469,5 +513,31 @@
     document.getElementById('globalDeleteForm').action = `/admin/deleteProduct/${productId}?_method=DELETE`;
     const modal = new bootstrap.Modal(document.getElementById('globalDeleteModal'));
     modal.show();
+  }
+
+  async function confirmMarkOutOfStock(productId) {
+    if (confirm("Are you sure you want to mark this product as out of stock? This will set its quantity to 0.")) {
+      try {
+        const response = await fetch(`/admin/markOutOfStock/${productId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
+        const result = await response.json();
+        if (result.success) {
+          // Dynamically update the row quantity to 0
+          let row = document.getElementById(`product-row-${productId}`);
+          if (row) {
+            row.querySelector('.product-quantity').innerText = '0';
+          }
+        } else {
+          alert("Error: " + result.message);
+        }
+      } catch (e) {
+        alert("Failed to update stock.");
+      }
+    }
   }
 </script>

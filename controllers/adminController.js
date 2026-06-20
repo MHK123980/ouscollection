@@ -178,7 +178,7 @@ module.exports = {
         Category.find().sort({ categoryName: 1 }).lean().exec(),
         Product.find()
           .populate('category', 'categoryName')
-          .select('name category quantity price discount offerPrice isFeatured isWholesaleSet piecesPerSet productImagePath deliveryCharges increaseDeliveryChargesWithQuantity description createdAt')
+          .select('name category quantity price discount offerPrice isFeatured isWholesaleSet piecesPerSet productImagePath deliveryCharges increaseDeliveryChargesWithQuantity createdAt')
           .sort({ createdAt: -1 })
           .lean()
           .exec()
