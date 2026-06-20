@@ -247,71 +247,51 @@
       <div class="humberger__open">
         <i class="fa fa-bars"></i>
       </div>
-      <!-- Mobile Sticky Cart -->
-      <div class="mobile-header-cart d-block d-lg-none" id="mobileStickyCart">
-        <a href="/user/cart">
-          <i class="fa fa-shopping-bag"></i>
-          <span class="cart-item-count">0</span>
-        </a>
-      </div>
-      <style>
-        .mobile-header-cart {
-          position: absolute;
-          top: 65px;
-          right: 15px;
-          z-index: 99;
-          height: 35px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: none;
-        }
-        .mobile-header-cart.scrolled {
-          position: fixed !important;
-          top: 22px !important;
-          right: 15px !important;
-          z-index: 9999 !important;
-        }
-        .mobile-header-cart a {
-          color: #1c1c1c;
-          font-size: 22px;
-          position: relative;
-          display: inline-block;
-        }
-        .mobile-header-cart a span {
-          position: absolute;
-          top: -6px;
-          right: -8px;
-          background: #7fad39;
-          color: white;
-          font-size: 10px;
-          font-weight: 700;
-          width: 18px;
-          height: 18px;
-          border-radius: 50%;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-      </style>
-      <script>
-        (function() {
-          var cart = document.getElementById('mobileStickyCart');
-          if (!cart) return;
-          function onScroll() {
-            if (window.scrollY > 60) {
-              cart.classList.add('scrolled');
-            } else {
-              cart.classList.remove('scrolled');
-            }
-          }
-          window.addEventListener('scroll', onScroll, { passive: true });
-          onScroll();
-        })();
-      </script>
     </div>
   </header>
   <!-- Header Section End -->
+
+  <!-- Mobile Sticky Cart (outside header so position:fixed works on all browsers) -->
+  <div class="mobile-header-cart d-block d-lg-none" id="mobileStickyCart">
+    <a href="/user/cart">
+      <i class="fa fa-shopping-bag"></i>
+      <span class="cart-item-count">0</span>
+    </a>
+  </div>
+  <style>
+    .mobile-header-cart {
+      position: fixed;
+      top: 18px;
+      right: 60px;
+      z-index: 9999;
+      height: 35px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .mobile-header-cart a {
+      color: #1c1c1c;
+      font-size: 22px;
+      position: relative;
+      display: inline-block;
+    }
+    .mobile-header-cart a span {
+      position: absolute;
+      top: -6px;
+      right: -8px;
+      background: #7fad39;
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  </style>
+
   <%- body %>
 
 
