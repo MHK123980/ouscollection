@@ -47,8 +47,8 @@
             <% allProducts.forEach(product=>{ %>
               <tr id="product-row-<%= product.id %>">
                 <td><img
-                    src="<%= product.productImagePath[0].startsWith('http') ? product.productImagePath[0] : '/files/' + product.productImagePath[0] %>"
-                    alt="<%= product.name %>" width="60" class="img-fluid img-thumbnail"></td>
+                    src="<%= product.productImagePath && product.productImagePath.length > 0 ? (product.productImagePath[0].startsWith('http') ? product.productImagePath[0] : '/files/' + product.productImagePath[0]) : '/img/no-image.png' %>"
+                    alt="<%= product.name %>" width="60" class="img-fluid img-thumbnail" loading="lazy" decoding="async"></td>
                 <td class="product-name">
                   <%= product.name %>
                   <% if(product.isWholesaleSet) { %>
