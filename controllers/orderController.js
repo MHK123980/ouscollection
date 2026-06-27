@@ -3,6 +3,7 @@ const Product = require("../models/product")
 const Cart = require("../models/cart")
 const User = require("../models/users")
 const Category = require("../models/category")
+const { sendOrderConfirmationEmail } = require("../services/emailService")
 
 module.exports = {
 
@@ -153,6 +154,11 @@ module.exports = {
             }
 
             await newOrder.save()
+
+            // Send Email Confirmation
+            if (deliveryAddress.email && deliveryAddress.email.trim() !== '') {
+                sendOrderConfirmationEmail(newOrder, deliveryAddress.email.trim());
+            }
 
             // Emit new_order event via Pusher
             const pusher = req.app.get('pusher');

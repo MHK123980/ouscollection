@@ -105,8 +105,8 @@
               <input type="number" name="pincode" minlength="6" maxlength="6">
             </div>
             <div class="checkout__input">
-              <p>Email</p>
-              <input type="text" name="email" placeholder="<%= user.email %>" readonly>
+              <p>Email (Optional)</p>
+              <input type="text" name="email" value="<%= user.email %>" placeholder="Enter email for order confirmation">
             </div>
 
             <input type="hidden" id="address-index" name="addressIndex" value="">
