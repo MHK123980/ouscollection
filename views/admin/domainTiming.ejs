@@ -1,0 +1,85 @@
+<div class="container-fluid px-4">
+  <h1 class="mt-4">Domain Timing</h1>
+  <div class="card mb-4">
+    <div class="card-header">
+      <i class="fas fa-clock me-1"></i>
+      Domain Expiry Timing
+    </div>
+    <div class="card-body">
+      <% if (timing) { %>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Start Date</th>
+              <th>Expiry Date</th>
+              <th>Days Remaining</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><%= new Date(timing.startDate).toLocaleDateString('en-GB') %></td>
+              <td><%= new Date(timing.expiryDate).toLocaleDateString('en-GB') %></td>
+              <td>
+                <% 
+                  const now = new Date();
+                  const expiry = new Date(timing.expiryDate);
+                  const diffTime = expiry - now;
+                  const diffDays = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+                %>
+                <span class="badge bg-<%= diffDays > 30 ? 'success' : (diffDays > 7 ? 'warning' : 'danger') %>">
+                  <%= diffDays %> Days Left
+                </span>
+              </td>
+              <td>
+                <button class="btn btn-sm btn-danger" onclick="deleteTiming('<%= timing._id %>')">
+                  <i class="fa-solid fa-trash"></i> Delete
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      <% } else { %>
+        <form action="/admin/domain-timing" method="post">
+          <div class="row mb-3">
+            <div class="col-md-5">
+              <label class="form-label">Start Date</label>
+              <input type="date" name="startDate" class="form-control" required>
+            </div>
+            <div class="col-md-5">
+              <label class="form-label">Expiry Date</label>
+              <input type="date" name="expiryDate" class="form-control" required>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+              <button type="submit" class="btn btn-dark w-100">Add</button>
+            </div>
+          </div>
+        </form>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<script>
+  async function deleteTiming(id) {
+    const result = await Swal.fire({
+      title: 'Delete Domain Timing?',
+      text: 'This will remove the domain expiry countdown.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, delete it!'
+    });
+    if (result.isConfirmed) {
+      try {
+        await axios.delete(`/admin/domain-timing/${id}`);
+        toastr.success('Domain timing deleted.');
+        setTimeout(() => location.reload(), 500);
+      } catch (err) {
+        toastr.error('Error deleting domain timing.');
+        console.error(err);
+      }
+    }
+  }
+</script>

@@ -58,11 +58,15 @@
                             <td>ouscollection.com<%=banner.url%>
                             </td>
                             <% if(banner.isActive){%>
-                              <td><button class="btn btn-sm btn-outline-danger"
-                                  onclick="deactivateBanner('<%=banner.id%>')">Deactivate</button></td>
+                              <td>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deactivateBanner('<%=banner.id%>')">Deactivate</button>
+                                <button class="btn btn-sm btn-danger ms-1" onclick="deleteBanner('<%=banner.id%>')"><i class="fa-solid fa-trash"></i></button>
+                              </td>
                               <% }else{%>
-                                <td><button class="btn btn-sm btn-outline-dark"
-                                    onclick="activateBanner('<%=banner.id%>')">Activate</button></td>
+                                <td>
+                                  <button class="btn btn-sm btn-outline-dark" onclick="activateBanner('<%=banner.id%>')">Activate</button>
+                                  <button class="btn btn-sm btn-danger ms-1" onclick="deleteBanner('<%=banner.id%>')"><i class="fa-solid fa-trash"></i></button>
+                                </td>
                                 <% } %>
               </tr>
               <%}) %>
@@ -94,6 +98,28 @@
     } catch (err) {
       toastr.error('Error Deactivating banner.')
       console.error(err)
+    }
+  }
+
+  async function deleteBanner(bannerId) {
+    const result = await Swal.fire({
+      title: 'Delete Banner?',
+      text: 'This banner will be permanently deleted.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, delete it!'
+    });
+    if (result.isConfirmed) {
+      try {
+        await axios.delete(`/admin/deleteBanner/${bannerId}`);
+        toastr.success('Banner deleted.');
+        setTimeout(() => location.reload(), 500);
+      } catch (err) {
+        toastr.error('Error deleting banner.');
+        console.error(err);
+      }
     }
   }
 </script>

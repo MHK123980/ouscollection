@@ -29,8 +29,21 @@ const adminControl = require("../controllers/adminController")
 const orderControl = require("../controllers/orderController")
 const bannerControl = require("../controllers/bannerController")
 const couponControl = require("../controllers/couponController")
+const domainTimingControl = require("../controllers/domainTimingController")
+const DomainTiming = require("../models/domainTiming")
 
 router.use(authentication.checkLoggedIn, authentication.checkAdminPrivilege)
+
+// Middleware to inject domain timing into all admin views
+router.use(async (req, res, next) => {
+    try {
+        const timing = await DomainTiming.findOne()
+        res.locals.domainTiming = timing || null
+    } catch (err) {
+        res.locals.domainTiming = null
+    }
+    next()
+})
 
 router.get("/", adminControl.home)
 router.get("/getGraphDetails",adminControl.getGraphDetails)
@@ -43,6 +56,7 @@ router.get("/banners", bannerControl.getBanner)
 router.get("/orders/:id", adminControl.orderDetails)
 router.get("/addOrder", adminControl.getAddOrder)
 router.get("/report", adminControl.getReport)
+router.get("/domain-timing", domainTimingControl.getTiming)
 
 router.post("/addOrder", adminControl.postAddOrder)
 router.post("/uploadSingleImage", multer.singleImage, productControl.uploadSingleImage)
@@ -50,6 +64,7 @@ router.post("/addCategory", adminControl.addCategory)
 router.post("/addProduct", multer.productImage, productControl.addProduct)
 router.post("/addCoupon", couponControl.addCoupon)
 router.post("/addBanner", multer.bannerImage, bannerControl.addBanner)
+router.post("/domain-timing", domainTimingControl.addTiming)
 
 router.put("/activateCoupon/:id", couponControl.activate)
 router.put("/deactivateCoupon/:id", couponControl.deactivate)
@@ -72,6 +87,8 @@ router.put("/cancelOrder/:id", orderControl.cancelOrder)
 router.delete("/orders/:id", adminControl.deleteOrder)
 router.delete("/deleteProduct/:id", productControl.deleteProduct)
 router.delete("/deleteCategory/:id", adminControl.deleteCategory)
+router.delete("/deleteBanner/:id", bannerControl.deleteBanner)
+router.delete("/domain-timing/:id", domainTimingControl.deleteTiming)
 router.delete("/logout", userControl.userLogout)
 
 module.exports = router

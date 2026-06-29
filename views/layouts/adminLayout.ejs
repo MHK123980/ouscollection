@@ -145,6 +145,17 @@
         <button class="btn btn-primary" id="btnNavbarSearch" type="button"><i class="fas fa-search"></i></button>
       </div> -->
     </form>
+    <% if (locals.domainTiming && locals.domainTiming.expiryDate) { %>
+      <% 
+        var dtNow = new Date();
+        var dtExpiry = new Date(locals.domainTiming.expiryDate);
+        var dtDiff = dtExpiry - dtNow;
+        var dtDaysLeft = Math.max(0, Math.ceil(dtDiff / (1000 * 60 * 60 * 24)));
+      %>
+      <span style="color: #fff; font-size: 11px; white-space: nowrap; margin-right: 10px;">
+        <i class="fas fa-globe" style="margin-right: 4px;"></i><%= dtDaysLeft %> Days Left Until Domain Expiry
+      </span>
+    <% } %>
     <!-- Navbar-->
     <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
       <li class="nav-item dropdown">
@@ -190,6 +201,10 @@
             <a class="nav-link" href="/admin/banners">
               <div class="sb-nav-link-icon"><i class="fa-solid fa-images"></i></div>
               Banners
+            </a>
+            <a class="nav-link" href="/admin/domain-timing">
+              <div class="sb-nav-link-icon"><i class="fa-solid fa-clock"></i></div>
+              Domain Timing
             </a>
             <a class="nav-link" href="/admin/coupons">
               <div class="sb-nav-link-icon"><i class="fa-solid fa-tags"></i></div>

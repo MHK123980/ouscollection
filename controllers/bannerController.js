@@ -21,6 +21,12 @@ module.exports = {
 
     addBanner: async (req, res) => {
         try {
+            const bannerCount = await Banner.countDocuments();
+            if (bannerCount >= 2) {
+                req.flash("message", "Maximum 2 banners allowed. Please delete an existing one first.");
+                return res.redirect("/admin/banners");
+            }
+
             const { title, viewOrder, caption, promoCoupon, url } = req.body
 
             let bannerImagePath = null;
@@ -70,6 +76,17 @@ module.exports = {
             await Banner.findByIdAndUpdate(bannerId, { isActive: false })
             res.status(201).json({ message: "Deactivate" })
         } catch (err) {
+            res.status(500).json({ err })
+        }
+    },
+
+    deleteBanner: async (req, res) => {
+        try {
+            const bannerId = req.params.id
+            await Banner.findByIdAndDelete(bannerId)
+            res.status(200).json({ message: "Deleted" })
+        } catch (err) {
+            console.log(err)
             res.status(500).json({ err })
         }
     }
