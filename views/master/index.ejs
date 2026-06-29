@@ -34,8 +34,21 @@
   .hero__item {
     background-color: #ffffff;
     border-radius: 15px;
-    padding: 15px;
+    overflow: hidden;
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  }
+  
+  .hero__item a {
+    display: block;
+    line-height: 0;
+  }
+  
+  .hero__item a img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 15px;
+    image-rendering: auto;
   }
   
   /* Remove top/bottom extra spacing if any, but let's keep it clean */
@@ -98,13 +111,10 @@
           </div>
         </div>
         <% if(primaryBanner){%>
-        <div class="hero__item set-bg primary-banner" data-setbg="<%= primaryBanner.bannerImagePath.startsWith('http') ? primaryBanner.bannerImagePath : '/files/' + primaryBanner.bannerImagePath %>">
-          <div class="hero__text">
-            <span>OUS Collection</span>
-            <h2><%= primaryBanner.title %> <br><%= primaryBanner.caption %></h2>
-            <p>Use Coupon ONAM100</p>
-            <a href="<%= primaryBanner.url %>" class="primary-btn">SHOP NOW</a>
-          </div>
+        <div class="hero__item">
+          <a href="<%= primaryBanner.url %>">
+            <img src="<%= primaryBanner.bannerImagePath.startsWith('http') ? primaryBanner.bannerImagePath : '/files/' + primaryBanner.bannerImagePath %>" alt="<%= primaryBanner.title || 'OUS Collection Banner' %>">
+          </a>
         </div>
         <% } %>
       </div>
