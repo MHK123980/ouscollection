@@ -11,14 +11,15 @@ module.exports = {
   getHome: async (req, res) => {
     try {
       const allCategoriesPromise = Category.find();
-      const primaryBannerPromise = Banner.findOne({
+      const primaryBannerPromise = Banner.find({
         $and: [{ viewOrder: "primary" }, { isActive: true }],
-      }).exec();
+      })
+        .sort({ createdAt: -1 })
+        .exec();
       const secondaryBannerPromise = Banner.find({
         $and: [{ viewOrder: "secondary" }, { isActive: true }],
       })
         .sort({ createdAt: -1 })
-        .limit(2)
         .exec();
 
       const topRatedProductsPromise = Product.find({ avgRating: { $ne: null } })

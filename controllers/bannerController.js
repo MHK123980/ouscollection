@@ -22,8 +22,8 @@ module.exports = {
     addBanner: async (req, res) => {
         try {
             const bannerCount = await Banner.countDocuments();
-            if (bannerCount >= 2) {
-                req.flash("message", "Maximum 2 banners allowed. Please delete an existing one first.");
+            if (bannerCount >= 10) {
+                req.flash("message", "Maximum 10 banners allowed. Please delete an existing one first.");
                 return res.redirect("/admin/banners");
             }
 
@@ -55,12 +55,8 @@ module.exports = {
         try {
             const bannerId = req.params.id
             const myBanner = await Banner.findById(bannerId)
-            if (myBanner.viewOrder == "primary") {
-                const isExist = await Banner.findOne({ $and: [{ viewOrder: "primary" }, { isActive: true }] })
-                if (isExist) {
-                    return res.status(403).json({ message: "cant activate multiple primary banners at same time" })
-                }
-            }
+            // Removed primary banner restriction so user can activate multiple primary banners
+
             myBanner.isActive = true
             await myBanner.save()
             res.status(201).json({ message: "Activated" })

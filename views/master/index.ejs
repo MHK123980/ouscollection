@@ -117,12 +117,14 @@
             </form>
           </div>
         </div>
-        <% if(primaryBanner){%>
-        <div class="hero__item">
-          <a href="<%= primaryBanner.url %>">
-            <img src="<%= primaryBanner.bannerImagePath.startsWith('http') ? primaryBanner.bannerImagePath : '/files/' + primaryBanner.bannerImagePath %>" alt="<%= primaryBanner.title || 'OUS Collection Banner' %>">
-          </a>
-        </div>
+        <% if(primaryBanner && primaryBanner.length > 0){%>
+          <% primaryBanner.forEach(banner => { %>
+          <div class="hero__item mb-4">
+            <a href="<%= banner.url %>">
+              <img src="<%= banner.bannerImagePath.startsWith('http') ? banner.bannerImagePath : '/files/' + banner.bannerImagePath %>" alt="<%= banner.title || 'OUS Collection Banner' %>">
+            </a>
+          </div>
+          <% }) %>
         <% } %>
       </div>
     </div>
