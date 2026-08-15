@@ -94,20 +94,35 @@
       position: fixed !important;
       top: 0; left: 0;
       width: 100% !important;
-      padding: 6px !important;
+      padding: 0 !important;
       margin: 0 !important;
+      background: #fff;
+      color: #000;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     }
 
     /* Size variants applied via body class */
     body.print-3inch #print-slip { max-width: 80mm !important; }
     body.print-4inch #print-slip { max-width: 104mm !important; }
 
-    #print-slip table { width: 100% !important; border-collapse: collapse; }
-    #print-slip th, #print-slip td { border: 1px solid #555; padding: 2px 4px; font-size: 9pt; }
-    #print-slip .slip-header { text-align: center; margin-bottom: 6px; }
-    #print-slip .slip-shop  { font-size: 14pt; font-weight: 900; }
-    #print-slip .slip-footer { text-align: center; margin-top: 8px; font-size: 8pt; }
-    #print-slip .slip-grand  { font-weight: bold; font-size: 11pt; }
+    #print-slip .slip-header { text-align: center; margin-bottom: 10px; border-bottom: 1px dashed #000; padding-bottom: 8px; }
+    #print-slip .slip-logo { max-width: 70px; margin-bottom: 5px; }
+    #print-slip .slip-shop { font-size: 16pt; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 2px; }
+    #print-slip .slip-subtitle { font-size: 8pt; font-weight: 600; margin-bottom: 4px; }
+    #print-slip .slip-datetime { font-size: 8pt; color: #333; }
+
+    #print-slip table { width: 100% !important; border-collapse: collapse; margin-bottom: 10px; }
+    #print-slip th { border-bottom: 1px solid #000; border-top: 1px solid #000; padding: 4px 2px; font-size: 8pt; text-align: left; }
+    #print-slip td { padding: 4px 2px; font-size: 8pt; border-bottom: 1px dotted #ccc; }
+    
+    #print-slip .text-right { text-align: right !important; }
+    #print-slip .text-center { text-align: center !important; }
+    
+    #print-slip tfoot tr td { border-top: 1px dashed #000; border-bottom: none; font-size: 9pt; padding-top: 6px; }
+    #print-slip .slip-grand { font-weight: 900; font-size: 12pt; text-align: right; }
+
+    #print-slip .slip-footer { text-align: center; margin-top: 15px; border-top: 1px dashed #000; padding-top: 10px; font-size: 8pt; }
+    #print-slip .slip-footer-thanks { font-weight: bold; font-size: 10pt; margin-bottom: 4px; }
   }
 </style>
 
@@ -257,8 +272,11 @@
 <!-- ===== PRINT SLIP (hidden until print) ===== -->
 <div id="print-slip" style="display:none;">
   <div class="slip-header">
+    <img src="/img/logo.png" class="slip-logo" alt="Logo">
     <div class="slip-shop">OUS Collection</div>
-    <div style="font-size:9pt;" id="slip-datetime"></div>
+    <div class="slip-subtitle">LADIES & GENTS FASHION</div>
+    <div class="slip-subtitle">WHOLESALE & RETAIL</div>
+    <div class="slip-datetime" id="slip-datetime"></div>
   </div>
   <table>
     <thead>
@@ -267,23 +285,23 @@
         <th>Item</th>
         <th>Cat</th>
         <th>Pc</th>
-        <th>Qty</th>
-        <th>Price</th>
-        <th>Disc</th>
-        <th>Total</th>
+        <th class="text-center">Qty</th>
+        <th class="text-right">Price</th>
+        <th class="text-right">Disc</th>
+        <th class="text-right">Total</th>
       </tr>
     </thead>
     <tbody id="slip-tbody"></tbody>
     <tfoot>
       <tr>
-        <td colspan="7" style="text-align:right;font-weight:bold;">Grand Total</td>
+        <td colspan="7" class="text-right" style="font-weight:bold;">Grand Total:</td>
         <td class="slip-grand" id="slip-grand"></td>
       </tr>
     </tfoot>
   </table>
   <div class="slip-footer">
-    <div>Thanks For Choosing Ous Collection</div>
-    <div style="margin-top:4px;color:#555;">Powered By MHT Devs</div>
+    <div class="slip-footer-thanks">Thanks For Choosing OUS Collection</div>
+    <div>Powered By MHT Devs</div>
   </div>
 </div>
 
@@ -481,10 +499,10 @@
         <td>${escHtml(item.name)}</td>
         <td>${escHtml(item.category)}</td>
         <td>${escHtml(item.pieceType)}</td>
-        <td>${item.qty}</td>
-        <td>${fmt(item.price)}</td>
-        <td>${item.discountedPrice > 0 ? fmt(item.discountedPrice) : ''}</td>
-        <td>${fmt(lt)}</td>`;
+        <td class="text-center">${item.qty}</td>
+        <td class="text-right">${fmt(item.price)}</td>
+        <td class="text-right">${item.discountedPrice > 0 ? fmt(item.discountedPrice) : ''}</td>
+        <td class="text-right">${fmt(lt)}</td>`;
       slipTbody.appendChild(tr);
     });
     document.getElementById('slip-grand').textContent = 'Rs ' + fmt(grand);
@@ -534,17 +552,23 @@
     }
 
     // Auto-add with qty 1, keep scanner open
+    const itemName = data.name || data.n || '';
+    const itemCat = data.category || data.c || '';
+    const itemPrice = parseFloat(data.price || data.p) || 0;
+    const itemDisc = parseFloat(data.discountedPrice || data.d) || 0;
+    const itemPiece = data.pieceType || data.pt || '';
+
     addItem({
-      name:            data.name            || '',
-      category:        data.category        || '',
-      price:           parseFloat(data.price)           || 0,
-      discountedPrice: parseFloat(data.discountedPrice) || 0,
-      pieceType:       data.pieceType       || '',
+      name:            itemName,
+      category:        itemCat,
+      price:           itemPrice,
+      discountedPrice: itemDisc,
+      pieceType:       itemPiece,
       qty: 1,
     });
 
     showFlash();
-    setScanStatus('✔ Added: ' + (data.name || 'item'), '#6aff9b');
+    setScanStatus('✔ Added: ' + (itemName || 'item'), '#6aff9b');
     setTimeout(function () { setScanStatus('Point camera at a QR code…'); }, 1800);
   }
 

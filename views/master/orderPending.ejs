@@ -39,14 +39,30 @@
           <p class="mb-4 text-left">
             Please pay the total amount via EasyPaisa/JazzCash or Bank Transfer and send us the screenshot on WhatsApp to confirm your order.
           </p>
+
+          <!-- Account Details -->
+          <div class="row text-left mb-4">
+            <div class="col-md-6 mb-3 mb-md-0">
+              <div class="p-3 border rounded h-100" style="background-color: #f8f9fa;">
+                <h5 class="font-weight-bold" style="color:#562483;">Meezan Bank</h5>
+                <p class="mb-1 small"><strong>Account Name:</strong> MUHAMMAD UBAID RAZA</p>
+                <p class="mb-1 small"><strong>Account Number:</strong> 16050111513736</p>
+                <p class="mb-1 small" style="word-break: break-all;"><strong>IBAN:</strong> PK72MEZN0016050111513736</p>
+                <p class="mb-0 small"><strong>Branch:</strong> NEW CLOTH MARKET-HYD</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 border rounded h-100" style="background-color: #f8f9fa;">
+                <h5 class="font-weight-bold" style="color:#00B251;">Easypaisa</h5>
+                <p class="mb-1 small"><strong>Account Name:</strong> MUHAMMAD UBAID RAZA</p>
+                <p class="mb-1 small"><strong>Account Number:</strong> 03183403368</p>
+                <p class="mb-0 small" style="word-break: break-all;"><strong>IBAN:</strong> PK51TMFB0000000098159248</p>
+              </div>
+            </div>
+          </div>
           
-          <% 
-            const waNumber = "+923000000000"; // Replace with actual number if provided
-            const waText = encodeURIComponent(`Hello, I have placed an order (ID: ${order.orderIdStr}) for Rs ${order.total.toFixed(2)}. Here is my payment screenshot.`);
-          %>
-          
-          <a href="https://wa.me/<%= waNumber %>?text=<%= waText %>" target="_blank" class="btn btn-success btn-lg btn-block mb-3" style="background-color: #25D366; border-color: #25D366;">
-            <i class="fa-brands fa-whatsapp fa-lg me-2"></i> Share Screenshot on WhatsApp
+          <a href="https://wa.me/message/MZ2ASHNRCMOYO1" target="_blank" class="btn btn-success btn-lg btn-block mb-3" style="background-color: #25D366; border-color: #25D366; font-weight: bold;">
+            <i class="fa-brands fa-whatsapp fa-lg me-2"></i> Whatsapp No : 03243503152
           </a>
 
           <a href="/user/myOrders" class="btn btn-outline-dark btn-block">

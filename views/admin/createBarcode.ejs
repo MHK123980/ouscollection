@@ -3,8 +3,8 @@
      Requires: Bootstrap 5, FontAwesome 6 (from layout)
      ========================================================= -->
 
-<!-- qrcode.js CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- JsBarcode CDN -->
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
 <style>
   /* ---- Page ---- */
@@ -22,10 +22,10 @@
     min-height: 80px;
   }
 
-  /* Each label: 50mm × 50mm approximated at 96dpi */
+  /* Each label: 2 inch (width) x 1 inch (height) roughly on screen */
   .qr-label {
-    width:  190px;
-    height: 200px;
+    width: 200px;
+    height: 100px;
     background: #fff;
     border: 1px solid #bbb;
     border-radius: 4px;
@@ -33,35 +33,37 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 6px 4px 4px;
+    padding: 2px;
     box-sizing: border-box;
     page-break-inside: avoid;
     break-inside: avoid;
+    overflow: hidden;
   }
 
   .qr-label .qr-canvas-wrap {
-    width: 130px;
-    height: 130px;
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-bottom: 2px;
   }
 
-  .qr-label .qr-canvas-wrap canvas,
-  .qr-label .qr-canvas-wrap img {
-    max-width: 128px !important;
-    max-height: 128px !important;
+  .qr-label .qr-canvas-wrap svg {
+    max-width: 95% !important;
+    max-height: 40px !important;
   }
 
   .qr-label .label-info {
-    margin-top: 6px;
     text-align: center;
-    line-height: 1.35;
+    line-height: 1.1;
+    width: 100%;
   }
-  .qr-label .label-name  { font-size: 10px; font-weight: 700; word-break: break-word; }
-  .qr-label .label-price { font-size: 11px; color: #198754; font-weight: 800; }
-  .qr-label .label-piece { font-size: 9px;  color: #555; }
-  .qr-label .label-disc  { font-size: 9px;  color: #dc3545; text-decoration: line-through; }
+  .qr-label .label-name  { font-size: 10px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 95%; margin: 0 auto; }
+  
+  .qr-label .price-line { display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 10px; }
+  .qr-label .label-price { font-weight: 800; color: #198754; }
+  .qr-label .label-disc  { color: #dc3545; text-decoration: line-through; font-size: 9px; }
+  .qr-label .label-piece { font-size: 9px; color: #555; }
 
   /* Empty placeholder */
   #labels-placeholder {
@@ -83,25 +85,27 @@
       width: 100% !important;
       background: #fff !important;
       border: none !important;
-      padding: 4px !important;
-      gap: 6px !important;
+      padding: 0 !important;
+      gap: 0 !important;
+      margin: 0 !important;
+      display: flex !important;
+      flex-wrap: wrap !important;
     }
 
     .qr-label {
-      width: 50mm !important;
-      height: 52mm !important;
-      border: 1px solid #999 !important;
-      padding: 3px !important;
+      width: 50.8mm !important; /* 2 inches */
+      height: 25.4mm !important; /* 1 inch */
+      border: 1px dashed #ccc !important;
+      padding: 1mm !important;
+      margin: 0 !important;
+      float: left !important;
     }
 
-    .qr-label .qr-canvas-wrap { width: 100px !important; height: 100px !important; }
-    .qr-label .qr-canvas-wrap canvas,
-    .qr-label .qr-canvas-wrap img { max-width: 98px !important; max-height: 98px !important; }
-
-    .qr-label .label-name  { font-size: 7pt !important; }
-    .qr-label .label-price { font-size: 8pt !important; }
-    .qr-label .label-piece { font-size: 7pt !important; }
-    .qr-label .label-disc  { font-size: 7pt !important; }
+    .qr-label .qr-canvas-wrap svg { max-height: 12mm !important; }
+    .qr-label .label-name  { font-size: 6pt !important; }
+    .qr-label .price-line { font-size: 7pt !important; }
+    .qr-label .label-disc { font-size: 6pt !important; }
+    .qr-label .label-piece { font-size: 6pt !important; }
   }
 </style>
 
@@ -217,11 +221,11 @@
   /* ------------------------------------------------------------------ */
   function buildQrData(name, category, price, discountedPrice, pieceType) {
     const obj = {};
-    if (name)           obj.name           = name;
-    if (category)       obj.category       = category;
-    if (price > 0)      obj.price          = price;
-    if (discountedPrice > 0) obj.discountedPrice = discountedPrice;
-    if (pieceType)      obj.pieceType      = pieceType;
+    if (name)           obj.n = name;
+    if (category)       obj.c = category;
+    if (price > 0)      obj.p = price;
+    if (discountedPrice > 0) obj.d = discountedPrice;
+    if (pieceType)      obj.pt= pieceType;
     return JSON.stringify(obj);
   }
 
@@ -234,6 +238,8 @@
 
     const canvasWrap = document.createElement('div');
     canvasWrap.className = 'qr-canvas-wrap';
+    const svgEl = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    canvasWrap.appendChild(svgEl);
     label.appendChild(canvasWrap);
 
     // Info section
@@ -247,42 +253,56 @@
       info.appendChild(nameEl);
     }
 
-    if (price > 0) {
-      const priceEl = document.createElement('div');
-      priceEl.className = 'label-price';
-      priceEl.textContent = 'Rs ' + parseFloat(price).toFixed(2);
-      info.appendChild(priceEl);
-    }
+    const priceLine = document.createElement('div');
+    priceLine.className = 'price-line';
 
     if (discountedPrice > 0) {
-      const discEl = document.createElement('div');
-      discEl.className = 'label-disc';
-      discEl.textContent = 'Disc: Rs ' + parseFloat(discountedPrice).toFixed(2);
-      info.appendChild(discEl);
+      // If there's a discount, the NEW price is the discounted one (green, bold)
+      // and the OLD price gets the strikethrough (red)
+      const oldPriceEl = document.createElement('div');
+      oldPriceEl.className = 'label-disc';
+      oldPriceEl.textContent = 'Rs ' + parseFloat(price).toFixed(0);
+      
+      const newPriceEl = document.createElement('div');
+      newPriceEl.className = 'label-price';
+      newPriceEl.textContent = 'Rs ' + parseFloat(discountedPrice).toFixed(0);
+      
+      priceLine.appendChild(oldPriceEl);
+      priceLine.appendChild(newPriceEl);
+    } else if (price > 0) {
+      // No discount, just show regular price
+      const priceEl = document.createElement('div');
+      priceEl.className = 'label-price';
+      priceEl.textContent = 'Rs ' + parseFloat(price).toFixed(0);
+      priceLine.appendChild(priceEl);
     }
 
     if (pieceType) {
       const pieceEl = document.createElement('div');
       pieceEl.className = 'label-piece';
       pieceEl.textContent = pieceType;
-      info.appendChild(pieceEl);
+      priceLine.appendChild(pieceEl);
+    }
+
+    if (priceLine.childNodes.length > 0) {
+      info.appendChild(priceLine);
     }
 
     label.appendChild(info);
 
-    // Generate QR code into canvasWrap AFTER appending to DOM
-    // We use a short timeout to let the element be in the DOM first
+    // Generate Barcode into svgEl AFTER appending to DOM
     setTimeout(function () {
       try {
-        new QRCode(canvasWrap, {
-          text: qrData,
-          width:  128,
-          height: 128,
-          correctLevel: QRCode.CorrectLevel.M,
+        JsBarcode(svgEl, qrData, {
+          format: "CODE128",
+          displayValue: false,
+          margin: 0,
+          width: 1.2,
+          height: 30
         });
       } catch (e) {
-        canvasWrap.innerHTML = '<span class="text-danger" style="font-size:10px;">QR Error</span>';
-        console.error('QRCode generation error:', e);
+        canvasWrap.innerHTML = '<span class="text-danger" style="font-size:10px;">Barcode Error</span>';
+        console.error('Barcode generation error:', e);
       }
     }, 0);
 

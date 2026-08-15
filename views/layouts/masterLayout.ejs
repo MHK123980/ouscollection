@@ -148,7 +148,9 @@
           <a href="#" class="mobile-accordion-toggle" onclick="return toggleMobileAccordion(this)">Mens <i class="fa-solid fa-chevron-down ms-1" style="font-size:0.7em;"></i></a>
           <ul class="mobile-accordion-sub" style="display:none; padding-left:15px; list-style:none;">
             <li><a href="/shop/category/mens/1">All Mens</a></li>
-            <% if(typeof allCategories !== 'undefined') { allCategories.filter(c => c.gender === 'mens' || (c.categoryName && c.categoryName.toLowerCase().includes('men'))).forEach(cat => { %>
+            <% if(typeof allCategories !== 'undefined') { 
+                allCategories.filter(c => c.gender === 'mens' || (c.categoryName && c.categoryName.toLowerCase().includes('mens') && !c.categoryName.toLowerCase().includes('womens'))).forEach(cat => { 
+            %>
               <li><a href="/shop/category/<%= cat.categoryName %>/<%= cat.gender || 'mens' %>/1"><%= cat.categoryName %></a></li>
             <% }) } %>
           </ul>
@@ -157,7 +159,9 @@
           <a href="#" class="mobile-accordion-toggle" onclick="return toggleMobileAccordion(this)">Womens <i class="fa-solid fa-chevron-down ms-1" style="font-size:0.7em;"></i></a>
           <ul class="mobile-accordion-sub" style="display:none; padding-left:15px; list-style:none;">
             <li><a href="/shop/category/womens/1">All Womens</a></li>
-            <% if(typeof allCategories !== 'undefined') { allCategories.filter(c => c.gender === 'womens' || (c.categoryName && c.categoryName.toLowerCase().includes('women'))).forEach(cat => { %>
+            <% if(typeof allCategories !== 'undefined') { 
+                allCategories.filter(c => c.gender === 'womens' || (c.categoryName && (c.categoryName.toLowerCase().includes('women') || c.categoryName.toLowerCase().includes('womens')))).forEach(cat => { 
+            %>
               <li><a href="/shop/category/<%= cat.categoryName %>/<%= cat.gender || 'womens' %>/1"><%= cat.categoryName %></a></li>
             <% }) } %>
           </ul>
