@@ -99,6 +99,9 @@ module.exports = {
                         }
                     })
                     findCart.totalDeliveryCharges = totalDelivery
+                    // Recalculate totals from cart items to ensure offerPrice is reflected
+                    findCart.subTotal = findCart.products.reduce((acc, curr) => acc + (curr.quantity * curr.price), 0)
+                    findCart.total = findCart.products.reduce((acc, curr) => acc + curr.quantity * (curr.offerPrice || curr.price), 0)
                     await findCart.save()
                 }
                 const couponCode = req.session.coupon?.code
