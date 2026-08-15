@@ -1,0 +1,597 @@
+<!-- =========================================================
+     CREATE BILL  –  POS Page
+     Requires: Bootstrap 5, FontAwesome 6, jQuery (from layout)
+     ========================================================= -->
+
+<!-- html5-qrcode CDN -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<style>
+  /* ---- Page Layout ---- */
+  #bill-page { max-width: 1100px; margin: 0 auto; }
+
+  /* ---- Items Table ---- */
+  #items-wrapper {
+    max-height: 340px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+  }
+  #items-table thead th {
+    position: sticky;
+    top: 0;
+    background: #343a40;
+    color: #fff;
+    font-size: .78rem;
+    white-space: nowrap;
+    z-index: 2;
+  }
+  #items-table tbody tr:nth-child(odd)  { background: #f8f9fa; }
+  #items-table tbody tr:nth-child(even) { background: #ffffff; }
+  #items-table tbody tr { font-size: .82rem; }
+  #items-table .btn-remove { line-height: 1; padding: 1px 6px; }
+
+  /* ---- Grand Total badge ---- */
+  #grand-total-badge { font-size: 1.1rem; min-width: 120px; text-align: right; }
+
+  /* ---- Manual form ---- */
+  #manual-form label { font-size: .82rem; font-weight: 600; }
+  #manual-form .form-control,
+  #manual-form .form-select { font-size: .84rem; }
+
+  /* ---- Qty control ---- */
+  .qty-control { display: flex; align-items: center; gap: 4px; }
+  .qty-control button { width: 30px; height: 30px; padding: 0; font-size: 1rem; line-height: 1; }
+  .qty-control input  { width: 50px; text-align: center; font-size: .84rem; }
+
+  /* ---- Camera Overlay ---- */
+  #camera-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.82);
+    z-index: 9999;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  #camera-overlay.active { display: flex; }
+  #qr-reader {
+    width: min(94vw, 420px);
+    border-radius: 10px;
+    overflow: hidden;
+    background: #000;
+  }
+  #scan-status {
+    margin-top: 14px;
+    font-size: .95rem;
+    color: #fff;
+    min-height: 28px;
+    text-align: center;
+  }
+  #scan-flash {
+    position: fixed;
+    inset: 0;
+    background: rgba(40,200,80,.35);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .25s;
+    z-index: 10000;
+  }
+  #scan-flash.show { opacity: 1; }
+
+  /* ---- Print size btn-group ---- */
+  #print-size-group .btn { min-width: 90px; }
+
+  /* ---- PRINT STYLES ---- */
+  @media print {
+    /* Hide everything by default */
+    body * { visibility: hidden !important; }
+
+    /* Show only slip */
+    #print-slip, #print-slip * { visibility: visible !important; }
+    #print-slip {
+      position: fixed !important;
+      top: 0; left: 0;
+      width: 100% !important;
+      padding: 6px !important;
+      margin: 0 !important;
+    }
+
+    /* Size variants applied via body class */
+    body.print-3inch #print-slip { max-width: 80mm !important; }
+    body.print-4inch #print-slip { max-width: 104mm !important; }
+
+    #print-slip table { width: 100% !important; border-collapse: collapse; }
+    #print-slip th, #print-slip td { border: 1px solid #555; padding: 2px 4px; font-size: 9pt; }
+    #print-slip .slip-header { text-align: center; margin-bottom: 6px; }
+    #print-slip .slip-shop  { font-size: 14pt; font-weight: 900; }
+    #print-slip .slip-footer { text-align: center; margin-top: 8px; font-size: 8pt; }
+    #print-slip .slip-grand  { font-weight: bold; font-size: 11pt; }
+  }
+</style>
+
+<!-- ===== MAIN PAGE ===== -->
+<div id="bill-page" class="container-fluid py-3">
+
+  <!-- Page Header -->
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h4 class="mb-0 fw-bold"><i class="fa-solid fa-file-invoice-dollar me-2 text-primary"></i>Create Bill</h4>
+    <span class="badge bg-success fs-6" id="grand-total-badge">Total: Rs 0.00</span>
+  </div>
+
+  <!-- ===== BILL ITEMS LIST ===== -->
+  <div id="items-wrapper" class="mb-3">
+    <table class="table table-sm mb-0" id="items-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Item Name</th>
+          <th>Category</th>
+          <th>Piece</th>
+          <th>Qty</th>
+          <th>Price</th>
+          <th>Disc. Price</th>
+          <th>Line Total</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="items-tbody">
+        <tr id="empty-row">
+          <td colspan="9" class="text-center text-muted py-3">
+            <i class="fa-solid fa-cart-plus me-2"></i>No items added yet
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ===== MANUAL ADD FORM ===== -->
+  <div class="card mb-3 shadow-sm" id="manual-form">
+    <div class="card-header bg-dark text-white py-2 d-flex align-items-center justify-content-between">
+      <span><i class="fa-solid fa-pen-to-square me-2"></i>Manual Entry</span>
+      <button class="btn btn-sm btn-outline-light" id="btn-open-scan">
+        <i class="fa-solid fa-camera me-1"></i>Create Bill via Scan
+      </button>
+    </div>
+    <div class="card-body py-3">
+      <div class="row g-2 align-items-end">
+
+        <!-- Item Name -->
+        <div class="col-12 col-sm-6 col-md-3">
+          <label for="f-name">Item Name <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="f-name" placeholder="e.g. Zellbury Shirt">
+        </div>
+
+        <!-- Category -->
+        <div class="col-12 col-sm-6 col-md-2">
+          <label for="f-category">Category</label>
+          <select class="form-select" id="f-category">
+            <option value="">-- Select --</option>
+            <% if (typeof allCategories !== 'undefined' && allCategories.length) { %>
+              <% allCategories.forEach(function(cat){ %>
+                <option value="<%= cat.categoryName %>"><%= cat.categoryName %></option>
+              <% }); %>
+            <% } %>
+          </select>
+        </div>
+
+        <!-- Price -->
+        <div class="col-6 col-sm-4 col-md-2">
+          <label for="f-price">Price <span class="text-danger">*</span></label>
+          <input type="number" class="form-control" id="f-price" placeholder="0" min="0" step="0.01">
+        </div>
+
+        <!-- Discounted Price -->
+        <div class="col-6 col-sm-4 col-md-2">
+          <label for="f-disc">Discounted Price</label>
+          <input type="number" class="form-control" id="f-disc" placeholder="0" min="0" step="0.01">
+        </div>
+
+        <!-- Piece Type -->
+        <div class="col-6 col-sm-4 col-md-1">
+          <label for="f-piece">Piece</label>
+          <select class="form-select" id="f-piece">
+            <option value="">--</option>
+            <% ['1pc','2pc','3pc','4pc','5pc','6pc','7pc','8pc','9pc','10pc'].forEach(function(p){ %>
+              <option value="<%= p %>"><%= p %></option>
+            <% }); %>
+          </select>
+        </div>
+
+        <!-- Quantity -->
+        <div class="col-6 col-sm-4 col-md-1">
+          <label>Qty</label>
+          <div class="qty-control">
+            <button class="btn btn-outline-secondary btn-sm" id="qty-dec" type="button">−</button>
+            <input type="number" class="form-control" id="f-qty" value="1" min="1">
+            <button class="btn btn-outline-secondary btn-sm" id="qty-inc" type="button">+</button>
+          </div>
+        </div>
+
+        <!-- Add Button -->
+        <div class="col-12 col-md-1 d-flex align-items-end">
+          <button class="btn btn-primary w-100" id="btn-add-item" type="button">
+            <i class="fa-solid fa-plus me-1"></i>Add
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== BOTTOM ACTIONS ===== -->
+  <div class="card shadow-sm">
+    <div class="card-body bg-dark rounded d-flex flex-wrap align-items-center gap-3">
+
+      <!-- Print size selector -->
+      <div>
+        <span class="text-white me-2 fw-semibold small">Print Size:</span>
+        <div class="btn-group" id="print-size-group" role="group">
+          <button type="button" class="btn btn-sm btn-light active" data-size="3inch">3 Inch</button>
+          <button type="button" class="btn btn-sm btn-outline-light"  data-size="4inch">4 Inch</button>
+        </div>
+      </div>
+
+      <button class="btn btn-success ms-auto" id="btn-save-print" type="button">
+        <i class="fa-solid fa-print me-2"></i>Save & Print Slip
+      </button>
+
+    </div>
+  </div>
+
+</div><!-- /bill-page -->
+
+<!-- ===== CAMERA OVERLAY ===== -->
+<div id="camera-overlay">
+  <div id="qr-reader"></div>
+  <div id="scan-status">Point camera at a QR code…</div>
+  <button class="btn btn-danger mt-3" id="btn-stop-scan">
+    <i class="fa-solid fa-stop me-2"></i>Stop Scanning
+  </button>
+</div>
+
+<!-- Flash on scan -->
+<div id="scan-flash"></div>
+
+<!-- ===== PRINT SLIP (hidden until print) ===== -->
+<div id="print-slip" style="display:none;">
+  <div class="slip-header">
+    <div class="slip-shop">OUS Collection</div>
+    <div style="font-size:9pt;" id="slip-datetime"></div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Item</th>
+        <th>Cat</th>
+        <th>Pc</th>
+        <th>Qty</th>
+        <th>Price</th>
+        <th>Disc</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody id="slip-tbody"></tbody>
+    <tfoot>
+      <tr>
+        <td colspan="7" style="text-align:right;font-weight:bold;">Grand Total</td>
+        <td class="slip-grand" id="slip-grand"></td>
+      </tr>
+    </tfoot>
+  </table>
+  <div class="slip-footer">
+    <div>Thanks For Choosing Ous Collection</div>
+    <div style="margin-top:4px;color:#555;">Powered By MHT Devs</div>
+  </div>
+</div>
+
+<!-- ===== PAGE SCRIPT ===== -->
+<script>
+(function () {
+  'use strict';
+
+  /* ------------------------------------------------------------------ */
+  /*  STATE                                                               */
+  /* ------------------------------------------------------------------ */
+  let billItems = [];
+  let selectedSize = '3inch';
+  let html5QrCode = null;
+  let scannerRunning = false;
+  let lastScannedCode = '';   // debounce same code scanned twice
+  let lastScanTime = 0;
+
+  /* ------------------------------------------------------------------ */
+  /*  HELPERS                                                             */
+  /* ------------------------------------------------------------------ */
+  const fmt = v => parseFloat(v || 0).toFixed(2);
+
+  function lineTotal(item) {
+    const unitPrice = item.discountedPrice > 0 ? item.discountedPrice : item.price;
+    return unitPrice * item.qty;
+  }
+
+  function now() {
+    return new Date().toLocaleString('en-PK', {
+      dateStyle: 'medium', timeStyle: 'short'
+    });
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  RENDER BILL TABLE                                                   */
+  /* ------------------------------------------------------------------ */
+  function renderTable() {
+    const tbody = document.getElementById('items-tbody');
+    tbody.innerHTML = '';
+
+    if (!billItems.length) {
+      tbody.innerHTML = `<tr id="empty-row">
+        <td colspan="9" class="text-center text-muted py-3">
+          <i class="fa-solid fa-cart-plus me-2"></i>No items added yet
+        </td></tr>`;
+      updateGrandTotal();
+      return;
+    }
+
+    billItems.forEach(function (item, idx) {
+      const lt = lineTotal(item);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${idx + 1}</td>
+        <td>${escHtml(item.name)}</td>
+        <td>${escHtml(item.category)}</td>
+        <td>${escHtml(item.pieceType)}</td>
+        <td>${item.qty}</td>
+        <td>Rs ${fmt(item.price)}</td>
+        <td>${item.discountedPrice > 0 ? 'Rs ' + fmt(item.discountedPrice) : '—'}</td>
+        <td>Rs ${fmt(lt)}</td>
+        <td>
+          <button class="btn btn-danger btn-sm btn-remove" data-idx="${idx}">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+
+    updateGrandTotal();
+  }
+
+  function updateGrandTotal() {
+    const total = billItems.reduce((s, i) => s + lineTotal(i), 0);
+    document.getElementById('grand-total-badge').textContent = 'Total: Rs ' + fmt(total);
+  }
+
+  function escHtml(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  READ FORM                                                           */
+  /* ------------------------------------------------------------------ */
+  function readForm() {
+    return {
+      name:           document.getElementById('f-name').value.trim(),
+      category:       document.getElementById('f-category').value,
+      price:          parseFloat(document.getElementById('f-price').value) || 0,
+      discountedPrice:parseFloat(document.getElementById('f-disc').value)  || 0,
+      pieceType:      document.getElementById('f-piece').value,
+      qty:            parseInt(document.getElementById('f-qty').value)    || 1,
+    };
+  }
+
+  function clearForm() {
+    document.getElementById('f-name').value     = '';
+    document.getElementById('f-category').value = '';
+    document.getElementById('f-price').value    = '';
+    document.getElementById('f-disc').value     = '';
+    document.getElementById('f-piece').value    = '';
+    document.getElementById('f-qty').value      = 1;
+  }
+
+  function fillForm(data) {
+    if (data.name)           document.getElementById('f-name').value          = data.name;
+    if (data.category)       document.getElementById('f-category').value      = data.category;
+    if (data.price)          document.getElementById('f-price').value         = data.price;
+    if (data.discountedPrice)document.getElementById('f-disc').value          = data.discountedPrice;
+    if (data.pieceType)      document.getElementById('f-piece').value         = data.pieceType;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  ADD ITEM                                                            */
+  /* ------------------------------------------------------------------ */
+  function addItem(itemData) {
+    billItems.push(itemData);
+    renderTable();
+    // scroll list to bottom
+    const w = document.getElementById('items-wrapper');
+    w.scrollTop = w.scrollHeight;
+  }
+
+  document.getElementById('btn-add-item').addEventListener('click', function () {
+    const item = readForm();
+    if (!item.name) {
+      toastr.warning('Please enter an item name.');
+      document.getElementById('f-name').focus();
+      return;
+    }
+    addItem(item);
+    clearForm();
+    document.getElementById('f-name').focus();
+  });
+
+  /* ------------------------------------------------------------------ */
+  /*  REMOVE ITEM (event delegation)                                      */
+  /* ------------------------------------------------------------------ */
+  document.getElementById('items-tbody').addEventListener('click', function (e) {
+    const btn = e.target.closest('.btn-remove');
+    if (!btn) return;
+    const idx = parseInt(btn.dataset.idx);
+    billItems.splice(idx, 1);
+    renderTable();
+  });
+
+  /* ------------------------------------------------------------------ */
+  /*  QTY +/-                                                             */
+  /* ------------------------------------------------------------------ */
+  document.getElementById('qty-dec').addEventListener('click', function () {
+    const inp = document.getElementById('f-qty');
+    inp.value = Math.max(1, (parseInt(inp.value) || 1) - 1);
+  });
+  document.getElementById('qty-inc').addEventListener('click', function () {
+    const inp = document.getElementById('f-qty');
+    inp.value = (parseInt(inp.value) || 1) + 1;
+  });
+
+  /* ------------------------------------------------------------------ */
+  /*  PRINT SIZE TOGGLE                                                   */
+  /* ------------------------------------------------------------------ */
+  document.getElementById('print-size-group').addEventListener('click', function (e) {
+    const btn = e.target.closest('[data-size]');
+    if (!btn) return;
+    selectedSize = btn.dataset.size;
+    document.querySelectorAll('#print-size-group .btn').forEach(function (b) {
+      b.classList.toggle('active',       b === btn);
+      b.classList.toggle('btn-light',    b === btn);
+      b.classList.toggle('btn-outline-light', b !== btn);
+    });
+  });
+
+  /* ------------------------------------------------------------------ */
+  /*  SAVE & PRINT                                                        */
+  /* ------------------------------------------------------------------ */
+  document.getElementById('btn-save-print').addEventListener('click', function () {
+    if (!billItems.length) {
+      toastr.warning('No items in the bill.');
+      return;
+    }
+
+    // Populate slip
+    document.getElementById('slip-datetime').textContent = now();
+
+    const slipTbody = document.getElementById('slip-tbody');
+    slipTbody.innerHTML = '';
+    let grand = 0;
+    billItems.forEach(function (item, idx) {
+      const lt = lineTotal(item);
+      grand += lt;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${idx + 1}</td>
+        <td>${escHtml(item.name)}</td>
+        <td>${escHtml(item.category)}</td>
+        <td>${escHtml(item.pieceType)}</td>
+        <td>${item.qty}</td>
+        <td>${fmt(item.price)}</td>
+        <td>${item.discountedPrice > 0 ? fmt(item.discountedPrice) : ''}</td>
+        <td>${fmt(lt)}</td>`;
+      slipTbody.appendChild(tr);
+    });
+    document.getElementById('slip-grand').textContent = 'Rs ' + fmt(grand);
+
+    // Apply size class to body
+    document.body.classList.remove('print-3inch', 'print-4inch');
+    document.body.classList.add('print-' + selectedSize);
+
+    // Show slip div (needed for print visibility rules)
+    const slip = document.getElementById('print-slip');
+    slip.style.display = 'block';
+
+    window.print();
+
+    // Hide again after print dialog closes
+    setTimeout(function () { slip.style.display = 'none'; }, 500);
+  });
+
+  /* ------------------------------------------------------------------ */
+  /*  CAMERA / QR SCANNER                                                 */
+  /* ------------------------------------------------------------------ */
+  function showFlash() {
+    const flash = document.getElementById('scan-flash');
+    flash.classList.add('show');
+    setTimeout(function () { flash.classList.remove('show'); }, 280);
+  }
+
+  function setScanStatus(msg, color) {
+    const el = document.getElementById('scan-status');
+    el.textContent = msg;
+    el.style.color = color || '#fff';
+  }
+
+  function onScanSuccess(decodedText) {
+    const now_ms = Date.now();
+    // Debounce: skip if same code within 1500ms
+    if (decodedText === lastScannedCode && now_ms - lastScanTime < 1500) return;
+    lastScannedCode = decodedText;
+    lastScanTime = now_ms;
+
+    let data = {};
+    try {
+      data = JSON.parse(decodedText);
+    } catch (e) {
+      // Not JSON – use raw text as name
+      data = { name: decodedText };
+    }
+
+    // Auto-add with qty 1, keep scanner open
+    addItem({
+      name:            data.name            || '',
+      category:        data.category        || '',
+      price:           parseFloat(data.price)           || 0,
+      discountedPrice: parseFloat(data.discountedPrice) || 0,
+      pieceType:       data.pieceType       || '',
+      qty: 1,
+    });
+
+    showFlash();
+    setScanStatus('✔ Added: ' + (data.name || 'item'), '#6aff9b');
+    setTimeout(function () { setScanStatus('Point camera at a QR code…'); }, 1800);
+  }
+
+  function onScanFailure() { /* silent */ }
+
+  function openScanner() {
+    if (scannerRunning) return;
+    document.getElementById('camera-overlay').classList.add('active');
+    setScanStatus('Starting camera…');
+
+    html5QrCode = new Html5Qrcode('qr-reader');
+    const config = {
+      fps: 15,
+      qrbox: { width: 260, height: 260 },
+      aspectRatio: 1.0,
+    };
+    html5QrCode.start(
+      { facingMode: 'environment' },
+      config,
+      onScanSuccess,
+      onScanFailure
+    ).then(function () {
+      scannerRunning = true;
+      setScanStatus('Point camera at a QR code…');
+    }).catch(function (err) {
+      setScanStatus('Camera error: ' + err, '#ff6b6b');
+      console.error('QR scanner start error:', err);
+    });
+  }
+
+  function stopScanner() {
+    if (!scannerRunning || !html5QrCode) return;
+    html5QrCode.stop().then(function () {
+      html5QrCode = null;
+      scannerRunning = false;
+      document.getElementById('camera-overlay').classList.remove('active');
+    }).catch(function (err) {
+      console.error('QR scanner stop error:', err);
+      document.getElementById('camera-overlay').classList.remove('active');
+    });
+  }
+
+  document.getElementById('btn-open-scan').addEventListener('click', openScanner);
+  document.getElementById('btn-stop-scan').addEventListener('click', stopScanner);
+
+  // Initial render
+  renderTable();
+
+})();
+</script>

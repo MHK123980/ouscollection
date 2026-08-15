@@ -8,6 +8,8 @@
         <%- include("_modal_product") %>
         <%- include("_modal_set_product") %>
           <div class=" float-end">
+            <button class="btn btn-danger btn-sm me-2" id="bulkDeleteBtn" style="display:none;" disabled>Delete Products</button>
+            <button class="btn btn-warning btn-sm me-2" id="toggleSelectBtn">Select to Delete</button>
             <button class="btn btn-dark btn-sm" onclick="exportCsv()">Export <i
                 class="fa-solid fa-download"></i></button>
             <button class="btn btn-dark btn-sm" data-bs-toggle="modal" data-bs-target="#addSetProduct"><i class="fa-solid fa-boxes-stacked"></i> Add Sets Product</button>
@@ -19,6 +21,7 @@
         <table id="datatablesSimple">
           <thead>
             <tr>
+              <th class="select-col" style="display:none;">Select</th>
               <th>Image</th>
               <th>Name</th>
               <th>Category</th>
@@ -32,6 +35,7 @@
           </thead>
           <tfoot>
             <tr>
+              <th class="select-col" style="display:none;">Select</th>
               <th>Image</th>
               <th>Name</th>
               <th>Category</th>
@@ -46,6 +50,9 @@
           <tbody>
             <% allProducts.forEach(product=>{ %>
               <tr id="product-row-<%= product.id %>">
+                <td class="select-col" style="display:none;">
+                  <input type="checkbox" class="product-checkbox" value="<%= product.id %>" style="width: 20px; height: 20px; cursor: pointer;">
+                </td>
                 <td><img
                     src="<%= product.productImagePath && product.productImagePath.length > 0 ? (product.productImagePath[0].startsWith('http') ? product.productImagePath[0] : '/files/' + product.productImagePath[0]) : '/img/no-image.png' %>"
                     alt="<%= product.name %>" width="60" class="img-fluid img-thumbnail" loading="lazy" decoding="async"></td>
@@ -548,4 +555,109 @@
       }
     }
   }
+
+  // Bulk Delete Logic
+  let selectedProducts = JSON.parse(localStorage.getItem('selectedProducts')) || [];
+  let isSelectionMode = false;
+
+  const toggleSelectBtn = document.getElementById('toggleSelectBtn');
+  const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+
+  function updateCheckboxes() {
+    document.querySelectorAll('.product-checkbox').forEach(cb => {
+      cb.checked = selectedProducts.includes(cb.value);
+    });
+    updateBulkDeleteButton();
+  }
+
+  function updateBulkDeleteButton() {
+    if (selectedProducts.length > 0) {
+      bulkDeleteBtn.disabled = false;
+      bulkDeleteBtn.innerText = `Delete ${selectedProducts.length} Products`;
+    } else {
+      bulkDeleteBtn.disabled = true;
+      bulkDeleteBtn.innerText = 'Delete Products';
+    }
+  }
+
+  toggleSelectBtn.addEventListener('click', () => {
+    isSelectionMode = !isSelectionMode;
+    const cols = document.querySelectorAll('.select-col');
+    if (isSelectionMode) {
+      cols.forEach(col => col.style.display = '');
+      bulkDeleteBtn.style.display = 'inline-block';
+      toggleSelectBtn.innerText = 'Cancel Selection';
+      toggleSelectBtn.classList.replace('btn-warning', 'btn-secondary');
+      updateCheckboxes();
+    } else {
+      cols.forEach(col => col.style.display = 'none');
+      bulkDeleteBtn.style.display = 'none';
+      toggleSelectBtn.innerText = 'Select to Delete';
+      toggleSelectBtn.classList.replace('btn-secondary', 'btn-warning');
+      selectedProducts = [];
+      localStorage.setItem('selectedProducts', JSON.stringify(selectedProducts));
+      updateCheckboxes();
+    }
+  });
+
+  document.addEventListener('change', (e) => {
+    if (e.target.classList.contains('product-checkbox')) {
+      const id = e.target.value;
+      if (e.target.checked) {
+        if (!selectedProducts.includes(id)) selectedProducts.push(id);
+      } else {
+        selectedProducts = selectedProducts.filter(pid => pid !== id);
+      }
+      localStorage.setItem('selectedProducts', JSON.stringify(selectedProducts));
+      updateBulkDeleteButton();
+    }
+  });
+
+  // Re-apply state on datatables page change/draw
+  document.addEventListener('DOMContentLoaded', () => {
+    const table = document.getElementById('datatablesSimple');
+    if (table) {
+      // Small delay to ensure DataTables has rendered
+      setInterval(() => {
+        if(isSelectionMode) {
+          document.querySelectorAll('.select-col').forEach(col => col.style.display = '');
+          updateCheckboxes();
+        }
+      }, 500);
+    }
+  });
+
+  bulkDeleteBtn.addEventListener('click', async () => {
+    if (selectedProducts.length === 0) return;
+    const confirmed = await Swal.fire({
+      title: 'Are you sure?',
+      text: `You are about to delete ${selectedProducts.length} products. This action cannot be undone.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete all!'
+    });
+
+    if (confirmed.isConfirmed) {
+      try {
+        const response = await fetch('/admin/bulkDeleteProducts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productIds: selectedProducts })
+        });
+        const result = await response.json();
+        if (response.ok) {
+          selectedProducts = [];
+          localStorage.removeItem('selectedProducts');
+          await Swal.fire('Deleted!', result.message, 'success');
+          window.location.reload();
+        } else {
+          Swal.fire('Error', result.message, 'error');
+        }
+      } catch(err) {
+        Swal.fire('Error', 'Failed to delete products', 'error');
+      }
+    }
+  });
 </script>

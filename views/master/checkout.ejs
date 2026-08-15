@@ -169,19 +169,20 @@
 
               <div class="form-check">
                 <label for="cod">
-                  <input class="form-check-input" type="radio" id="cod" name="paymentType" checked value="cod">
+                  <input class="form-check-input" type="radio" id="cod" name="paymentType" value="cod" required>
                   Cash on delivery <i class="fa-solid fa-money-bill-1"></i>
+                  <div class="small text-danger" id="cod-tax-notice" style="display:none;">(+4% COD Tax will be applied)</div>
                 </label>
               </div>
 
               <div class="form-check">
                 <label for="online-payment">
-                  <input class="form-check-input" id="online-payment" type="radio" name="paymentType" value="razorpay" disabled>
-                  Online Payment <span class="badge badge-warning">Coming Soon</span> <i class="fa-brands fa-cc-visa"></i>
+                  <input class="form-check-input" id="online-payment" type="radio" name="paymentType" value="online" required>
+                  Online Payment <i class="fa-brands fa-cc-visa"></i>
                 </label>
               </div>
 
-              <button type="submit" class="site-btn" id="rzp-button1" style="cursor: pointer; pointer-events: auto;">PLACE ORDER <% if(couponCode){%> (Rs <%= (findCart.total + (findCart.totalDeliveryCharges || 0) - couponDiscount).toFixed(2) %>)<% }else{%> (Rs <%= (findCart.total + (findCart.totalDeliveryCharges || 0)).toFixed(2) %>)<% }%></button>
+              <button type="submit" class="site-btn" id="rzp-button1" style="cursor: pointer; pointer-events: auto;">PLACE ORDER <span id="btn-total-price"><% if(couponCode){%> (Rs <%= (findCart.total + (findCart.totalDeliveryCharges || 0) - couponDiscount).toFixed(2) %>)<% }else{%> (Rs <%= (findCart.total + (findCart.totalDeliveryCharges || 0)).toFixed(2) %>)<% }%></span></button>
             </div>
 
           </div>
@@ -200,38 +201,31 @@
 <script>
  
 // generating orderId for razorpay 
-  const couponDiscount = '<%=couponDiscount%>'
-  const cartTotal = '<%= (findCart.total + (findCart.totalDeliveryCharges || 0)) %>'
-  let amount = couponDiscount ? (cartTotal - couponDiscount) * 100 : cartTotal * 100
-  amount = parseInt(amount)
-  let data
-  console.log(amount)
+  const couponDiscount = Number('<%=couponDiscount%>' || 0);
+  const cartTotal = Number('<%= (findCart.total + (findCart.totalDeliveryCharges || 0)) %>');
+  let amount = couponDiscount ? (cartTotal - couponDiscount) * 100 : cartTotal * 100;
+  amount = parseInt(amount);
   
-  // Disable online payment option
-  document.getElementById('online-payment').addEventListener('change', function() {
-    if (this.checked) {
-      this.checked = false;
-      toastr.options = { "positionClass": "toast-bottom-right" }
-      toastr.warning('Online Payment Coming Soon!')
-      document.getElementById('cod').checked = true;
-    }
-  });
+  const codRadio = document.getElementById('cod');
+  const onlineRadio = document.getElementById('online-payment');
+  const codTaxNotice = document.getElementById('cod-tax-notice');
+  const btnTotalPrice = document.getElementById('btn-total-price');
   
-  $(document).ready(async function() {
-    try {
-      const settings = await axios({
-        "url": "/user/payment/orderId",
-        "method": "POST",
-        "data": {
-          "amount": amount
-        }
-      });
-      orderId = settings.data.orderId;
-      console.log(orderId)
-    } catch (err) {
-      console.error(err)
+  const baseTotalStr = '(Rs ' + (amount / 100).toFixed(2) + ')';
+  
+  function updateTaxDisplay() {
+    if (codRadio.checked) {
+      codTaxNotice.style.display = 'block';
+      const codTotal = ((amount / 100) * 1.04).toFixed(2);
+      btnTotalPrice.innerText = '(Rs ' + codTotal + ')';
+    } else {
+      codTaxNotice.style.display = 'none';
+      btnTotalPrice.innerText = baseTotalStr;
     }
-  });
+  }
+
+  codRadio.addEventListener('change', updateTaxDisplay);
+  onlineRadio.addEventListener('change', updateTaxDisplay);
 
   // autocomplete states
   autocomplete(document.getElementById("state"), allStates);

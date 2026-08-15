@@ -4,8 +4,26 @@ const Cart = require("../models/cart")
 const User = require("../models/users")
 const Category = require("../models/category")
 const { sendOrderConfirmationEmail } = require("../services/emailService")
+const Counter = require('../models/counter')
 
 module.exports = {
+
+    getOrderPending: async (req, res) => {
+        try {
+            const orderId = req.params.id;
+            const order = await Order.findById(orderId);
+            if (!order) {
+                return res.redirect("/");
+            }
+            res.render("master/orderPending", {
+                order: order,
+                layout: "layouts/masterLayout"
+            });
+        } catch (err) {
+            console.log(err);
+            res.redirect("/");
+        }
+    },
 
     checkout: async (req, res) => {
         console.log('[DEBUG] Checkout Controller Hit');
@@ -102,7 +120,10 @@ module.exports = {
             const couponCode = req.session.coupon?.code
             const couponId = req.session.coupon?.id
 
-            const finalTotal = (total + totalDeliveryCharges) - couponDiscount;
+            let finalTotal = (total + totalDeliveryCharges) - couponDiscount;
+            if (req.body.paymentType == "cod") {
+                finalTotal = finalTotal * 1.04;
+            }
 
             const Counter = require('../models/counter');
             const counter = await Counter.findOneAndUpdate(
@@ -124,7 +145,9 @@ module.exports = {
                 paymentType: req.body.paymentType
             })
 
-            if (req.body.paymentType == "razorpay") {
+            if (req.body.paymentType == "online") {
+                newOrder.status = "Payment Pending";
+            } else if (req.body.paymentType == "razorpay") {
                 newOrder.razorpayOrderId = req.body.orderId
                 newOrder.razorpayPaymentId = req.body.paymentId
             }
@@ -178,7 +201,9 @@ module.exports = {
             // res.sendStatus(201)
             res.status(201).json({
                 message: "Order placed successfully",
-                isGuest: !userId
+                isGuest: !userId,
+                orderId: newOrder._id,
+                paymentType: req.body.paymentType
             })
 
         } catch (err) {

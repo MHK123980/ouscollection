@@ -292,7 +292,7 @@ function updateCartTotals() {
                 if (span) {
                     const discount = subTotal - totalCartValue;
                     if (discount > 0) {
-                        span.innerHTML = `<del>Rs ${subTotal.toFixed(2)}</del>`;
+                        span.innerHTML = `<del class="text-muted mr-2">Rs ${subTotal.toFixed(2)}</del> Rs ${totalCartValue.toFixed(2)}`;
                     } else {
                         span.innerHTML = `Rs ${subTotal.toFixed(2)}`;
                     }

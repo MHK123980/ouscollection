@@ -5,6 +5,7 @@ const passport = require("passport");
 const Category = require("../models/category");
 const userControl = require("../controllers/userController");
 const shopControl = require("../controllers/shopController");
+const orderControl = require("../controllers/orderController");
 const authentication = require("../middleware/authentication");
 const { otpVerification, getOtpForm, sendOtp } = require("../middleware/otp");
 
@@ -159,5 +160,7 @@ router.post("/login", (req, res) => {
 router.post("/register", userControl.userRegister);
 
 router.delete("/logout", userControl.userLogout);
+
+router.get("/order/pending/:id", orderControl.getOrderPending);
 
 module.exports = router;

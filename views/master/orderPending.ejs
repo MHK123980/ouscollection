@@ -1,0 +1,61 @@
+<!-- Breadcrumb Section Begin -->
+<section class="breadcrumb-section set-bg" data-setbg="/img/breadcrumb.jpg">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-12 text-center">
+        <div class="breadcrumb__text">
+          <h2>Payment Pending</h2>
+          <div class="breadcrumb__option">
+            <a href="/">Home</a>
+            <span>Payment Pending</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- Breadcrumb Section End -->
+
+<!-- Order Pending Section Begin -->
+<section class="checkout spad">
+  <div class="container text-center">
+    <div class="row justify-content-center">
+      <div class="col-lg-6 col-md-8">
+        <div class="card shadow-sm border-0 rounded-lg p-5">
+          
+          <div class="mb-4">
+            <i class="fa-solid fa-hourglass-half fa-spin fa-4x text-warning"></i>
+          </div>
+          
+          <h3 class="mb-3">Waiting for Payment!</h3>
+          <p class="text-muted mb-4">
+            Your order <strong>#<%= order.orderIdStr %></strong> has been saved but is pending payment. 
+          </p>
+          
+          <div class="bg-light p-3 rounded mb-4">
+            <h4 class="text-dark mb-0">Total Amount: Rs <%= order.total.toFixed(2) %></h4>
+          </div>
+
+          <p class="mb-4 text-left">
+            Please pay the total amount via EasyPaisa/JazzCash or Bank Transfer and send us the screenshot on WhatsApp to confirm your order.
+          </p>
+          
+          <% 
+            const waNumber = "+923000000000"; // Replace with actual number if provided
+            const waText = encodeURIComponent(`Hello, I have placed an order (ID: ${order.orderIdStr}) for Rs ${order.total.toFixed(2)}. Here is my payment screenshot.`);
+          %>
+          
+          <a href="https://wa.me/<%= waNumber %>?text=<%= waText %>" target="_blank" class="btn btn-success btn-lg btn-block mb-3" style="background-color: #25D366; border-color: #25D366;">
+            <i class="fa-brands fa-whatsapp fa-lg me-2"></i> Share Screenshot on WhatsApp
+          </a>
+
+          <a href="/user/myOrders" class="btn btn-outline-dark btn-block">
+            View My Orders
+          </a>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- Order Pending Section End -->

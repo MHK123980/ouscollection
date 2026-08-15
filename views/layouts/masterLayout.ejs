@@ -144,8 +144,24 @@
       <ul class="nav">
         <li><a href="/">Home</a></li>
         <li><a href="/shop/1">Shop</a></li>
-        <li><a href="/shop/category/mens/1">Mens</a></li>
-        <li><a href="/shop/category/womens/1">Womens</a></li>
+        <li class="mobile-accordion-item">
+          <a href="#" class="mobile-accordion-toggle" onclick="return toggleMobileAccordion(this)">Mens <i class="fa-solid fa-chevron-down ms-1" style="font-size:0.7em;"></i></a>
+          <ul class="mobile-accordion-sub" style="display:none; padding-left:15px; list-style:none;">
+            <li><a href="/shop/category/mens/1">All Mens</a></li>
+            <% if(typeof allCategories !== 'undefined') { allCategories.filter(c => c.gender === 'mens' || (c.categoryName && c.categoryName.toLowerCase().includes('men'))).forEach(cat => { %>
+              <li><a href="/shop/category/<%= cat.categoryName %>/<%= cat.gender || 'mens' %>/1"><%= cat.categoryName %></a></li>
+            <% }) } %>
+          </ul>
+        </li>
+        <li class="mobile-accordion-item">
+          <a href="#" class="mobile-accordion-toggle" onclick="return toggleMobileAccordion(this)">Womens <i class="fa-solid fa-chevron-down ms-1" style="font-size:0.7em;"></i></a>
+          <ul class="mobile-accordion-sub" style="display:none; padding-left:15px; list-style:none;">
+            <li><a href="/shop/category/womens/1">All Womens</a></li>
+            <% if(typeof allCategories !== 'undefined') { allCategories.filter(c => c.gender === 'womens' || (c.categoryName && c.categoryName.toLowerCase().includes('women'))).forEach(cat => { %>
+              <li><a href="/shop/category/<%= cat.categoryName %>/<%= cat.gender || 'womens' %>/1"><%= cat.categoryName %></a></li>
+            <% }) } %>
+          </ul>
+        </li>
         <li><a href="/shop/sets/1">Set Products</a></li>
         <li><a href="#">More</a>
           <ul class="header__menu__dropdown">
@@ -430,7 +446,19 @@
     }
   </script>
 
-  <%- script %>
+  <script>
+    function toggleMobileAccordion(el) {
+      const sub = el.nextElementSibling;
+      const icon = el.querySelector('i');
+      if (sub) {
+        const isOpen = sub.style.display !== 'none';
+        sub.style.display = isOpen ? 'none' : 'block';
+        if (icon) icon.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+      }
+      return false;
+    }
+  </script>
+
   <%- script %>
 
   <!-- Mobile Sticky Cart (outside everything so position:fixed works on all browsers without clipping) -->

@@ -1,0 +1,153 @@
+/* ============================================
+   PRINT CSS for POS Bill Slips
+   Supports 3-inch (80mm) and 4-inch (104mm)
+   ============================================ */
+
+@media print {
+
+  /* Hide everything except the print slip */
+  body * {
+    visibility: hidden;
+  }
+
+  #printSlipArea,
+  #printSlipArea * {
+    visibility: visible;
+  }
+
+  /* Hide print label area on regular print (used only on barcode page) */
+  body.barcode-print #printSlipArea {
+    display: none;
+  }
+
+  body.barcode-print #barcodePrintArea,
+  body.barcode-print #barcodePrintArea * {
+    visibility: visible;
+  }
+
+  #printSlipArea {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+
+  /* 3-inch (80mm) thermal paper */
+  body.print-3inch #printSlipArea {
+    max-width: 80mm;
+    font-size: 9pt;
+  }
+
+  /* 4-inch (104mm) thermal paper */
+  body.print-4inch #printSlipArea {
+    max-width: 104mm;
+    font-size: 10pt;
+  }
+
+  /* Default (3 inch) */
+  #printSlipArea {
+    max-width: 80mm;
+    font-size: 9pt;
+    margin: 0 auto;
+    padding: 4mm;
+    font-family: 'Courier New', monospace;
+    color: #000;
+  }
+
+  #printSlipArea .slip-header {
+    text-align: center;
+    border-bottom: 1px dashed #000;
+    padding-bottom: 4mm;
+    margin-bottom: 4mm;
+  }
+
+  #printSlipArea .slip-header h2 {
+    font-size: 14pt;
+    font-weight: bold;
+    margin: 0;
+  }
+
+  #printSlipArea .slip-header p {
+    font-size: 8pt;
+    margin: 2px 0;
+  }
+
+  #printSlipArea table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8pt;
+  }
+
+  #printSlipArea table th {
+    border-bottom: 1px solid #000;
+    font-weight: bold;
+    padding: 2px;
+    text-align: left;
+  }
+
+  #printSlipArea table td {
+    padding: 2px;
+    border-bottom: 1px dotted #ccc;
+    vertical-align: top;
+    word-break: break-word;
+  }
+
+  #printSlipArea .slip-total {
+    border-top: 1px dashed #000;
+    padding-top: 3mm;
+    margin-top: 3mm;
+    font-size: 11pt;
+    font-weight: bold;
+    text-align: right;
+  }
+
+  #printSlipArea .slip-footer {
+    text-align: center;
+    border-top: 1px dashed #000;
+    margin-top: 4mm;
+    padding-top: 3mm;
+    font-size: 7.5pt;
+  }
+
+  /* Barcode labels for createBarcode page */
+  #barcodePrintArea {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2mm;
+    padding: 2mm;
+  }
+
+  .barcode-label-print {
+    width: 50mm;
+    height: 55mm;
+    border: 1px solid #000;
+    padding: 2mm;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    font-size: 7pt;
+    page-break-inside: avoid;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .barcode-label-print canvas,
+  .barcode-label-print img {
+    max-width: 40mm !important;
+    max-height: 40mm !important;
+  }
+
+  .barcode-label-print .label-name {
+    font-weight: bold;
+    font-size: 8pt;
+    margin-top: 1mm;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}

@@ -31,6 +31,7 @@ const bannerControl = require("../controllers/bannerController")
 const couponControl = require("../controllers/couponController")
 const domainTimingControl = require("../controllers/domainTimingController")
 const DomainTiming = require("../models/domainTiming")
+const posControl = require("../controllers/posController")
 
 router.use(authentication.checkLoggedIn, authentication.checkAdminPrivilege)
 
@@ -86,9 +87,13 @@ router.put("/cancelOrder/:id", orderControl.cancelOrder)
 
 router.delete("/orders/:id", adminControl.deleteOrder)
 router.delete("/deleteProduct/:id", productControl.deleteProduct)
+router.post("/bulkDeleteProducts", productControl.bulkDeleteProducts)
 router.delete("/deleteCategory/:id", adminControl.deleteCategory)
 router.delete("/deleteBanner/:id", bannerControl.deleteBanner)
 router.delete("/domain-timing/:id", domainTimingControl.deleteTiming)
 router.delete("/logout", userControl.userLogout)
+
+router.get("/create-bill", posControl.getCreateBill)
+router.get("/create-barcode", posControl.getCreateBarcode)
 
 module.exports = router

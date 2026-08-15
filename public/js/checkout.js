@@ -20,14 +20,13 @@ document.addEventListener('DOMContentLoaded', function () {
             const formData = new FormData(event.target)
             console.log('Form data created');
 
-            if (paymentType == "cod") {
-                console.log('Processing COD order');
+            if (paymentType == "cod" || paymentType == "online") {
+                console.log('Processing order with paymentType: ', paymentType);
                 checkout(formData)
-            } else if (paymentType == "razorpay") {
-                console.log('Processing Razorpay order');
-                razorpay(orderId, amount, formData)
             } else {
                 console.error('No payment type selected');
+                toastr.options = { "positionClass": "toast-bottom-right" }
+                toastr.warning('Please select a payment method')
             }
         });
     } else {
@@ -71,7 +70,9 @@ async function checkout(formData) {
                 // timer: 3000 // Removed timer to let animation complete and user read message
             })
 
-            if (response.data && response.data.isGuest) {
+            if (response.data && response.data.paymentType === 'online' && response.data.orderId) {
+                window.location = "/order/pending/" + response.data.orderId;
+            } else if (response.data && response.data.isGuest) {
                 window.location = "/"
             } else {
                 window.location = "/"

@@ -133,7 +133,10 @@
                 <li>
                   Subtotal
                   <% if(findCart.subTotal !== findCart.total) { %>
-                    <span><del>Rs <%= findCart.subTotal.toFixed(2) %></del></span>
+                    <span>
+                      <del class="text-muted mr-2">Rs <%= findCart.subTotal.toFixed(2) %></del>
+                      Rs <%= findCart.total.toFixed(2) %>
+                    </span>
                   <% } else { %>
                     <span>Rs <%= findCart.subTotal.toFixed(2) %></span>
                   <% } %>

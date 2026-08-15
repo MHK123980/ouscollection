@@ -192,12 +192,43 @@ module.exports = {
 
             const pusher = req.app.get('pusher');
             if (pusher) { await pusher.trigger('ecommerce-channel', 'site_updated', {}); }
-            res.redirect("/admin/products")
+            res.redirect(req.get('referer') || "/admin/products")
         } catch (err) {
             console.log(err)
             req.flash("message", "Error deleting product")
-            res.redirect("/admin/products")
+            res.redirect(req.get('referer') || "/admin/products")
         }
     },
 
+    bulkDeleteProducts: async (req, res) => {
+        try {
+            const { productIds } = req.body;
+            if (!productIds || !Array.isArray(productIds) || productIds.length === 0) {
+                return res.status(400).json({ message: "No products selected" });
+            }
+            
+            // Delete products completely from the database
+            await Product.deleteMany({ _id: { $in: productIds } });
+            
+            // Also remove these products from all user carts
+            await Cart.updateMany(
+                { "products.productId": { $in: productIds } },
+                { $pull: { products: { productId: { $in: productIds } } } }
+            );
+
+            // Also remove these products from all user wishlists
+            await Wishlist.updateMany(
+                { "myList.productId": { $in: productIds } },
+                { $pull: { myList: { productId: { $in: productIds } } } }
+            );
+
+            const pusher = req.app.get('pusher');
+            if (pusher) { await pusher.trigger('ecommerce-channel', 'site_updated', {}); }
+            
+            res.status(200).json({ message: "Selected products deleted successfully" });
+        } catch (err) {
+            console.log(err)
+            res.status(500).json({ message: "Error deleting products" });
+        }
+    },
 }
