@@ -235,6 +235,39 @@
     </div>
   </div>
 
+  <!-- ===== OPTIONAL CUSTOMER DETAILS ===== -->
+  <div class="card shadow-sm mb-3" id="customer-details-card">
+    <div class="card-header py-2" style="background:#f8f9fa;">
+      <i class="fa-solid fa-user me-2 text-secondary"></i>
+      <span class="fw-semibold small text-secondary">Customer Details</span>
+      <span class="badge bg-secondary ms-2" style="font-size:10px;">Optional</span>
+    </div>
+    <div class="card-body py-2">
+      <div class="row g-2">
+        <div class="col-12 col-sm-6 col-md-3">
+          <label class="form-label small mb-1">Customer Name</label>
+          <input type="text" class="form-control form-control-sm" id="cust-name" placeholder="e.g. Ahmed Khan">
+        </div>
+        <div class="col-12 col-sm-6 col-md-3">
+          <label class="form-label small mb-1">Phone No</label>
+          <input type="text" class="form-control form-control-sm" id="cust-phone" placeholder="e.g. 0300-1234567">
+        </div>
+        <div class="col-12 col-sm-6 col-md-3">
+          <label class="form-label small mb-1">City</label>
+          <input type="text" class="form-control form-control-sm" id="cust-city" placeholder="e.g. Lahore">
+        </div>
+        <div class="col-12 col-sm-6 col-md-3">
+          <label class="form-label small mb-1 text-danger fw-bold">Total Discounted Amount</label>
+          <div class="input-group input-group-sm">
+            <span class="input-group-text">Rs</span>
+            <input type="number" class="form-control" id="cust-discount-total" placeholder="Amount to collect" min="0" step="0.01">
+          </div>
+          <small class="text-muted" style="font-size:10px;">If entered, shows on bill as final payable amount</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== BOTTOM ACTIONS ===== -->
   <div class="card shadow-sm">
     <div class="card-body bg-dark rounded d-flex flex-wrap align-items-center gap-3">
@@ -273,11 +306,18 @@
 <div id="print-slip" style="display:none;">
   <div class="slip-header">
     <img src="/img/ous-logo.png" class="slip-logo" alt="Logo" style="max-width: 90px; margin-bottom: 5px;">
-    <!-- <div class="slip-shop">OUS Collection</div> -->
-    <div class="slip-subtitle">LADIES & GENTS FASHION</div>
-    <div class="slip-subtitle">WHOLESALE & RETAIL</div>
+    <div class="slip-subtitle">LADIES &amp; GENTS FASHION</div>
+    <div class="slip-subtitle">WHOLESALE &amp; RETAIL</div>
     <div class="slip-datetime" id="slip-datetime"></div>
   </div>
+
+  <!-- Customer info (shown only if filled) -->
+  <div id="slip-cust-block" style="display:none; border-bottom:1px dashed #000; padding-bottom:6px; margin-bottom:6px; font-size:8pt;">
+    <div id="slip-cust-name"></div>
+    <div id="slip-cust-phone"></div>
+    <div id="slip-cust-city"></div>
+  </div>
+
   <table>
     <thead>
       <tr>
@@ -296,6 +336,11 @@
       <tr>
         <td colspan="7" class="text-right" style="font-weight:bold;">Grand Total:</td>
         <td class="slip-grand" id="slip-grand"></td>
+      </tr>
+      <!-- Discounted total row: shown only if entered -->
+      <tr id="slip-disc-row" style="display:none;">
+        <td colspan="7" class="text-right" style="font-weight:900; font-size:11pt; color:#c00;">Amount to Pay:</td>
+        <td style="font-weight:900; font-size:11pt; color:#c00;" id="slip-disc-total"></td>
       </tr>
     </tfoot>
   </table>
@@ -508,6 +553,31 @@
     });
     document.getElementById('slip-grand').textContent = 'Rs ' + fmt(grand);
 
+    // --- Customer Details ---
+    const custName  = document.getElementById('cust-name').value.trim();
+    const custPhone = document.getElementById('cust-phone').value.trim();
+    const custCity  = document.getElementById('cust-city').value.trim();
+    const custDiscTotal = parseFloat(document.getElementById('cust-discount-total').value) || 0;
+
+    const custBlock = document.getElementById('slip-cust-block');
+    if (custName || custPhone || custCity) {
+      custBlock.style.display = 'block';
+      document.getElementById('slip-cust-name').textContent  = custName  ? 'Customer: ' + custName  : '';
+      document.getElementById('slip-cust-phone').textContent = custPhone ? 'Phone: '    + custPhone : '';
+      document.getElementById('slip-cust-city').textContent  = custCity  ? 'City: '     + custCity  : '';
+    } else {
+      custBlock.style.display = 'none';
+    }
+
+    // --- Discounted Total Row ---
+    const discRow = document.getElementById('slip-disc-row');
+    if (custDiscTotal > 0) {
+      discRow.style.display = '';
+      document.getElementById('slip-disc-total').textContent = 'Rs ' + fmt(custDiscTotal);
+    } else {
+      discRow.style.display = 'none';
+    }
+
     // Apply size class to body
     document.body.classList.remove('print-3inch', 'print-4inch');
     document.body.classList.add('print-' + selectedSize);
@@ -545,18 +615,27 @@
     lastScanTime = now_ms;
 
     let data = {};
-    try {
-      data = JSON.parse(decodedText);
-    } catch (e) {
-      // Not JSON – use raw text as name
-      data = { name: decodedText };
+    let barcodeNum = '';
+
+    // Parse BCODE:<num>|<json> format from createBarcode page
+    if (decodedText.startsWith('BCODE:')) {
+      const pipeIdx = decodedText.indexOf('|');
+      if (pipeIdx > 6) {
+        barcodeNum = decodedText.substring(6, pipeIdx);
+        try { data = JSON.parse(decodedText.substring(pipeIdx + 1)); } catch(e) { data = {}; }
+      } else {
+        barcodeNum = decodedText.substring(6);
+      }
+    } else {
+      // Legacy plain-JSON or raw text
+      try { data = JSON.parse(decodedText); } catch (e) { data = { n: decodedText }; }
     }
 
     // Auto-add with qty 1, keep scanner open
-    const itemName = data.name || data.n || '';
-    const itemCat = data.category || data.c || '';
+    const itemName  = data.name || data.n || barcodeNum || '';
+    const itemCat   = data.category || data.c || '';
     const itemPrice = parseFloat(data.price || data.p) || 0;
-    const itemDisc = parseFloat(data.discountedPrice || data.d) || 0;
+    const itemDisc  = parseFloat(data.discountedPrice || data.d) || 0;
     const itemPiece = data.pieceType || data.pt || '';
 
     addItem({
@@ -569,8 +648,8 @@
     });
 
     showFlash();
-    setScanStatus('✔ Added: ' + (itemName || 'item'), '#6aff9b');
-    setTimeout(function () { setScanStatus('Point camera at a QR code…'); }, 1800);
+    setScanStatus('✔ Added: ' + (itemName || barcodeNum || 'item'), '#6aff9b');
+    setTimeout(function () { setScanStatus('Point camera at barcode…'); }, 1800);
   }
 
   function onScanFailure() { /* silent */ }

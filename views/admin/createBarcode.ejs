@@ -25,7 +25,7 @@
   /* Each label: 38mm × 25mm (2-up thermal sticker) */
   .qr-label {
     width: 144px;      /* ~38mm on 96dpi screen */
-    height: 96px;      /* ~25mm on 96dpi screen */
+    height: 110px;      /* slightly taller to fit barcode num */
     background: #fff;
     border: 1px solid #bbb;
     border-radius: 3px;
@@ -59,6 +59,17 @@
     height: 45px !important;
     display: block;
     image-rendering: pixelated;
+  }
+
+  /* Numeric code below barcode */
+  .qr-label .label-barcode-num {
+    font-size: 8px;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 2px;
+    color: #000;
+    text-align: center;
+    margin-top: 0;
+    line-height: 1;
   }
 
   /* Price line at bottom */
@@ -119,6 +130,7 @@
       height: 14mm !important; 
       width: auto !important;
     }
+    .qr-label .label-barcode-num { font-size: 5pt !important; letter-spacing: 1px !important; }
     .qr-label .label-name  { font-size: 6pt !important; }
     .qr-label .price-line { font-size: 6pt !important; }
     .qr-label .label-price { font-size: 7pt !important; }
@@ -235,22 +247,34 @@
   const placeholder   = document.getElementById('labels-placeholder');
 
   /* ------------------------------------------------------------------ */
-  /*  BUILD QR DATA STRING                                               */
+  /*  GENERATE RANDOM 8-DIGIT BARCODE NUMBER                            */
   /* ------------------------------------------------------------------ */
-  function buildQrData(name, category, price, discountedPrice, pieceType) {
+  function genBarcodeNum() {
+    // Random 8-digit number: 10000000 – 99999999
+    return String(Math.floor(10000000 + Math.random() * 90000000));
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  BUILD SCAN PAYLOAD                                                 */
+  /*  Format: BCODE:<8digitNum>|<json>                                   */
+  /*  This keeps the barcode value short (scannable) while still         */
+  /*  carrying product data for the POS scanner.                         */
+  /* ------------------------------------------------------------------ */
+  function buildScanPayload(barcodeNum, name, category, price, discountedPrice, pieceType) {
     const obj = {};
-    if (name)           obj.n = name;
-    if (category)       obj.c = category;
-    if (price > 0)      obj.p = price;
+    if (name)               obj.n  = name;
+    if (category)           obj.c  = category;
+    if (price > 0)          obj.p  = price;
     if (discountedPrice > 0) obj.d = discountedPrice;
-    if (pieceType)      obj.pt= pieceType;
-    return JSON.stringify(obj);
+    if (pieceType)          obj.pt = pieceType;
+    // Prefix with barcode number so scanner can extract both
+    return 'BCODE:' + barcodeNum + '|' + JSON.stringify(obj);
   }
 
   /* ------------------------------------------------------------------ */
   /*  CREATE SINGLE LABEL ELEMENT                                        */
   /* ------------------------------------------------------------------ */
-  function createLabel(qrData, name, price, discountedPrice, pieceType) {
+  function createLabel(scanPayload, barcodeNum, name, price, discountedPrice, pieceType) {
     const label = document.createElement('div');
     label.className = 'qr-label';
 
@@ -266,6 +290,12 @@
     const canvasEl = document.createElement('canvas');
     canvasEl.className = 'label-barcode-canvas';
     label.appendChild(canvasEl);
+
+    // --- BARCODE NUMBER (shown below bars) ---
+    const codeNumEl = document.createElement('div');
+    codeNumEl.className = 'label-barcode-num';
+    codeNumEl.textContent = barcodeNum;
+    label.appendChild(codeNumEl);
 
     // --- BOTTOM: Price ---
     const priceLine = document.createElement('div');
@@ -301,7 +331,7 @@
     // Generate barcode on canvas after a tick
     setTimeout(function () {
       try {
-        JsBarcode(canvasEl, qrData, {
+        JsBarcode(canvasEl, scanPayload, {
           format: "CODE128",
           renderer: "canvas",
           displayValue: false,
@@ -335,11 +365,13 @@
     labelsArea.innerHTML = '';
     placeholder.style.display = 'none';
 
-    const qrData = buildQrData(name, category, price, discountedPrice, pieceType);
+    // Generate ONE barcode number for this batch (same number on all copies)
+    const barcodeNum   = genBarcodeNum();
+    const scanPayload  = buildScanPayload(barcodeNum, name, category, price, discountedPrice, pieceType);
 
     for (let i = 0; i < copies; i++) {
       labelsArea.appendChild(
-        createLabel(qrData, name, price, discountedPrice, pieceType)
+        createLabel(scanPayload, barcodeNum, name, price, discountedPrice, pieceType)
       );
     }
 
