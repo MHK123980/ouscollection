@@ -49,8 +49,8 @@
   }
 
   .qr-label .qr-canvas-wrap svg {
-    max-width: 95% !important;
-    max-height: 40px !important;
+    max-width: 100% !important;
+    height: auto !important;
   }
 
   .qr-label .label-info {
@@ -101,7 +101,7 @@
       float: left !important;
     }
 
-    .qr-label .qr-canvas-wrap svg { max-height: 12mm !important; }
+    .qr-label .qr-canvas-wrap svg { height: 16mm !important; width: auto !important; max-width: 100% !important; }
     .qr-label .label-name  { font-size: 6pt !important; }
     .qr-label .price-line { font-size: 7pt !important; }
     .qr-label .label-disc { font-size: 6pt !important; }
@@ -297,8 +297,8 @@
           format: "CODE128",
           displayValue: false,
           margin: 0,
-          width: 1.2,
-          height: 30
+          width: 2,
+          height: 60
         });
       } catch (e) {
         canvasWrap.innerHTML = '<span class="text-danger" style="font-size:10px;">Barcode Error</span>';
