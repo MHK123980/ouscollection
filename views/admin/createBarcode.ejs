@@ -56,20 +56,21 @@
   /* Canvas barcode fills the center */
   .qr-label .label-barcode-canvas {
     max-width: 100%;
-    height: 45px !important;
+    height: 35px !important;
     display: block;
     image-rendering: pixelated;
   }
 
-  /* Numeric code below barcode */
+  /* Numeric code below barcode — BIG & BOLD */
   .qr-label .label-barcode-num {
-    font-size: 8px;
+    font-size: 15px;
+    font-weight: 900;
     font-family: 'Courier New', monospace;
-    letter-spacing: 2px;
+    letter-spacing: 3px;
     color: #000;
     text-align: center;
-    margin-top: 0;
-    line-height: 1;
+    line-height: 1.2;
+    margin-top: 1px;
   }
 
   /* Price line at bottom */
@@ -127,10 +128,10 @@
 
     .qr-label .label-barcode-canvas { 
       max-width: 100% !important; 
-      height: 14mm !important; 
+      height: 10mm !important; 
       width: auto !important;
     }
-    .qr-label .label-barcode-num { font-size: 5pt !important; letter-spacing: 1px !important; }
+    .qr-label .label-barcode-num { font-size: 9pt !important; font-weight: 900 !important; letter-spacing: 2px !important; }
     .qr-label .label-name  { font-size: 6pt !important; }
     .qr-label .price-line { font-size: 6pt !important; }
     .qr-label .label-price { font-size: 7pt !important; }
@@ -335,9 +336,9 @@
           format: "CODE128",
           renderer: "canvas",
           displayValue: false,
-          margin: 2,
+          margin: 1,
           width: 1.4,
-          height: 50,
+          height: 32,
           background: "#ffffff",
           lineColor: "#000000"
         });
