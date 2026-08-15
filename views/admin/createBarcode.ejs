@@ -22,10 +22,10 @@
     min-height: 80px;
   }
 
-  /* Each label: 2 inch (width) x 1 inch (height) roughly on screen */
+  /* Each label: 38mm × 25mm */
   .qr-label {
-    width: 200px;
-    height: 100px;
+    width: 38mm;
+    height: 25mm;
     background: #fff;
     border: 1px solid #bbb;
     border-radius: 4px;
@@ -58,12 +58,12 @@
     line-height: 1.1;
     width: 100%;
   }
-  .qr-label .label-name  { font-size: 10px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 95%; margin: 0 auto; }
+  .qr-label .label-name  { font-size: 8px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 95%; margin: 0 auto; color: #000; }
   
-  .qr-label .price-line { display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 10px; }
-  .qr-label .label-price { font-weight: 800; color: #198754; }
-  .qr-label .label-disc  { color: #dc3545; text-decoration: line-through; font-size: 9px; }
-  .qr-label .label-piece { font-size: 9px; color: #555; }
+  .qr-label .price-line { display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 8px; color: #000; }
+  .qr-label .label-price { font-weight: 900; }
+  .qr-label .label-disc  { text-decoration: line-through; font-size: 7px; }
+  .qr-label .label-piece { font-size: 7px; color: #333; }
 
   /* Empty placeholder */
   #labels-placeholder {
@@ -77,13 +77,15 @@
   /* ---- PRINT STYLES ---- */
   @media print {
     body * { visibility: hidden !important; }
+    
+    @page { margin: 0; }
 
     #labels-area, #labels-area * { visibility: visible !important; }
     #labels-area {
       position: fixed !important;
       top: 0; left: 0;
-      width: 100% !important;
-      background: #fff !important;
+      width: 80mm !important; /* 2-up thermal roll width */
+      background: transparent !important;
       border: none !important;
       padding: 0 !important;
       gap: 0 !important;
@@ -93,15 +95,16 @@
     }
 
     .qr-label {
-      width: 50.8mm !important; /* 2 inches */
-      height: 25.4mm !important; /* 1 inch */
-      border: 1px dashed #ccc !important;
+      width: 38mm !important; 
+      height: 25mm !important; 
+      border: none !important;
       padding: 1mm !important;
       margin: 0 !important;
       float: left !important;
+      border-radius: 0 !important;
     }
 
-    .qr-label .qr-canvas-wrap svg { height: 16mm !important; width: auto !important; max-width: 100% !important; }
+    .qr-label .qr-canvas-wrap svg { height: auto !important; width: 100% !important; max-width: 100% !important; }
     .qr-label .label-name  { font-size: 6pt !important; }
     .qr-label .price-line { font-size: 7pt !important; }
     .qr-label .label-disc { font-size: 6pt !important; }
@@ -297,8 +300,8 @@
           format: "CODE128",
           displayValue: false,
           margin: 0,
-          width: 2,
-          height: 60
+          width: 1.5,
+          height: 55
         });
       } catch (e) {
         canvasWrap.innerHTML = '<span class="text-danger" style="font-size:10px;">Barcode Error</span>';
