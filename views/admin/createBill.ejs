@@ -408,8 +408,15 @@
         <td>${escHtml(item.pieceType)}</td>
         <td>${item.qty}</td>
         <td>Rs ${fmt(item.price)}</td>
-        <td>${item.discountedPrice > 0 ? 'Rs ' + fmt(item.discountedPrice) : '—'}</td>
-        <td>Rs ${fmt(lt)}</td>
+        <td>
+          <input type="number" class="form-control form-control-sm row-disc-price" 
+                 data-idx="${idx}" 
+                 value="${item.discountedPrice > 0 ? item.discountedPrice : ''}" 
+                 placeholder="0.00" 
+                 min="0" step="0.01"
+                 style="width: 80px; padding: 2px 4px; font-size: 12px; height: 26px;">
+        </td>
+        <td class="row-line-total">Rs ${fmt(lt)}</td>
         <td>
           <button class="btn btn-danger btn-sm btn-remove" data-idx="${idx}">
             <i class="fa-solid fa-xmark"></i>
@@ -493,6 +500,24 @@
     const idx = parseInt(btn.dataset.idx);
     billItems.splice(idx, 1);
     renderTable();
+  });
+
+  /* ------------------------------------------------------------------ */
+  /*  EDIT DISCOUNT PRICE IN ROW                                          */
+  /* ------------------------------------------------------------------ */
+  document.getElementById('items-tbody').addEventListener('input', function (e) {
+    if (e.target.classList.contains('row-disc-price')) {
+      const idx = parseInt(e.target.dataset.idx);
+      const val = parseFloat(e.target.value) || 0;
+      billItems[idx].discountedPrice = val;
+      
+      const tr = e.target.closest('tr');
+      const ltCell = tr.querySelector('.row-line-total');
+      if (ltCell) {
+        ltCell.textContent = 'Rs ' + fmt(lineTotal(billItems[idx]));
+      }
+      updateGrandTotal();
+    }
   });
 
   /* ------------------------------------------------------------------ */
