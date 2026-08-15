@@ -3,8 +3,8 @@
      Requires: Bootstrap 5, FontAwesome 6 (from layout)
      ========================================================= -->
 
-<!-- JsBarcode CDN -->
-<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<!-- QRCode.js CDN (back to QR) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
   /* ---- Page ---- */
@@ -14,7 +14,7 @@
   #labels-area {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
     padding: 14px;
     background: #f4f4f4;
     border: 1px solid #dee2e6;
@@ -22,70 +22,76 @@
     min-height: 80px;
   }
 
-  /* Each label: 38mm × 25mm (2-up thermal sticker) */
+  /* ── 2×1 label: 38mm wide × 25mm tall ──
+     Side-by-side layout: [QR | text]          */
   .qr-label {
-    width: 144px;      /* ~38mm on 96dpi screen */
-    height: 110px;      /* slightly taller to fit barcode num */
+    width:  144px;   /* ≈38mm @96dpi */
+    height:  96px;   /* ≈25mm @96dpi */
     background: #fff;
     border: 1px solid #bbb;
     border-radius: 3px;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;      /* ← side by side */
     align-items: center;
-    justify-content: space-between;
-    padding: 3px 2px 2px;
+    padding: 2px;
     box-sizing: border-box;
     page-break-inside: avoid;
     break-inside: avoid;
     overflow: hidden;
+    gap: 4px;
   }
 
-  /* Name at top */
-  .qr-label .label-name {
-    font-size: 9px;
-    font-weight: bold;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 98%;
-    color: #000;
-    line-height: 1.2;
-  }
-
-  /* Canvas barcode fills the center */
-  .qr-label .label-barcode-canvas {
-    max-width: 100%;
-    height: 35px !important;
-    display: block;
-    image-rendering: pixelated;
-  }
-
-  /* Numeric code below barcode — BIG & BOLD */
-  .qr-label .label-barcode-num {
-    font-size: 15px;
-    font-weight: 900;
-    font-family: 'Courier New', monospace;
-    letter-spacing: 3px;
-    color: #000;
-    text-align: center;
-    line-height: 1.2;
-    margin-top: 1px;
-  }
-
-  /* Price line at bottom */
-  .qr-label .price-line {
+  /* LEFT side: QR code */
+  .qr-label .label-qr-wrap {
+    flex: 0 0 auto;
+    width:  60px;
+    height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 3px;
-    font-size: 9px;
-    color: #000;
-    line-height: 1;
   }
-  .qr-label .label-price { font-weight: 900; font-size: 10px; }
-  .qr-label .label-disc  { text-decoration: line-through; font-size: 8px; color: #c00; }
-  .qr-label .label-piece { font-size: 8px; color: #333; }
+  .qr-label .label-qr-wrap img,
+  .qr-label .label-qr-wrap canvas {
+    width:  60px !important;
+    height: 60px !important;
+  }
+
+  /* RIGHT side: text info */
+  .qr-label .label-text {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1px;
+    overflow: hidden;
+  }
+
+  .qr-label .label-name {
+    font-size: 10px;
+    font-weight: 700;
+    color: #000;
+    word-break: break-word;
+    line-height: 1.1;
+    max-height: 33px; /* limit to 3 lines */
+    overflow: hidden;
+  }
+
+  .qr-label .label-price {
+    font-size: 11px;
+    font-weight: 900;
+    color: #000;
+  }
+
+  .qr-label .label-disc {
+    font-size: 9px;
+    color: #c00;
+    text-decoration: line-through;
+  }
+
+  .qr-label .label-piece {
+    font-size: 8px;
+    color: #444;
+  }
 
   /* Empty placeholder */
   #labels-placeholder {
@@ -99,14 +105,14 @@
   /* ---- PRINT STYLES ---- */
   @media print {
     body * { visibility: hidden !important; }
-    
+
     @page { margin: 0; }
 
     #labels-area, #labels-area * { visibility: visible !important; }
     #labels-area {
       position: fixed !important;
       top: 0; left: 0;
-      width: 80mm !important;
+      width: 80mm !important;    /* 2-up thermal roll */
       background: transparent !important;
       border: none !important;
       padding: 0 !important;
@@ -117,26 +123,30 @@
     }
 
     .qr-label {
-      width: 38mm !important;
+      width:  38mm !important;
       height: 25mm !important;
       border: none !important;
-      padding: 0.5mm 1mm !important;
+      padding: 1mm !important;
       margin: 0 !important;
-      float: left !important;
       border-radius: 0 !important;
+      gap: 1mm !important;
+      float: left !important;
     }
 
-    .qr-label .label-barcode-canvas { 
-      max-width: 100% !important; 
-      height: 10mm !important; 
-      width: auto !important;
+    .qr-label .label-qr-wrap {
+      width:  16mm !important;
+      height: 16mm !important;
     }
-    .qr-label .label-barcode-num { font-size: 9pt !important; font-weight: 900 !important; letter-spacing: 2px !important; }
-    .qr-label .label-name  { font-size: 6pt !important; }
-    .qr-label .price-line { font-size: 6pt !important; }
-    .qr-label .label-price { font-size: 7pt !important; }
-    .qr-label .label-disc  { font-size: 5pt !important; }
-    .qr-label .label-piece { font-size: 5pt !important; }
+    .qr-label .label-qr-wrap img,
+    .qr-label .label-qr-wrap canvas {
+      width:  16mm !important;
+      height: 16mm !important;
+    }
+
+    .qr-label .label-name  { font-size: 7pt !important; }
+    .qr-label .label-price { font-size: 8pt !important; }
+    .qr-label .label-disc  { font-size: 6pt !important; }
+    .qr-label .label-piece { font-size: 6pt !important; }
   }
 </style>
 
@@ -145,7 +155,7 @@
   <!-- Header -->
   <div class="d-flex align-items-center justify-content-between mb-3">
     <h4 class="mb-0 fw-bold">
-      <i class="fa-solid fa-qrcode me-2 text-primary"></i>Create Barcode / QR Labels
+      <i class="fa-solid fa-qrcode me-2 text-primary"></i>Create QR Labels
     </h4>
   </div>
 
@@ -241,110 +251,92 @@
 (function () {
   'use strict';
 
-  const btnGenerate   = document.getElementById('btn-generate');
-  const btnPrint      = document.getElementById('btn-print-labels');
-  const labelsArea    = document.getElementById('labels-area');
-  const labelCount    = document.getElementById('label-count');
-  const placeholder   = document.getElementById('labels-placeholder');
+  const btnGenerate = document.getElementById('btn-generate');
+  const btnPrint    = document.getElementById('btn-print-labels');
+  const labelsArea  = document.getElementById('labels-area');
+  const labelCount  = document.getElementById('label-count');
+  const placeholder = document.getElementById('labels-placeholder');
 
   /* ------------------------------------------------------------------ */
-  /*  GENERATE RANDOM 8-DIGIT BARCODE NUMBER                            */
+  /*  BUILD QR PAYLOAD  (BCODE:<num>|<json> so scanner in createBill     */
+  /*  can still parse it correctly)                                       */
   /* ------------------------------------------------------------------ */
-  function genBarcodeNum() {
-    // Random 8-digit number: 10000000 – 99999999
+  function genCode() {
     return String(Math.floor(10000000 + Math.random() * 90000000));
   }
 
-  /* ------------------------------------------------------------------ */
-  /*  BUILD SCAN PAYLOAD                                                 */
-  /*  Format: BCODE:<8digitNum>|<json>                                   */
-  /*  This keeps the barcode value short (scannable) while still         */
-  /*  carrying product data for the POS scanner.                         */
-  /* ------------------------------------------------------------------ */
-  function buildScanPayload(barcodeNum, name, category, price, discountedPrice, pieceType) {
+  function buildPayload(code, name, category, price, discountedPrice, pieceType) {
     const obj = {};
     if (name)               obj.n  = name;
     if (category)           obj.c  = category;
     if (price > 0)          obj.p  = price;
     if (discountedPrice > 0) obj.d = discountedPrice;
     if (pieceType)          obj.pt = pieceType;
-    // Prefix with barcode number so scanner can extract both
-    return 'BCODE:' + barcodeNum + '|' + JSON.stringify(obj);
+    return 'BCODE:' + code + '|' + JSON.stringify(obj);
   }
 
   /* ------------------------------------------------------------------ */
-  /*  CREATE SINGLE LABEL ELEMENT                                        */
+  /*  CREATE SINGLE LABEL                                                 */
+  /*  Layout: [QR code | name + price]  side-by-side                     */
   /* ------------------------------------------------------------------ */
-  function createLabel(scanPayload, barcodeNum, name, price, discountedPrice, pieceType) {
+  function createLabel(payload, name, price, discountedPrice, pieceType) {
     const label = document.createElement('div');
     label.className = 'qr-label';
 
-    // --- TOP: Name ---
+    /* --- LEFT: QR container --- */
+    const qrWrap = document.createElement('div');
+    qrWrap.className = 'label-qr-wrap';
+    label.appendChild(qrWrap);
+
+    /* --- RIGHT: text info --- */
+    const textDiv = document.createElement('div');
+    textDiv.className = 'label-text';
+
     if (name) {
       const nameEl = document.createElement('div');
       nameEl.className = 'label-name';
       nameEl.textContent = name;
-      label.appendChild(nameEl);
+      textDiv.appendChild(nameEl);
     }
 
-    // --- MIDDLE: Canvas Barcode ---
-    const canvasEl = document.createElement('canvas');
-    canvasEl.className = 'label-barcode-canvas';
-    label.appendChild(canvasEl);
-
-    // --- BARCODE NUMBER (shown below bars) ---
-    const codeNumEl = document.createElement('div');
-    codeNumEl.className = 'label-barcode-num';
-    codeNumEl.textContent = barcodeNum;
-    label.appendChild(codeNumEl);
-
-    // --- BOTTOM: Price ---
-    const priceLine = document.createElement('div');
-    priceLine.className = 'price-line';
-
     if (discountedPrice > 0) {
-      const oldPriceEl = document.createElement('span');
-      oldPriceEl.className = 'label-disc';
-      oldPriceEl.textContent = 'Rs ' + parseFloat(price).toFixed(0);
-      const newPriceEl = document.createElement('span');
-      newPriceEl.className = 'label-price';
-      newPriceEl.textContent = ' Rs ' + parseFloat(discountedPrice).toFixed(0);
-      priceLine.appendChild(oldPriceEl);
-      priceLine.appendChild(newPriceEl);
+      const discEl = document.createElement('div');
+      discEl.className = 'label-disc';
+      discEl.textContent = 'Rs ' + parseFloat(price).toFixed(0);
+      textDiv.appendChild(discEl);
+
+      const priceEl = document.createElement('div');
+      priceEl.className = 'label-price';
+      priceEl.textContent = 'Rs ' + parseFloat(discountedPrice).toFixed(0);
+      textDiv.appendChild(priceEl);
     } else if (price > 0) {
-      const priceEl = document.createElement('span');
+      const priceEl = document.createElement('div');
       priceEl.className = 'label-price';
       priceEl.textContent = 'Rs ' + parseFloat(price).toFixed(0);
-      priceLine.appendChild(priceEl);
+      textDiv.appendChild(priceEl);
     }
 
     if (pieceType) {
-      const pieceEl = document.createElement('span');
+      const pieceEl = document.createElement('div');
       pieceEl.className = 'label-piece';
-      pieceEl.textContent = '  ' + pieceType;
-      priceLine.appendChild(pieceEl);
+      pieceEl.textContent = pieceType;
+      textDiv.appendChild(pieceEl);
     }
 
-    if (priceLine.childNodes.length > 0) {
-      label.appendChild(priceLine);
-    }
+    label.appendChild(textDiv);
 
-    // Generate barcode on canvas after a tick
+    /* Generate QR into qrWrap after DOM tick */
     setTimeout(function () {
       try {
-        JsBarcode(canvasEl, scanPayload, {
-          format: "CODE128",
-          renderer: "canvas",
-          displayValue: false,
-          margin: 1,
-          width: 1.4,
-          height: 32,
-          background: "#ffffff",
-          lineColor: "#000000"
+        new QRCode(qrWrap, {
+          text: payload,
+          width:  60,
+          height: 60,
+          correctLevel: QRCode.CorrectLevel.M
         });
       } catch (e) {
-        canvasEl.outerHTML = '<span style="font-size:9px;color:red;">Barcode Error</span>';
-        console.error('Barcode error:', e);
+        qrWrap.innerHTML = '<span style="font-size:9px;color:red;">QR Error</span>';
+        console.error('QR error:', e);
       }
     }, 0);
 
@@ -352,54 +344,42 @@
   }
 
   /* ------------------------------------------------------------------ */
-  /*  GENERATE BUTTON                                                    */
+  /*  GENERATE BUTTON                                                     */
   /* ------------------------------------------------------------------ */
   btnGenerate.addEventListener('click', function () {
-    const name           = document.getElementById('b-name').value.trim();
-    const category       = document.getElementById('b-category').value;
-    const price          = parseFloat(document.getElementById('b-price').value) || 0;
-    const discountedPrice= parseFloat(document.getElementById('b-disc').value)  || 0;
-    const pieceType      = document.getElementById('b-piece').value;
-    const copies         = Math.min(100, Math.max(1, parseInt(document.getElementById('b-copies').value) || 1));
+    const name          = document.getElementById('b-name').value.trim();
+    const category      = document.getElementById('b-category').value;
+    const price         = parseFloat(document.getElementById('b-price').value) || 0;
+    const discountedPrice = parseFloat(document.getElementById('b-disc').value) || 0;
+    const pieceType     = document.getElementById('b-piece').value;
+    const copies        = Math.min(100, Math.max(1, parseInt(document.getElementById('b-copies').value) || 1));
 
-    // Clear previous
     labelsArea.innerHTML = '';
     placeholder.style.display = 'none';
 
-    // Generate ONE barcode number for this batch (same number on all copies)
-    const barcodeNum   = genBarcodeNum();
-    const scanPayload  = buildScanPayload(barcodeNum, name, category, price, discountedPrice, pieceType);
+    const code    = genCode();
+    const payload = buildPayload(code, name, category, price, discountedPrice, pieceType);
 
     for (let i = 0; i < copies; i++) {
-      labelsArea.appendChild(
-        createLabel(scanPayload, barcodeNum, name, price, discountedPrice, pieceType)
-      );
+      labelsArea.appendChild(createLabel(payload, name, price, discountedPrice, pieceType));
     }
 
     labelCount.textContent = copies;
     btnPrint.style.display = copies > 0 ? 'inline-block' : 'none';
-
-    // Scroll to labels
     labelsArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
   /* ------------------------------------------------------------------ */
-  /*  PRINT BUTTON                                                       */
+  /*  PRINT BUTTON                                                        */
   /* ------------------------------------------------------------------ */
-  btnPrint.addEventListener('click', function () {
-    window.print();
-  });
+  btnPrint.addEventListener('click', function () { window.print(); });
 
-  /* ------------------------------------------------------------------ */
-  /*  Allow pressing Enter in form to trigger generate                   */
-  /* ------------------------------------------------------------------ */
+  /* Enter key triggers generate */
   ['b-name','b-price','b-disc','b-copies'].forEach(function (id) {
     const el = document.getElementById(id);
-    if (el) {
-      el.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') btnGenerate.click();
-      });
-    }
+    if (el) el.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') btnGenerate.click();
+    });
   });
 
 })();
