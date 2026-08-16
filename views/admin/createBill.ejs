@@ -306,6 +306,7 @@
 <div id="print-slip" style="display:none;">
   <div class="slip-header">
     <img src="/img/ous-logo.png" class="slip-logo" alt="Logo" style="max-width: 90px; margin-bottom: 5px;">
+    <div style="font-size: 9pt; font-weight: bold; margin-bottom: 4px;">0324 3503152</div>
     <div class="slip-subtitle">LADIES &amp; GENTS FASHION</div>
     <div class="slip-subtitle">WHOLESALE &amp; RETAIL</div>
     <div class="slip-datetime" id="slip-datetime"></div>
@@ -406,7 +407,13 @@
         <td>${escHtml(item.name)}</td>
         <td>${escHtml(item.category)}</td>
         <td>${escHtml(item.pieceType)}</td>
-        <td>${item.qty}</td>
+        <td>
+          <input type="number" class="form-control form-control-sm row-qty" 
+                 data-idx="${idx}" 
+                 value="${item.qty}" 
+                 min="1" step="1"
+                 style="width: 50px; padding: 2px 4px; font-size: 12px; height: 26px;">
+        </td>
         <td>Rs ${fmt(item.price)}</td>
         <td>
           <input type="number" class="form-control form-control-sm row-disc-price" 
@@ -503,15 +510,28 @@
   });
 
   /* ------------------------------------------------------------------ */
-  /*  EDIT DISCOUNT PRICE IN ROW                                          */
+  /*  EDIT DISCOUNT PRICE OR QTY IN ROW                                 */
   /* ------------------------------------------------------------------ */
   document.getElementById('items-tbody').addEventListener('input', function (e) {
+    const tr = e.target.closest('tr');
+    if (!tr) return;
+
     if (e.target.classList.contains('row-disc-price')) {
       const idx = parseInt(e.target.dataset.idx);
       const val = parseFloat(e.target.value) || 0;
       billItems[idx].discountedPrice = val;
       
-      const tr = e.target.closest('tr');
+      const ltCell = tr.querySelector('.row-line-total');
+      if (ltCell) {
+        ltCell.textContent = 'Rs ' + fmt(lineTotal(billItems[idx]));
+      }
+      updateGrandTotal();
+    }
+    else if (e.target.classList.contains('row-qty')) {
+      const idx = parseInt(e.target.dataset.idx);
+      const val = parseInt(e.target.value) || 1;
+      billItems[idx].qty = Math.max(1, val);
+      
       const ltCell = tr.querySelector('.row-line-total');
       if (ltCell) {
         ltCell.textContent = 'Rs ' + fmt(lineTotal(billItems[idx]));

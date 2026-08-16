@@ -316,4 +316,48 @@ module.exports = {
             return res.status(500).json(err)
         }
     },
-}
+
+    // Generic status change — also sends email when moving OUT of "Payment Pending"
+    changeOrderStatus: async (req, res) => {
+        try {
+            const orderId = req.params.id;
+            const { newStatus } = req.body;
+
+            const validStatuses = ["Payment Pending", "Pending", "Packed", "Shipped", "Out for delivery", "Delivered", "Cancelled"];
+            if (!validStatuses.includes(newStatus)) {
+                return res.status(400).json({ message: "Invalid status" });
+            }
+
+            const myOrder = await Order.findById(orderId).populate('userId');
+            if (!myOrder) return res.status(404).json({ message: "Order not found" });
+
+            const wasPaymentPending = myOrder.status === "Payment Pending";
+            const oldStatus = myOrder.status;
+
+            myOrder.status = newStatus;
+            await myOrder.save();
+
+            // Emit pusher event
+            const pusher = req.app.get('pusher');
+            if (pusher) pusher.trigger('ecommerce-channel', 'orderStatusUpdated', { orderId, status: newStatus });
+
+            // If this order was "Payment Pending" (online payment) and now admin
+            // changed it to any other status → send order confirmation email
+            if (wasPaymentPending && newStatus !== "Payment Pending") {
+                const email = myOrder.deliveryAddress?.email ||
+                              (myOrder.userId && myOrder.userId.email) || null;
+                if (email && email.trim() !== '') {
+                    console.log(`[Email] Sending order confirmation to ${email} (status changed from Payment Pending → ${newStatus})`);
+                    sendOrderConfirmationEmail(myOrder, email.trim());
+                } else {
+                    console.log('[Email] No email on order — skipping confirmation email for Payment Pending → ' + newStatus);
+                }
+            }
+
+            return res.status(200).json({ message: `Order status updated to ${newStatus}`, oldStatus });
+        } catch (err) {
+            console.log(err);
+            return res.status(500).json(err);
+        }
+    },
+}

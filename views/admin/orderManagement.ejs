@@ -70,7 +70,8 @@
                 <button id="delete-btn-<%= order.id %>" class="btn btn-sm btn-outline-danger w-100" onclick="deleteOrder('<%=order.id%>')" style="display: <%= (order.status === 'Delivered' || order.status === 'Cancelled') ? 'block' : 'none' %>;"><i class="fa-solid fa-trash"></i> Delete</button>
                 
                 <select class="form-select form-select-sm mt-1" onchange="changeOrderStatus(this, '<%= order.id %>', '<%= order.status %>')" <%= order.status === 'Delivered' || order.status === 'Cancelled' ? 'disabled' : '' %>>
-                  <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %> disabled>Pending</option>
+                  <option value="Payment Pending" <%= order.status === 'Payment Pending' ? 'selected' : '' %>>Payment Pending</option>
+                  <option value="Pending" <%= order.status === 'Pending' ? 'selected' : '' %>>Pending</option>
                   <option value="Packed" <%= order.status === 'Packed' ? 'selected' : '' %>>Packed</option>
                   <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
                   <option value="Out for delivery" <%= order.status === 'Out for delivery' ? 'selected' : '' %>>Out for delivery</option>
@@ -150,7 +151,8 @@
                   <button id="delete-btn-${order._id}" class="btn btn-sm btn-outline-danger w-100" onclick="deleteOrder('${order._id}')" style="display: none;"><i class="fa-solid fa-trash"></i> Delete</button>
                   
                   <select class="form-select form-select-sm mt-1" onchange="changeOrderStatus(this, '${order._id}', '${order.status}')">
-                    <option value="Pending" selected disabled>Pending</option>
+                    <option value="Payment Pending" ${order.status === 'Payment Pending' ? 'selected' : ''}>Payment Pending</option>
+                    <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
                     <option value="Packed" >Packed</option>
                     <option value="Shipped" >Shipped</option>
                     <option value="Out for delivery" >Out for delivery</option>

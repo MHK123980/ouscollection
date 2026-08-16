@@ -3,6 +3,9 @@ const orderStatus = document.querySelectorAll(".order-status")
 for (let i = 0; i < orderStatus.length; i++) {
     if (orderStatus[i].innerHTML == "Pending") {
         orderStatus[i].classList.add("bg-warning")
+    } else if (orderStatus[i].innerHTML == "Payment Pending") {
+        orderStatus[i].classList.add("bg-orange")
+        orderStatus[i].style.backgroundColor = '#fd7e14';
     } else if (orderStatus[i].innerHTML == "Packed") {
         orderStatus[i].classList.add("bg-info")
     } else if (orderStatus[i].innerHTML == "Shipped") {
@@ -201,28 +204,72 @@ async function deleteOrder(orderId) {
 async function changeOrderStatus(selectEl, orderId, oldStatus) {
     const newStatus = selectEl.value;
     
-    // Store old value in case we need to revert (like cancelled)
+    // Store old value in case we need to revert
     if (!selectEl.getAttribute('data-old-value')) {
         selectEl.setAttribute('data-old-value', oldStatus);
     }
     const currentOldValue = selectEl.getAttribute('data-old-value');
     
-    // Warn before changing if they select Cancelled
+    // Warn before cancelling
     if (newStatus === "Cancelled") {
         cancelOrder(orderId, selectEl, currentOldValue);
         return;
     }
     
-    // Route to appropriate function
-    if (newStatus === "Packed") packOrder(orderId);
-    else if (newStatus === "Shipped") shipOrder(orderId);
-    else if (newStatus === "Out for delivery") outForDelivery(orderId);
-    else if (newStatus === "Delivered") deliverPackage(orderId);
+    document.getElementById("waiter").innerHTML = `<div class="waiting"></div>`;
     
-    // Update old status reference for next change
-    selectEl.setAttribute('data-old-value', newStatus);
-    // Update the inline onclick attribute to use the new status for next time
-    selectEl.setAttribute('onchange', `changeOrderStatus(this, '${orderId}', '${newStatus}')`);
+    try {
+        const response = await axios({
+            method: "put",
+            url: `/admin/changeOrderStatus/${orderId}`,
+            data: { newStatus }
+        });
+
+        document.getElementById("waiter").innerHTML = "";
+
+        if (response.status === 200) {
+            const wasPaymentPending = currentOldValue === 'Payment Pending';
+            
+            // Update badge
+            const badge = document.getElementById("status-" + orderId);
+            if (badge) {
+                badge.className = 'badge order-status';
+                if (newStatus === 'Pending') badge.classList.add('bg-warning');
+                else if (newStatus === 'Payment Pending') { badge.classList.add('bg-warning'); badge.style.backgroundColor = '#fd7e14'; }
+                else if (newStatus === 'Packed') badge.classList.add('bg-info');
+                else if (newStatus === 'Shipped') badge.classList.add('bg-primary');
+                else if (newStatus === 'Out for delivery') badge.classList.add('bg-dark');
+                else if (newStatus === 'Delivered') { badge.classList.add('bg-success'); }
+                else badge.classList.add('bg-danger');
+                badge.innerHTML = newStatus;
+            }
+
+            // Disable select if Delivered
+            if (newStatus === 'Delivered' || newStatus === 'Cancelled') {
+                if (selectEl) selectEl.disabled = true;
+                const deleteBtn = document.getElementById("delete-btn-" + orderId);
+                if (deleteBtn) deleteBtn.style.display = 'block';
+            }
+
+            selectEl.setAttribute('data-old-value', newStatus);
+            selectEl.setAttribute('onchange', `changeOrderStatus(this, '${orderId}', '${newStatus}')`);
+
+            toastr.options = { "positionClass": "toast-bottom-left" };
+            if (wasPaymentPending && newStatus !== 'Payment Pending') {
+                toastr.success(`✅ Status updated to "${newStatus}" — Order confirmation email sent to customer!`);
+            } else {
+                toastr.success(`Status updated to "${newStatus}"`);
+            }
+        } else {
+            toastr.error('Error updating order status');
+        }
+    } catch (err) {
+        document.getElementById("waiter").innerHTML = "";
+        console.error(err);
+        toastr.error('Error updating order status');
+        // Revert select
+        if (selectEl) selectEl.value = currentOldValue;
+    }
 }
 
 async function viewOrderDetails(orderId) {

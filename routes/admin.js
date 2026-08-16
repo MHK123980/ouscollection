@@ -84,6 +84,7 @@ router.put("/shipOrder/:id", orderControl.shipOrder)
 router.put("/outForDelivery/:id", orderControl.outForDelivery)
 router.put("/deliverPackage/:id", orderControl.deliverPackage)
 router.put("/cancelOrder/:id", orderControl.cancelOrder)
+router.put("/changeOrderStatus/:id", orderControl.changeOrderStatus)
 
 router.delete("/orders/:id", adminControl.deleteOrder)
 router.delete("/deleteProduct/:id", productControl.deleteProduct)
