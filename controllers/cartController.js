@@ -3,6 +3,19 @@ const Category = require("../models/category")
 const User = require("../models/users")
 const Product = require("../models/product")
 
+const calculateDeliveryCharge = (prod, quantity) => {
+    if (prod.deliveryChargeTiers && prod.deliveryChargeTiers.length > 0) {
+        let charge = Number(prod.deliveryCharges || 0);
+        for (let tier of prod.deliveryChargeTiers) {
+            if (quantity >= tier.quantity) charge = Number(tier.charge);
+            else break;
+        }
+        return charge;
+    }
+    const charge = Number(prod.deliveryCharges || 0);
+    return prod.increaseDeliveryChargesWithQuantity ? charge * quantity : charge;
+};
+
 module.exports = {
     addToCart: async (req, res) => {
         const productId = req.params.id
@@ -43,8 +56,7 @@ module.exports = {
                     const subTotal = (quantity * price)
                     const total = offerPrice ? (quantity * offerPrice) : subTotal
                     // NOTE: deliveryCharges computed on cart page view only (speeds up addToCart)
-                    const deliveryCharge = Number(findProduct.deliveryCharges || 0)
-                    const totalDelivery = findProduct.increaseDeliveryChargesWithQuantity ? deliveryCharge * quantity : deliveryCharge
+                    const totalDelivery = calculateDeliveryCharge(findProduct, quantity);
                     cart = await Cart.create({
                         userId,
                         products: [{ productId, quantity, name, price, offerPrice }],
@@ -94,8 +106,7 @@ module.exports = {
                     findCart.products.forEach(item => {
                         const prod = prods.find(p => p.id == (item.productId._id ? item.productId._id.toString() : item.productId))
                         if (prod) {
-                            const charge = Number(prod.deliveryCharges || 0)
-                            totalDelivery += prod.increaseDeliveryChargesWithQuantity ? charge * item.quantity : charge
+                            totalDelivery += calculateDeliveryCharge(prod, item.quantity);
                         }
                     })
                     findCart.totalDeliveryCharges = totalDelivery
@@ -123,8 +134,7 @@ module.exports = {
                 let totalDelivery = 0
                 populatedProducts.forEach(item => {
                     if (item.productId) {
-                        const charge = Number(item.productId.deliveryCharges || 0)
-                        totalDelivery += item.productId.increaseDeliveryChargesWithQuantity ? charge * item.quantity : charge
+                        totalDelivery += calculateDeliveryCharge(item.productId, item.quantity);
                     }
                 })
                 const findCart = { products: populatedProducts, subTotal: sessionCart.subTotal, total: sessionCart.total, totalDeliveryCharges: totalDelivery }
@@ -177,8 +187,7 @@ module.exports = {
                 cart.products.forEach(item => {
                     const prod = prods.find(p => p.id == item.productId)
                     if (prod) {
-                        const charge = Number(prod.deliveryCharges || 0)
-                        totalDelivery += prod.increaseDeliveryChargesWithQuantity ? charge * item.quantity : charge
+                        totalDelivery += calculateDeliveryCharge(prod, item.quantity);
                     }
                 })
                 cart.totalDeliveryCharges = totalDelivery
@@ -198,8 +207,7 @@ module.exports = {
                 req.session.cart.products.forEach(item => {
                     const prod = prods.find(p => p.id == item.productId)
                     if (prod) {
-                        const charge = Number(prod.deliveryCharges || 0)
-                        totalDelivery += prod.increaseDeliveryChargesWithQuantity ? charge * item.quantity : charge
+                        totalDelivery += calculateDeliveryCharge(prod, item.quantity);
                     }
                 })
                 req.session.cart.totalDeliveryCharges = totalDelivery
@@ -228,8 +236,7 @@ module.exports = {
                     findCart.products.forEach(item => {
                         const prod = prods.find(p => p.id == (item.productId._id ? item.productId._id.toString() : item.productId))
                         if (prod) {
-                            const charge = Number(prod.deliveryCharges || 0)
-                            totalDelivery += prod.increaseDeliveryChargesWithQuantity ? charge * item.quantity : charge
+                            totalDelivery += calculateDeliveryCharge(prod, item.quantity);
                         }
                     })
                     findCart.totalDeliveryCharges = totalDelivery
@@ -250,8 +257,7 @@ module.exports = {
                     populatedProducts.forEach(item => {
                         const prod = item.productId
                         if (prod) {
-                            const charge = Number(prod.deliveryCharges || 0)
-                            totalDelivery += prod.increaseDeliveryChargesWithQuantity ? charge * item.quantity : charge
+                            totalDelivery += calculateDeliveryCharge(prod, item.quantity);
                         }
                     })
                     const findCart = { products: populatedProducts, subTotal: sessionCart.subTotal || 0, total: sessionCart.total || 0, totalDeliveryCharges: totalDelivery }

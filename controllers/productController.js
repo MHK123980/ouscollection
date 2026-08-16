@@ -54,6 +54,23 @@ module.exports = {
                 productImages.push(...batchUrls);
             }
 
+            // Process Delivery Tiers
+            let deliveryChargeTiers = [];
+            if (req.body.tierQuantities && req.body.tierCharges) {
+                let quantities = Array.isArray(req.body.tierQuantities) ? req.body.tierQuantities : [req.body.tierQuantities];
+                let charges = Array.isArray(req.body.tierCharges) ? req.body.tierCharges : [req.body.tierCharges];
+                for (let i = 0; i < quantities.length; i++) {
+                    if (quantities[i] && charges[i]) {
+                        deliveryChargeTiers.push({
+                            quantity: Number(quantities[i]),
+                            charge: Number(charges[i])
+                        });
+                    }
+                }
+                // Sort ascending by quantity
+                deliveryChargeTiers.sort((a, b) => a.quantity - b.quantity);
+            }
+
             const product = new Product({
                 name: req.body.name,
                 brand: req.body.brand,
@@ -64,6 +81,7 @@ module.exports = {
                 offerPrice: offerPrice,
                 deliveryCharges: req.body.deliveryCharges ? Number(req.body.deliveryCharges) : 0,
                 increaseDeliveryChargesWithQuantity: req.body.increaseDeliveryChargesWithQuantity == 'on' ? true : false,
+                deliveryChargeTiers: deliveryChargeTiers,
                 isFeatured: isFeatured,
                 isWholesaleSet: isWholesaleSet,
                 piecesPerSet: piecesPerSet,
@@ -122,6 +140,23 @@ module.exports = {
                 productImages.push(...newUrls);
             }
 
+            // Process Delivery Tiers
+            let deliveryChargeTiers = [];
+            if (req.body.tierQuantities && req.body.tierCharges) {
+                let quantities = Array.isArray(req.body.tierQuantities) ? req.body.tierQuantities : [req.body.tierQuantities];
+                let charges = Array.isArray(req.body.tierCharges) ? req.body.tierCharges : [req.body.tierCharges];
+                for (let i = 0; i < quantities.length; i++) {
+                    if (quantities[i] && charges[i]) {
+                        deliveryChargeTiers.push({
+                            quantity: Number(quantities[i]),
+                            charge: Number(charges[i])
+                        });
+                    }
+                }
+                // Sort ascending by quantity
+                deliveryChargeTiers.sort((a, b) => a.quantity - b.quantity);
+            }
+
             await Product.findByIdAndUpdate(req.params.id, {
                 name: req.body.name,
                 brand: req.body.brand,
@@ -132,6 +167,7 @@ module.exports = {
                 offerPrice: offerPrice,
                 deliveryCharges: req.body.deliveryCharges ? Number(req.body.deliveryCharges) : 0,
                 increaseDeliveryChargesWithQuantity: req.body.increaseDeliveryChargesWithQuantity == 'on' ? true : false,
+                deliveryChargeTiers: deliveryChargeTiers,
                 isFeatured: isFeatured,
                 isWholesaleSet: isWholesaleSet,
                 piecesPerSet: piecesPerSet,

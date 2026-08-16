@@ -60,6 +60,10 @@ const productSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    deliveryChargeTiers: [{
+        quantity: Number,
+        charge: Number
+    }],
     description: {
         type: String,
         required: true

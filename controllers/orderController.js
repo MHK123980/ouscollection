@@ -6,6 +6,19 @@ const Category = require("../models/category")
 const { sendOrderConfirmationEmail } = require("../services/emailService")
 const Counter = require('../models/counter')
 
+const calculateDeliveryCharge = (prod, quantity) => {
+    if (prod.deliveryChargeTiers && prod.deliveryChargeTiers.length > 0) {
+        let charge = Number(prod.deliveryCharges || 0);
+        for (let tier of prod.deliveryChargeTiers) {
+            if (quantity >= tier.quantity) charge = Number(tier.charge);
+            else break;
+        }
+        return charge;
+    }
+    const charge = Number(prod.deliveryCharges || 0);
+    return prod.increaseDeliveryChargesWithQuantity ? charge * quantity : charge;
+};
+
 module.exports = {
 
     getOrderPending: async (req, res) => {
@@ -110,8 +123,7 @@ module.exports = {
                 const pId = item.productId._id ? item.productId._id.toString() : item.productId.toString();
                 const prod = dbProducts.find(p => p._id.toString() === pId);
                 if (prod) {
-                    const charge = Number(prod.deliveryCharges || 0);
-                    totalDeliveryCharges += prod.increaseDeliveryChargesWithQuantity ? charge * item.quantity : charge;
+                    totalDeliveryCharges += calculateDeliveryCharge(prod, item.quantity);
                 }
             });
 
