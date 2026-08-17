@@ -712,16 +712,18 @@ function calcRemainingBalance() {
     const paidRow = document.getElementById('slip-paid-row');
     const remRow  = document.getElementById('slip-remaining-row');
 
-    if (amountPaid > 0) {
+    const isFullUdhaar = (paymentMethod === 'Remaining (Udhaar)' && amountPaid === 0);
+
+    if (amountPaid > 0 || isFullUdhaar) {
       paidRow.style.display = '';
       document.getElementById('slip-amount-paid').textContent = 'Rs ' + fmt(amountPaid);
     } else {
       paidRow.style.display = 'none';
     }
 
-    if (amountPaid > 0 && remaining > 0) {
+    if ((amountPaid > 0 && remaining > 0) || isFullUdhaar) {
       remRow.style.display = '';
-      document.getElementById('slip-remaining').textContent = 'Rs ' + fmt(remaining);
+      document.getElementById('slip-remaining').textContent = 'Rs ' + fmt(isFullUdhaar ? baseForBalance : remaining);
     } else {
       remRow.style.display = 'none';
     }
