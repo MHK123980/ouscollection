@@ -264,6 +264,38 @@
           </div>
           <small class="text-muted" style="font-size:10px;">If entered, shows on bill as final payable amount</small>
         </div>
+
+        <!-- Amount Paid -->
+        <div class="col-12 col-sm-6 col-md-3">
+          <label class="form-label small mb-1">Amount Paid <span class="badge bg-secondary" style="font-size:9px;">Optional</span></label>
+          <div class="input-group input-group-sm">
+            <span class="input-group-text">Rs</span>
+            <input type="number" class="form-control" id="cust-amount-paid" placeholder="e.g. 2000" min="0" step="0.01" oninput="calcRemainingBalance()">
+          </div>
+        </div>
+
+        <!-- Remaining Balance (auto-calculated, read-only) -->
+        <div class="col-12 col-sm-6 col-md-3">
+          <label class="form-label small mb-1">Outstanding Balance <span class="badge bg-secondary" style="font-size:9px;">Auto</span></label>
+          <div class="input-group input-group-sm">
+            <span class="input-group-text">Rs</span>
+            <input type="number" class="form-control" id="cust-remaining" placeholder="0.00" readonly style="background:#f8f9fa;">
+          </div>
+          <small class="text-muted" style="font-size:10px;">Grand Total &minus; Amount Paid</small>
+        </div>
+
+        <!-- Payment Method (Compulsory) -->
+        <div class="col-12 col-sm-6 col-md-3">
+          <label class="form-label small mb-1 fw-bold">Payment Method <span class="text-danger">*</span></label>
+          <select class="form-select form-select-sm" id="cust-payment-method">
+            <option value="">-- Select Method --</option>
+            <option value="Cash">Cash</option>
+            <option value="Online">Online</option>
+            <option value="Deferred (Udhaar)">Deferred <span style="font-size:10px;">(Udhaar)</span></option>
+          </select>
+          <small class="text-danger d-none" id="payment-method-err" style="font-size:10px;">Please select a payment method</small>
+        </div>
+
       </div>
     </div>
   </div>
@@ -343,6 +375,21 @@
         <td colspan="7" class="text-right" style="font-weight:900; font-size:11pt; color:#c00;">Amount to Pay:</td>
         <td style="font-weight:900; font-size:11pt; color:#c00;" id="slip-disc-total"></td>
       </tr>
+      <!-- Payment Method row -->
+      <tr id="slip-payment-row">
+        <td colspan="7" class="text-right" style="font-weight:bold;">Payment Method:</td>
+        <td style="font-weight:bold;" id="slip-payment-method"></td>
+      </tr>
+      <!-- Amount Paid row: shown only if entered -->
+      <tr id="slip-paid-row" style="display:none;">
+        <td colspan="7" class="text-right" style="font-weight:bold; color:#007700;">Amount Received:</td>
+        <td style="font-weight:bold; color:#007700;" id="slip-amount-paid"></td>
+      </tr>
+      <!-- Remaining Balance row: shown only if > 0 -->
+      <tr id="slip-remaining-row" style="display:none;">
+        <td colspan="7" class="text-right" style="font-weight:900; font-size:10pt; color:#c00;">Outstanding Balance:</td>
+        <td style="font-weight:900; font-size:10pt; color:#c00;" id="slip-remaining"></td>
+      </tr>
     </tfoot>
   </table>
   <div class="slip-footer">
@@ -354,6 +401,23 @@
 
 <!-- ===== PAGE SCRIPT ===== -->
 <script>
+// Global: called from oninput attribute on Amount Paid field
+function calcRemainingBalance() {
+  // Access billItems from the enclosing scope via a module-level getter
+  const rows = document.querySelectorAll('#items-tbody tr.bill-item-row');
+  // Simpler: compute from DOM line totals
+  let grand = 0;
+  document.querySelectorAll('.row-line-total').forEach(function(cell) {
+    const val = cell.textContent.replace(/[^0-9.]/g,'');
+    grand += parseFloat(val) || 0;
+  });
+  const discTotal = parseFloat(document.getElementById('cust-discount-total').value) || 0;
+  const baseAmt   = discTotal > 0 ? discTotal : grand;
+  const paid      = parseFloat(document.getElementById('cust-amount-paid').value) || 0;
+  const rem       = Math.max(0, baseAmt - paid);
+  document.getElementById('cust-remaining').value = paid > 0 ? rem.toFixed(2) : '';
+}
+
 (function () {
   'use strict';
 
@@ -438,6 +502,10 @@
   function updateGrandTotal() {
     const total = billItems.reduce((s, i) => s + lineTotal(i), 0);
     document.getElementById('grand-total-badge').textContent = 'Total: Rs ' + fmt(total);
+    // Keep remaining balance in sync
+    if (document.getElementById('cust-amount-paid').value) {
+      calcRemainingBalance();
+    }
   }
 
   function escHtml(str) {
@@ -575,6 +643,16 @@
       return;
     }
 
+    // Validate Payment Method (compulsory)
+    const paymentMethod = document.getElementById('cust-payment-method').value;
+    if (!paymentMethod) {
+      document.getElementById('payment-method-err').classList.remove('d-none');
+      document.getElementById('cust-payment-method').focus();
+      toastr.error('Please select a Payment Method before printing.');
+      return;
+    }
+    document.getElementById('payment-method-err').classList.add('d-none');
+
     // Populate slip
     document.getElementById('slip-datetime').textContent = now();
 
@@ -621,6 +699,31 @@
       document.getElementById('slip-disc-total').textContent = 'Rs ' + fmt(custDiscTotal);
     } else {
       discRow.style.display = 'none';
+    }
+
+    // --- Payment Method ---
+    document.getElementById('slip-payment-method').textContent = paymentMethod;
+
+    // --- Amount Paid & Outstanding Balance ---
+    const amountPaid = parseFloat(document.getElementById('cust-amount-paid').value) || 0;
+    const baseForBalance = custDiscTotal > 0 ? custDiscTotal : grand;
+    const remaining = baseForBalance - amountPaid;
+
+    const paidRow = document.getElementById('slip-paid-row');
+    const remRow  = document.getElementById('slip-remaining-row');
+
+    if (amountPaid > 0) {
+      paidRow.style.display = '';
+      document.getElementById('slip-amount-paid').textContent = 'Rs ' + fmt(amountPaid);
+    } else {
+      paidRow.style.display = 'none';
+    }
+
+    if (amountPaid > 0 && remaining > 0) {
+      remRow.style.display = '';
+      document.getElementById('slip-remaining').textContent = 'Rs ' + fmt(remaining);
+    } else {
+      remRow.style.display = 'none';
     }
 
     // Apply size class to body
@@ -738,6 +841,9 @@
 
   document.getElementById('btn-open-scan').addEventListener('click', openScanner);
   document.getElementById('btn-stop-scan').addEventListener('click', stopScanner);
+
+  // Keep remaining balance in sync when discount total changes
+  document.getElementById('cust-discount-total').addEventListener('input', calcRemainingBalance);
 
   // Initial render
   renderTable();
