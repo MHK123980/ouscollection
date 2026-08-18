@@ -93,10 +93,10 @@
                                             <% itemDelivery = 0; %>
                                         <% } else if (item.productId.deliveryChargeTiers && item.productId.deliveryChargeTiers.length > 0) { %>
                                             <% itemDelivery = Number(item.productId.deliveryCharges || 0); %>
-                                            <% for (let tier of item.productId.deliveryChargeTiers) { %>
-                                                <% if (item.quantity >= tier.quantity) itemDelivery = Number(tier.charge); %>
-                                                <% else break; %>
-                                            <% } %>
+                                            <% for (let tier of item.productId.deliveryChargeTiers) {
+                                                if (item.quantity >= tier.quantity) itemDelivery = Number(tier.charge);
+                                                else break;
+                                            } %>
                                         <% } else { %>
                                             <% const dCharge = Number(item.productId.deliveryCharges || 0); %>
                                             <% itemDelivery = item.productId.increaseDeliveryChargesWithQuantity ? (dCharge * item.quantity) : dCharge; %>

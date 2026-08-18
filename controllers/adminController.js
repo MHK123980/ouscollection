@@ -187,6 +187,10 @@ module.exports = {
 
   products: async (req, res) => {
     try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = 200;
+      const skip = (page - 1) * limit;
+
       const errorMessage = req.flash('message');
       const [allCategories, rawProducts] = await Promise.all([
         Category.find().sort({ categoryName: 1 }).lean().exec(),
@@ -194,6 +198,8 @@ module.exports = {
           .populate('category', 'categoryName')
           .select('name category quantity price discount offerPrice isFeatured isWholesaleSet piecesPerSet productImagePath deliveryCharges increaseDeliveryChargesWithQuantity createdAt')
           .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
           .lean()
           .exec()
       ]);
@@ -201,6 +207,9 @@ module.exports = {
       res.render('admin/productManagement', {
         allCategories: allCategories,
         allProducts: allProducts,
+        currentPage: page,
+        limit: limit,
+        hasMore: rawProducts.length === limit,
         errorMessage: errorMessage,
         layout: 'layouts/adminLayout',
       });
