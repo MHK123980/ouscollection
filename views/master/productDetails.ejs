@@ -111,11 +111,15 @@
                 </div>
               <% } %>
             <% } %>
-                  <% if(findProduct.deliveryCharges && Number(findProduct.deliveryCharges)> 0){ %>
+                  <% if(findProduct.isFreeDelivery) { %>
+                    <p class="delivery-charges text-success fw-bold">FREE Delivery <i class="fa-solid fa-truck-fast"></i></p>
+                  <% } else if(findProduct.deliveryCharges && Number(findProduct.deliveryCharges)> 0){ %>
                     <p class="delivery-charges">Delivery: Rs <%= Number(findProduct.deliveryCharges).toFixed(2) %>
-                        <% if(findProduct.increaseDeliveryChargesWithQuantity){ %> (per piece)<% } %>
+                        <% if (!findProduct.deliveryChargeTiers || findProduct.deliveryChargeTiers.length === 0) { %>
+                            <% if(findProduct.increaseDeliveryChargesWithQuantity){ %> (per piece)<% } %>
+                        <% } %>
                     </p>
-                    <% } %>
+                  <% } %>
                       <p>
                         <%= findProduct.description %>
                       </p>

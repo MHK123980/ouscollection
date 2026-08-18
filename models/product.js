@@ -51,6 +51,10 @@ const productSchema = new mongoose.Schema({
     },
     discount: Number,
     offerPrice: Number,
+    isFreeDelivery: {
+        type: Boolean,
+        default: false
+    },
     deliveryCharges: {
         type: Number,
         required: true,

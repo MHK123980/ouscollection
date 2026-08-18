@@ -6,6 +6,7 @@ const Order = require("../models/order");
 const Coupon = require("../models/coupon");
 
 const calculateDeliveryCharge = (prod, quantity) => {
+    if (prod.isFreeDelivery) return 0;
     if (prod.deliveryChargeTiers && prod.deliveryChargeTiers.length > 0) {
         let charge = Number(prod.deliveryCharges || 0);
         for (let tier of prod.deliveryChargeTiers) {

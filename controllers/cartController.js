@@ -4,6 +4,7 @@ const User = require("../models/users")
 const Product = require("../models/product")
 
 const calculateDeliveryCharge = (prod, quantity) => {
+    if (prod.isFreeDelivery) return 0;
     if (prod.deliveryChargeTiers && prod.deliveryChargeTiers.length > 0) {
         let charge = Number(prod.deliveryCharges || 0);
         for (let tier of prod.deliveryChargeTiers) {

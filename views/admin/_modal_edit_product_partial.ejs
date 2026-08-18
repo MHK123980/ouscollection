@@ -39,9 +39,16 @@
           </div>
           <div>
             <label class="form-label">Price</label>
-            <input type="number" name="price" min="1" value="<%=product.price %>" required class="form-control">
+            <input type="number" name="price" min="1" value="<%= product.price %>" required class="form-control">
           </div>
-          <div>
+          
+          <div class="form-check form-switch mt-3 mb-2">
+            <input class="form-check-input" type="checkbox" name="isFreeDelivery" id="isFreeDeliveryEdit-<%= product.id %>" onchange="toggleDeliveryInputs(this.checked, 'Edit-<%= product.id %>')" <%= product.isFreeDelivery ? 'checked' : '' %>>
+            <label class="form-check-label fw-bold text-success" for="isFreeDeliveryEdit-<%= product.id %>">FREE Delivery <i class="fa-solid fa-truck-fast"></i></label>
+          </div>
+
+          <div id="deliveryInputsWrapperEdit-<%= product.id %>" style="<%= product.isFreeDelivery ? 'opacity:0.5; pointer-events:none;' : '' %>">
+            <div>
             <label class="form-label">Base Delivery Charges (Rs) <span class="text-muted">(For 1 Qty)</span></label>
             <input type="number" name="deliveryCharges" min="0" step="0.01" value="<%= typeof product.deliveryCharges !== 'undefined' ? product.deliveryCharges : 0 %>" required class="form-control">
           </div>
@@ -75,6 +82,7 @@
             <input class="form-check-input" <%= product.increaseDeliveryChargesWithQuantity ? 'checked' : '' %> type="checkbox" name="increaseDeliveryChargesWithQuantity" id="increaseDeliveryChargesWithQuantity-<%= product.id %>">
             <label class="form-check-label" style="font-size: 13px;" for="increaseDeliveryChargesWithQuantity-<%= product.id %>">Multiply base charge by quantity (if no tiers defined)</label>
           </div>
+          </div> <!-- /deliveryInputsWrapperEdit -->
           <div>
             <label class="form-label">Discount <span class="text-muted">(in percentage)</span></label>
             <input type="number" name="discount" min="0" max="100" step="0.01" value="<%=product.discount %>" class="form-control" placeholder="Optional">

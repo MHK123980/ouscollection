@@ -126,12 +126,13 @@ async function addToCart(productId, productName, productPrice, quantity, offerPr
                 if (qtyInput) qtyInput.value = newQuantity
 
                 // If item total element exists, update it using returned itemTotal
+                // We will rely on updateCartTotals() to re-render the delivery HTML properly
+                // so we don't need to try and preserve it here. updateCartTotals will overwrite it anyway.
                 if (response.data && response.data.itemTotal) {
                     const itemTotalEl = document.getElementById(`item-${productId}`)
                     if (itemTotalEl) {
-                        const deliveryNode = itemTotalEl.querySelector('.text-muted')
-                        const deliveryHtml = deliveryNode ? deliveryNode.outerHTML : ''
-                        itemTotalEl.innerHTML = ` Rs ${Number(response.data.itemTotal).toFixed(2)}` + (deliveryHtml ? `<div class="text-muted small">${deliveryHtml}</div>` : '')
+                        // let updateCartTotals handle the deliveryHtml rendering
+                        itemTotalEl.innerHTML = `Rs ${Number(response.data.itemTotal).toFixed(2)}`
                     }
                 }
 
@@ -247,11 +248,33 @@ function updateCartTotals() {
         // Get delivery charge data
         const deliveryCharges = parseFloat(quantityInput.getAttribute('data-delivery-charges')) || 0;
         const increaseDelivery = quantityInput.getAttribute('data-increase-delivery') === 'true';
-
-        console.log(`Delivery charges: ${deliveryCharges}, increase with qty: ${increaseDelivery}`);
+        const isFreeDelivery = quantityInput.getAttribute('data-is-free-delivery') === 'true';
+        const deliveryTiersStr = quantityInput.getAttribute('data-delivery-tiers') || '[]';
+        let deliveryTiers = [];
+        try { deliveryTiers = JSON.parse(deliveryTiersStr); } catch (e) { }
 
         // Calculate item delivery charge
-        const itemDelivery = increaseDelivery ? (deliveryCharges * quantity) : deliveryCharges;
+        let itemDelivery = 0;
+        let deliveryHtml = '';
+        if (isFreeDelivery) {
+            itemDelivery = 0;
+            deliveryHtml = '<div class="text-success small" style="font-weight:bold;">FREE Delivery <i class="fa-solid fa-truck-fast"></i></div>';
+        } else if (deliveryTiers && deliveryTiers.length > 0) {
+            itemDelivery = deliveryCharges;
+            for (let tier of deliveryTiers) {
+                if (quantity >= tier.quantity) itemDelivery = Number(tier.charge);
+                else break;
+            }
+            if (itemDelivery > 0) {
+                deliveryHtml = `<div class="text-muted small">Delivery: Rs ${itemDelivery.toFixed(2)}</div>`;
+            }
+        } else {
+            itemDelivery = increaseDelivery ? (deliveryCharges * quantity) : deliveryCharges;
+            if (itemDelivery > 0) {
+                deliveryHtml = `<div class="text-muted small">Delivery: Rs ${itemDelivery.toFixed(2)}${increaseDelivery ? ` (per piece: Rs ${deliveryCharges.toFixed(2)})` : ''}</div>`;
+            }
+        }
+
         totalDeliveryCharges += itemDelivery;
 
         // Calculate item total
@@ -265,10 +288,7 @@ function updateCartTotals() {
         // Update item total display
         const itemTotalElement = document.getElementById(`item-${productId}`);
         if (itemTotalElement) {
-            // Preserve delivery info HTML if present
-            const deliveryNode = itemTotalElement.querySelector('.text-muted');
-            const deliveryHtml = deliveryNode ? deliveryNode.outerHTML : '';
-            itemTotalElement.innerHTML = `Rs ${itemTotal.toFixed(2)}` + (deliveryHtml ? `<div class="text-muted small">${deliveryHtml}</div>` : '');
+            itemTotalElement.innerHTML = `Rs ${itemTotal.toFixed(2)}` + deliveryHtml;
         }
     });
 

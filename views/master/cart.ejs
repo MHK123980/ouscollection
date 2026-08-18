@@ -75,6 +75,8 @@
                                     data-max-stock="<%= item.productId.quantity %>"
                                     data-delivery-charges="<%= item.productId.deliveryCharges || 0 %>"
                                     data-increase-delivery="<%= item.productId.increaseDeliveryChargesWithQuantity || false %>"
+                                    data-delivery-tiers="<%= JSON.stringify(item.productId.deliveryChargeTiers || []) %>"
+                                    data-is-free-delivery="<%= item.productId.isFreeDelivery || false %>"
                                     onchange="updateQuantity('<%=item.productId.id%>','<%=item.name%>','<%=item.price%>','<%=item?.offerPrice%>')" />
                                   <span class="inc qtybtn"
                                     onclick="addToCart('<%=item.productId.id%>','<%=item.name%>','<%=item.price%>',1,'<%=item?.offerPrice%>')">+</span>
@@ -86,16 +88,29 @@
                                   <% }else {%> Rs <%= (item.price * item.quantity).toFixed(2) %>
                                       <% } %>
                                         <% // show per-item delivery charge %>
-                                          <% const dCharge=Number(item.productId.deliveryCharges || 0) %>
-                                            <% const itemDelivery=item.productId.increaseDeliveryChargesWithQuantity ?
-                                              (dCharge * item.quantity) : dCharge %>
-                                              <% if(itemDelivery && itemDelivery>0){ %>
-                                                <div class="text-muted small">Delivery: Rs <%= itemDelivery.toFixed(2)
-                                                    %>
-                                                    <% if(item.productId.increaseDeliveryChargesWithQuantity){ %> (per
-                                                      piece: Rs <%= dCharge.toFixed(2) %>)<% } %>
-                                                </div>
+                                        <% let itemDelivery = 0; %>
+                                        <% if (item.productId.isFreeDelivery) { %>
+                                            <% itemDelivery = 0; %>
+                                        <% } else if (item.productId.deliveryChargeTiers && item.productId.deliveryChargeTiers.length > 0) { %>
+                                            <% itemDelivery = Number(item.productId.deliveryCharges || 0); %>
+                                            <% for (let tier of item.productId.deliveryChargeTiers) { %>
+                                                <% if (item.quantity >= tier.quantity) itemDelivery = Number(tier.charge); %>
+                                                <% else break; %>
+                                            <% } %>
+                                        <% } else { %>
+                                            <% const dCharge = Number(item.productId.deliveryCharges || 0); %>
+                                            <% itemDelivery = item.productId.increaseDeliveryChargesWithQuantity ? (dCharge * item.quantity) : dCharge; %>
+                                        <% } %>
+                                        
+                                        <% if (item.productId.isFreeDelivery) { %>
+                                            <div class="text-success small" style="font-weight:bold;">FREE Delivery <i class="fa-solid fa-truck-fast"></i></div>
+                                        <% } else if (itemDelivery && itemDelivery > 0) { %>
+                                            <div class="text-muted small">Delivery: Rs <%= itemDelivery.toFixed(2) %>
+                                                <% if (!item.productId.deliveryChargeTiers || item.productId.deliveryChargeTiers.length === 0) { %>
+                                                    <% if (item.productId.increaseDeliveryChargesWithQuantity) { %> (per piece: Rs <%= Number(item.productId.deliveryCharges || 0).toFixed(2) %>)<% } %>
                                                 <% } %>
+                                            </div>
+                                        <% } %>
                             </td>
                             <td class="shoping__cart__item__close">
                               <span class="icon_close" onclick="deleteItem('<%=item.productId.id %>')"></span>

@@ -4,6 +4,8 @@
                   <span class="badge bg-danger text-white" style="position:absolute; top:0px; right:0px; z-index:5; font-size:0.55rem; padding: 2px 4px;">Out Of Stock</span>
                   <% } else if(product.quantity <= 5) { %>
                   <span class="badge bg-warning text-dark" style="position:absolute; top:0px; right:0px; z-index:5; font-size:0.55rem; padding: 2px 4px;">Low In Stock!!</span>
+                  <% } else if(product.isFreeDelivery) { %>
+                  <span class="badge bg-success text-white" style="position:absolute; top:0px; right:0px; z-index:5; font-size:0.55rem; padding: 2px 4px;">FREE Delivery <i class="fa-solid fa-truck-fast"></i></span>
                   <% } %>
                   <img src="<%= product.productImagePath[0].startsWith('http') ? product.productImagePath[0] : '/files/' + product.productImagePath[0] %>" alt="">
                 </div>
