@@ -588,7 +588,7 @@ btnDownload.addEventListener('click', async () => {
     // Generate image at scale 4 (384 DPI) for print quality
     const canvas = await html2canvas(div, { scale: 4, useCORS: true, backgroundColor: '#ffffff' });
     const link = document.createElement('a');
-    link.download = \`label_\${labelData.name ? labelData.name.replace(/[^a-z0-9]/gi, '_') : 'qrcode'}.png\`;
+    link.download = `label_${labelData.name ? labelData.name.replace(/[^a-z0-9]/gi, '_') : 'qrcode'}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
   } catch(e) {
