@@ -1,63 +1,117 @@
 <!-- =========================================================
      CREATE BARCODE  –  QR Label Generator
-     Requires: Bootstrap 5, FontAwesome 6 (from layout)
+     Mobile-friendly with label size presets, gap, preview, print & PDF
      ========================================================= -->
 
-<!-- QRCode.js CDN (back to QR) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
   /* ---- Page ---- */
-  #barcode-page { max-width: 900px; margin: 0 auto; }
+  #barcode-page { max-width: 700px; margin: 0 auto; padding-bottom: 40px; }
 
-  /* ---- Labels grid ---- */
-  #labels-area {
+  /* ---- Label Size Presets ---- */
+  .preset-row {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    padding: 14px;
-    background: #f4f4f4;
-    border: 1px solid #dee2e6;
-    border-radius: 6px;
-    min-height: 80px;
+    margin-top: 6px;
+  }
+  .preset-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 2px solid #dee2e6;
+    background: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .18s;
+    user-select: none;
+    -webkit-user-select: none;
+    position: relative;
+  }
+  .preset-chip.active {
+    border-color: #0d6efd;
+    background: #e8f0fe;
+    color: #0d6efd;
+  }
+  .preset-chip.holding {
+    border-color: #dc3545;
+    background: #fdecea;
+    animation: holdPulse .3s ease infinite alternate;
+  }
+  @keyframes holdPulse {
+    from { transform: scale(1); }
+    to   { transform: scale(1.05); }
+  }
+  .preset-chip .del-hint {
+    display: none;
+    font-size: 9px;
+    color: #dc3545;
+    margin-left: 4px;
+  }
+  .preset-chip.holding .del-hint { display: inline; }
+
+  /* Add custom preset btn */
+  .preset-add-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 2px dashed #adb5bd;
+    background: transparent;
+    font-size: 13px;
+    color: #6c757d;
+    cursor: pointer;
+    transition: all .18s;
+  }
+  .preset-add-btn:hover {
+    border-color: #0d6efd;
+    color: #0d6efd;
   }
 
-  /* ── 2×1 label: 38mm wide × 25mm tall ──
-     Side-by-side layout: [QR | text]          */
-  .qr-label {
-    width:  144px;   /* ≈38mm @96dpi */
-    height:  96px;   /* ≈25mm @96dpi */
+  /* ---- Print Preview ---- */
+  #print-preview-wrap {
+    background: #f0f0f0;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 16px;
+    min-height: 100px;
+    overflow-x: auto;
+  }
+  #print-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+  .preview-label {
     background: #fff;
-    border: 1px solid #bbb;
+    border: 1px solid #ccc;
     border-radius: 3px;
     display: flex;
-    flex-direction: row;      /* ← side by side */
+    flex-direction: row;
     align-items: center;
-    padding: 2px;
+    padding: 3px;
     box-sizing: border-box;
-    page-break-inside: avoid;
-    break-inside: avoid;
     overflow: hidden;
     gap: 4px;
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
-
-  /* LEFT side: QR code */
-  .qr-label .label-qr-wrap {
+  .preview-label .lbl-qr-wrap {
     flex: 0 0 auto;
-    width:  60px;
-    height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
   }
-  .qr-label .label-qr-wrap img,
-  .qr-label .label-qr-wrap canvas {
-    width:  60px !important;
-    height: 60px !important;
+  .preview-label .lbl-qr-wrap img,
+  .preview-label .lbl-qr-wrap canvas {
+    display: block;
   }
-
-  /* RIGHT side: text info */
-  .qr-label .label-text {
+  .preview-label .lbl-text {
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
@@ -65,90 +119,45 @@
     gap: 1px;
     overflow: hidden;
   }
+  .preview-label .lbl-name  { font-size: 10px; font-weight: 700; color: #000; word-break: break-word; line-height: 1.1; overflow: hidden; }
+  .preview-label .lbl-price { font-size: 11px; font-weight: 900; color: #000; }
+  .preview-label .lbl-disc  { font-size: 9px;  color: #c00;  text-decoration: line-through; }
+  .preview-label .lbl-piece { font-size: 8px;  color: #444; }
 
-  .qr-label .label-name {
-    font-size: 10px;
-    font-weight: 700;
-    color: #000;
-    word-break: break-word;
-    line-height: 1.1;
-    max-height: 33px; /* limit to 3 lines */
-    overflow: hidden;
-  }
-
-  .qr-label .label-price {
-    font-size: 11px;
-    font-weight: 900;
-    color: #000;
-  }
-
-  .qr-label .label-disc {
-    font-size: 9px;
-    color: #c00;
-    text-decoration: line-through;
-  }
-
-  .qr-label .label-piece {
-    font-size: 8px;
-    color: #444;
-  }
-
-  /* Empty placeholder */
-  #labels-placeholder {
-    width: 100%;
+  /* Preview placeholder */
+  #preview-placeholder {
     text-align: center;
     color: #aaa;
-    font-size: .9rem;
     padding: 20px;
+    font-size: .9rem;
   }
 
   /* ---- PRINT STYLES ---- */
   @media print {
-    body * { visibility: hidden !important; }
+    /* hide everything */
+    body > * { display: none !important; }
+    #print-only-area { display: block !important; }
+  }
 
-    @page { margin: 0; }
+  #print-only-area {
+    display: none;
+  }
 
-    #labels-area, #labels-area * { visibility: visible !important; }
-    #labels-area {
-      position: fixed !important;
-      top: 0; left: 0;
-      width: 80mm !important;    /* 2-up thermal roll */
-      background: transparent !important;
-      border: none !important;
-      padding: 0 !important;
-      gap: 0 !important;
-      margin: 0 !important;
-      display: flex !important;
-      flex-wrap: wrap !important;
-    }
-
-    .qr-label {
-      width:  38mm !important;
-      height: 25mm !important;
-      border: none !important;
-      padding: 1mm !important;
-      margin: 0 !important;
-      border-radius: 0 !important;
-      gap: 1mm !important;
-      float: left !important;
-    }
-
-    .qr-label .label-qr-wrap {
-      width:  16mm !important;
-      height: 16mm !important;
-    }
-    .qr-label .label-qr-wrap img,
-    .qr-label .label-qr-wrap canvas {
-      width:  16mm !important;
-      height: 16mm !important;
-    }
-
-    .qr-label .label-name  { font-size: 7pt !important; }
-    .qr-label .label-price { font-size: 8pt !important; }
-    .qr-label .label-disc  { font-size: 6pt !important; }
-    .qr-label .label-piece { font-size: 6pt !important; }
+  /* Hold progress bar */
+  .hold-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: #dc3545;
+    border-radius: 0 0 20px 20px;
+    width: 0%;
+    transition: width linear;
   }
 </style>
+
+<!-- PRINT-ONLY AREA (injected before print) -->
+<div id="print-only-area"></div>
 
 <div id="barcode-page" class="container-fluid py-3">
 
@@ -159,8 +168,8 @@
     </h4>
   </div>
 
-  <!-- ===== FORM ===== -->
-  <div class="card shadow-sm mb-4">
+  <!-- ===== LABEL DETAILS FORM ===== -->
+  <div class="card shadow-sm mb-3">
     <div class="card-header bg-dark text-white py-2">
       <i class="fa-solid fa-sliders me-2"></i>Label Details
     </div>
@@ -168,13 +177,13 @@
       <div class="row g-3 align-items-end">
 
         <!-- Item Name -->
-        <div class="col-12 col-sm-6 col-md-3">
+        <div class="col-12 col-sm-6">
           <label class="form-label fw-semibold small" for="b-name">Item Name</label>
           <input type="text" class="form-control" id="b-name" placeholder="e.g. Zellbury Shirt">
         </div>
 
         <!-- Category -->
-        <div class="col-12 col-sm-6 col-md-2">
+        <div class="col-12 col-sm-6">
           <label class="form-label fw-semibold small" for="b-category">Category</label>
           <select class="form-select" id="b-category">
             <option value="">-- Select --</option>
@@ -187,20 +196,20 @@
         </div>
 
         <!-- Price -->
-        <div class="col-6 col-sm-4 col-md-2">
-          <label class="form-label fw-semibold small" for="b-price">Price</label>
+        <div class="col-6">
+          <label class="form-label fw-semibold small" for="b-price">Price (Rs)</label>
           <input type="number" class="form-control" id="b-price" placeholder="0" min="0" step="0.01">
         </div>
 
         <!-- Discounted Price -->
-        <div class="col-6 col-sm-4 col-md-2">
-          <label class="form-label fw-semibold small" for="b-disc">Discounted Price</label>
+        <div class="col-6">
+          <label class="form-label fw-semibold small" for="b-disc">Discounted Price (Rs)</label>
           <input type="number" class="form-control" id="b-disc" placeholder="0" min="0" step="0.01">
         </div>
 
         <!-- Piece Type -->
-        <div class="col-6 col-sm-4 col-md-1">
-          <label class="form-label fw-semibold small" for="b-piece">Piece</label>
+        <div class="col-6">
+          <label class="form-label fw-semibold small" for="b-piece">Piece Type</label>
           <select class="form-select" id="b-piece">
             <option value="">--</option>
             <% ['1pc','2pc','3pc','4pc','5pc','6pc','7pc','8pc','9pc','10pc'].forEach(function(p){ %>
@@ -210,15 +219,15 @@
         </div>
 
         <!-- Copies -->
-        <div class="col-6 col-sm-4 col-md-1">
-          <label class="form-label fw-semibold small" for="b-copies">Copies</label>
-          <input type="number" class="form-control" id="b-copies" value="1" min="1" max="100">
+        <div class="col-6">
+          <label class="form-label fw-semibold small" for="b-copies">No. of Labels</label>
+          <input type="number" class="form-control" id="b-copies" value="1" min="1" max="200">
         </div>
 
         <!-- Generate Button -->
-        <div class="col-12 col-md-1 d-flex align-items-end">
+        <div class="col-12">
           <button class="btn btn-primary w-100" id="btn-generate" type="button">
-            <i class="fa-solid fa-qrcode me-1"></i>Generate
+            <i class="fa-solid fa-qrcode me-2"></i>Generate Labels
           </button>
         </div>
 
@@ -226,161 +235,505 @@
     </div>
   </div>
 
-  <!-- ===== LABELS OUTPUT ===== -->
-  <div class="d-flex align-items-center justify-content-between mb-2">
-    <h6 class="mb-0 fw-bold text-secondary">
-      <i class="fa-solid fa-tags me-1"></i>Generated Labels
-      <span class="badge bg-secondary ms-1" id="label-count">0</span>
-    </h6>
-    <button class="btn btn-success btn-sm" id="btn-print-labels" style="display:none;" type="button">
-      <i class="fa-solid fa-print me-1"></i>Print Labels
-    </button>
+  <!-- ===== PRINT SETTINGS ===== -->
+  <div class="card shadow-sm mb-3" id="print-settings-card" style="display:none!important;">
+    <div class="card-header bg-secondary text-white py-2">
+      <i class="fa-solid fa-print me-2"></i>Print Settings
+    </div>
+    <div class="card-body">
+
+      <!-- Label Size Presets -->
+      <div class="mb-3">
+        <label class="form-label fw-semibold small mb-1">
+          Label Size
+          <span class="text-muted fw-normal ms-1" style="font-size:11px;">(hold 2s to delete custom)</span>
+        </label>
+        <div class="preset-row" id="preset-row">
+          <!-- Chips injected by JS -->
+        </div>
+        <button class="preset-add-btn mt-2" id="btn-add-preset" type="button">
+          <i class="fa-solid fa-plus"></i> Add Custom Size
+        </button>
+        <!-- Custom size inputs (hidden by default) -->
+        <div id="custom-size-inputs" class="row g-2 mt-2" style="display:none!important;">
+          <div class="col-5">
+            <input type="number" class="form-control form-control-sm" id="custom-w" placeholder="Width (in)" step="0.1" min="0.5">
+          </div>
+          <div class="col-5">
+            <input type="number" class="form-control form-control-sm" id="custom-h" placeholder="Height (in)" step="0.1" min="0.5">
+          </div>
+          <div class="col-2">
+            <button class="btn btn-success btn-sm w-100" id="btn-save-preset" type="button">
+              <i class="fa-solid fa-check"></i>
+            </button>
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold small mb-0">Preset Name (optional)</label>
+            <input type="text" class="form-control form-control-sm" id="custom-name" placeholder="e.g. My Size">
+          </div>
+        </div>
+      </div>
+
+      <!-- Label Gap -->
+      <div class="mb-3">
+        <label class="form-label fw-semibold small" for="lbl-gap">Gap Between Labels</label>
+        <div class="input-group input-group-sm">
+          <input type="number" class="form-control" id="lbl-gap" value="0.125" min="0" max="1" step="0.0625">
+          <span class="input-group-text">inch</span>
+        </div>
+      </div>
+
+      <!-- Print & PDF Buttons -->
+      <div class="d-flex gap-2">
+        <button class="btn btn-success flex-grow-1" id="btn-print" type="button">
+          <i class="fa-solid fa-print me-2"></i>Print
+        </button>
+        <button class="btn btn-danger flex-grow-1" id="btn-pdf" type="button">
+          <i class="fa-solid fa-file-pdf me-2"></i>Download PDF
+        </button>
+      </div>
+
+    </div>
   </div>
 
-  <div id="labels-area">
-    <div id="labels-placeholder">
-      <i class="fa-solid fa-qrcode fa-2x mb-2 d-block text-muted"></i>
-      Generated labels will appear here
+  <!-- ===== LIVE PREVIEW ===== -->
+  <div id="preview-section" style="display:none;">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <h6 class="mb-0 fw-bold text-secondary">
+        <i class="fa-solid fa-eye me-1"></i>Print Preview
+        <span class="badge bg-secondary ms-1" id="label-count">0</span>
+        <span class="text-muted fw-normal ms-1" id="preview-size-info" style="font-size:11px;"></span>
+      </h6>
+    </div>
+    <div id="print-preview-wrap">
+      <div id="preview-placeholder">
+        <i class="fa-solid fa-qrcode fa-2x mb-2 d-block text-muted"></i>
+        Labels preview will appear here after generating
+      </div>
+      <div id="print-preview" style="display:none;"></div>
     </div>
   </div>
 
 </div><!-- /barcode-page -->
+
 
 <!-- ===== PAGE SCRIPT ===== -->
 <script>
 (function () {
   'use strict';
 
-  const btnGenerate = document.getElementById('btn-generate');
-  const btnPrint    = document.getElementById('btn-print-labels');
-  const labelsArea  = document.getElementById('labels-area');
-  const labelCount  = document.getElementById('label-count');
-  const placeholder = document.getElementById('labels-placeholder');
+  /* ── Constants ── */
+  const MM_PER_IN  = 25.4;
+  const PX_PER_IN  = 96;   // CSS reference px/inch
+  const BUILT_IN_PRESETS = [
+    { id: 'b_2x1', label: '2×1 in', w: 2,   h: 1,   builtin: true },
+    { id: 'b_2x2', label: '2×2 in', w: 2,   h: 2,   builtin: true },
+  ];
+  const LS_KEY = 'barcodeCustomPresets';
 
-  /* ------------------------------------------------------------------ */
-  /*  BUILD QR PAYLOAD  (BCODE:<num>|<json> so scanner in createBill     */
-  /*  can still parse it correctly)                                       */
-  /* ------------------------------------------------------------------ */
+  /* ── State ── */
+  let currentPreset  = BUILT_IN_PRESETS[0];   // default 2×1
+  let generatedPayload = null;
+  let generatedData    = {};
+  let generatedCopies  = 0;
+
+  /* ── DOM refs ── */
+  const presetRow      = document.getElementById('preset-row');
+  const btnAddPreset   = document.getElementById('btn-add-preset');
+  const customSizeWrap = document.getElementById('custom-size-inputs');
+  const customW        = document.getElementById('custom-w');
+  const customH        = document.getElementById('custom-h');
+  const customName     = document.getElementById('custom-name');
+  const btnSavePreset  = document.getElementById('btn-save-preset');
+  const lblGap         = document.getElementById('lbl-gap');
+  const btnGenerate    = document.getElementById('btn-generate');
+  const btnPrint       = document.getElementById('btn-print');
+  const btnPdf         = document.getElementById('btn-pdf');
+  const printCard      = document.getElementById('print-settings-card');
+  const previewSection = document.getElementById('preview-section');
+  const previewDiv     = document.getElementById('print-preview');
+  const previewPH      = document.getElementById('preview-placeholder');
+  const labelCount     = document.getElementById('label-count');
+  const previewSizeInfo= document.getElementById('preview-size-info');
+
+  /* ================================================================== */
+  /*  PRESETS                                                             */
+  /* ================================================================== */
+  function getCustomPresets() {
+    try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); }
+    catch { return []; }
+  }
+  function saveCustomPresets(arr) {
+    localStorage.setItem(LS_KEY, JSON.stringify(arr));
+  }
+
+  function allPresets() {
+    return [...BUILT_IN_PRESETS, ...getCustomPresets()];
+  }
+
+  let holdTimer  = null;
+  let holdEl     = null;
+  let holdStart  = 0;
+  let holdRaf    = null;
+
+  function renderPresets() {
+    presetRow.innerHTML = '';
+    allPresets().forEach(p => {
+      const chip = document.createElement('span');
+      chip.className = 'preset-chip' + (p.id === currentPreset.id ? ' active' : '');
+      chip.dataset.id = p.id;
+      chip.innerHTML = p.label + (p.builtin ? '' : '<span class="del-hint">⟳ release to delete</span><span class="hold-progress"></span>');
+
+      // click → select
+      chip.addEventListener('click', () => {
+        currentPreset = allPresets().find(x => x.id === p.id) || BUILT_IN_PRESETS[0];
+        renderPresets();
+        refreshPreview();
+      });
+
+      // Hold-to-delete (custom only)
+      if (!p.builtin) {
+        const startHold = (e) => {
+          e.preventDefault();
+          holdEl    = chip;
+          holdStart = Date.now();
+          chip.classList.add('holding');
+          const bar = chip.querySelector('.hold-progress');
+
+          const tick = () => {
+            const elapsed = Date.now() - holdStart;
+            const pct = Math.min(100, (elapsed / 2000) * 100);
+            if (bar) bar.style.width = pct + '%';
+            if (elapsed < 2000) { holdRaf = requestAnimationFrame(tick); }
+            else { triggerDelete(p); }
+          };
+          holdRaf = requestAnimationFrame(tick);
+        };
+
+        const cancelHold = () => {
+          if (holdRaf) cancelAnimationFrame(holdRaf);
+          chip.classList.remove('holding');
+          const bar = chip.querySelector('.hold-progress');
+          if (bar) bar.style.width = '0%';
+          holdEl = null;
+        };
+
+        chip.addEventListener('mousedown',  startHold);
+        chip.addEventListener('touchstart', startHold, { passive: false });
+        chip.addEventListener('mouseup',    cancelHold);
+        chip.addEventListener('mouseleave', cancelHold);
+        chip.addEventListener('touchend',   cancelHold);
+        chip.addEventListener('touchcancel',cancelHold);
+      }
+
+      presetRow.appendChild(chip);
+    });
+  }
+
+  function triggerDelete(p) {
+    if (holdEl) { holdEl.classList.remove('holding'); holdEl = null; }
+    if (confirm(`Delete preset "${p.label}"?`)) {
+      let custom = getCustomPresets().filter(x => x.id !== p.id);
+      saveCustomPresets(custom);
+      // if deleted preset was active, switch to first
+      if (currentPreset.id === p.id) currentPreset = BUILT_IN_PRESETS[0];
+      renderPresets();
+      refreshPreview();
+    }
+  }
+
+  /* Add custom preset */
+  btnAddPreset.addEventListener('click', () => {
+    const hidden = customSizeWrap.style.display === 'none' || customSizeWrap.style.display === '';
+    customSizeWrap.style.display = hidden ? 'flex' : 'none';
+    customSizeWrap.style.flexWrap = 'wrap';
+  });
+
+  btnSavePreset.addEventListener('click', () => {
+    const w = parseFloat(customW.value);
+    const h = parseFloat(customH.value);
+    if (!w || !h || w < 0.5 || h < 0.5) {
+      alert('Please enter valid width and height (minimum 0.5 inch).');
+      return;
+    }
+    const nm = customName.value.trim() || `${w}×${h} in`;
+    const id = 'c_' + Date.now();
+    const custom = getCustomPresets();
+    custom.push({ id, label: nm, w, h, builtin: false });
+    saveCustomPresets(custom);
+    currentPreset = { id, label: nm, w, h, builtin: false };
+    customSizeWrap.style.display = 'none';
+    customW.value = ''; customH.value = ''; customName.value = '';
+    renderPresets();
+    refreshPreview();
+  });
+
+  /* ================================================================== */
+  /*  QR PAYLOAD BUILDER                                                  */
+  /* ================================================================== */
   function genCode() {
     return String(Math.floor(10000000 + Math.random() * 90000000));
   }
 
-  function buildPayload(code, name, category, price, discountedPrice, pieceType) {
+  function buildPayload(code, name, category, price, disc, piece) {
     const obj = {};
-    if (name)               obj.n  = name;
-    if (category)           obj.c  = category;
-    if (price > 0)          obj.p  = price;
-    if (discountedPrice > 0) obj.d = discountedPrice;
-    if (pieceType)          obj.pt = pieceType;
+    if (name)     obj.n  = name;
+    if (category) obj.c  = category;
+    if (price > 0) obj.p = price;
+    if (disc  > 0) obj.d = disc;
+    if (piece)    obj.pt = piece;
     return 'BCODE:' + code + '|' + JSON.stringify(obj);
   }
 
-  /* ------------------------------------------------------------------ */
-  /*  CREATE SINGLE LABEL                                                 */
-  /*  Layout: [QR code | name + price]  side-by-side                     */
-  /* ------------------------------------------------------------------ */
-  function createLabel(payload, name, price, discountedPrice, pieceType) {
+  /* ================================================================== */
+  /*  CREATE SINGLE LABEL ELEMENT                                         */
+  /* ================================================================== */
+  function createLabelEl(payload, data, wPx, hPx, qrPx, forPrint) {
     const label = document.createElement('div');
-    label.className = 'qr-label';
+    label.className = 'preview-label';
+    label.style.width  = wPx + 'px';
+    label.style.height = hPx + 'px';
+    label.style.padding = Math.max(2, hPx * 0.04) + 'px';
 
-    /* --- LEFT: QR container --- */
+    /* QR wrap */
     const qrWrap = document.createElement('div');
-    qrWrap.className = 'label-qr-wrap';
+    qrWrap.className = 'lbl-qr-wrap';
+    qrWrap.style.width  = qrPx + 'px';
+    qrWrap.style.height = qrPx + 'px';
     label.appendChild(qrWrap);
 
-    /* --- RIGHT: text info --- */
+    /* Text */
     const textDiv = document.createElement('div');
-    textDiv.className = 'label-text';
+    textDiv.className = 'lbl-text';
 
-    if (name) {
-      const nameEl = document.createElement('div');
-      nameEl.className = 'label-name';
-      nameEl.textContent = name;
-      textDiv.appendChild(nameEl);
+    if (data.name) {
+      const el = document.createElement('div');
+      el.className = 'lbl-name';
+      el.style.fontSize = Math.max(7, hPx * 0.11) + 'px';
+      el.textContent = data.name;
+      textDiv.appendChild(el);
     }
+    if (data.disc > 0) {
+      const el = document.createElement('div');
+      el.className = 'lbl-disc';
+      el.style.fontSize = Math.max(6, hPx * 0.09) + 'px';
+      el.textContent = 'Rs ' + parseFloat(data.price).toFixed(0);
+      textDiv.appendChild(el);
 
-    if (discountedPrice > 0) {
-      const discEl = document.createElement('div');
-      discEl.className = 'label-disc';
-      discEl.textContent = 'Rs ' + parseFloat(price).toFixed(0);
-      textDiv.appendChild(discEl);
-
-      const priceEl = document.createElement('div');
-      priceEl.className = 'label-price';
-      priceEl.textContent = 'Rs ' + parseFloat(discountedPrice).toFixed(0);
-      textDiv.appendChild(priceEl);
-    } else if (price > 0) {
-      const priceEl = document.createElement('div');
-      priceEl.className = 'label-price';
-      priceEl.textContent = 'Rs ' + parseFloat(price).toFixed(0);
-      textDiv.appendChild(priceEl);
+      const el2 = document.createElement('div');
+      el2.className = 'lbl-price';
+      el2.style.fontSize = Math.max(8, hPx * 0.12) + 'px';
+      el2.textContent = 'Rs ' + parseFloat(data.disc).toFixed(0);
+      textDiv.appendChild(el2);
+    } else if (data.price > 0) {
+      const el = document.createElement('div');
+      el.className = 'lbl-price';
+      el.style.fontSize = Math.max(8, hPx * 0.12) + 'px';
+      el.textContent = 'Rs ' + parseFloat(data.price).toFixed(0);
+      textDiv.appendChild(el);
     }
-
-    if (pieceType) {
-      const pieceEl = document.createElement('div');
-      pieceEl.className = 'label-piece';
-      pieceEl.textContent = pieceType;
-      textDiv.appendChild(pieceEl);
+    if (data.piece) {
+      const el = document.createElement('div');
+      el.className = 'lbl-piece';
+      el.style.fontSize = Math.max(6, hPx * 0.08) + 'px';
+      el.textContent = data.piece;
+      textDiv.appendChild(el);
     }
-
     label.appendChild(textDiv);
 
-    /* Generate QR into qrWrap after DOM tick */
-    setTimeout(function () {
+    /* Generate QR */
+    setTimeout(() => {
       try {
         new QRCode(qrWrap, {
-          text: payload,
-          width:  60,
-          height: 60,
+          text:  payload,
+          width:  qrPx,
+          height: qrPx,
           correctLevel: QRCode.CorrectLevel.M
         });
       } catch (e) {
-        qrWrap.innerHTML = '<span style="font-size:9px;color:red;">QR Error</span>';
-        console.error('QR error:', e);
+        qrWrap.innerHTML = '<span style="font-size:8px;color:red;">QR Err</span>';
       }
     }, 0);
 
     return label;
   }
 
-  /* ------------------------------------------------------------------ */
-  /*  GENERATE BUTTON                                                     */
-  /* ------------------------------------------------------------------ */
-  btnGenerate.addEventListener('click', function () {
-    const name          = document.getElementById('b-name').value.trim();
-    const category      = document.getElementById('b-category').value;
-    const price         = parseFloat(document.getElementById('b-price').value) || 0;
-    const discountedPrice = parseFloat(document.getElementById('b-disc').value) || 0;
-    const pieceType     = document.getElementById('b-piece').value;
-    const copies        = Math.min(100, Math.max(1, parseInt(document.getElementById('b-copies').value) || 1));
+  /* ================================================================== */
+  /*  REFRESH PREVIEW                                                     */
+  /* ================================================================== */
+  function refreshPreview() {
+    if (!generatedPayload || generatedCopies === 0) return;
 
-    labelsArea.innerHTML = '';
-    placeholder.style.display = 'none';
+    const p   = currentPreset;
+    const gap = parseFloat(lblGap.value) || 0;
 
-    const code    = genCode();
-    const payload = buildPayload(code, name, category, price, discountedPrice, pieceType);
+    /* Screen preview sizes (scaled to look good on screen) */
+    const maxPreviewW = Math.min(previewDiv.parentElement.clientWidth - 32, 400);
+    const scale = Math.min(1, maxPreviewW / (p.w * PX_PER_IN));
+    const wPx   = p.w * PX_PER_IN * scale;
+    const hPx   = p.h * PX_PER_IN * scale;
+    const qrPx  = Math.max(30, Math.round(hPx * 0.7));
+    const gapPx = gap * PX_PER_IN * scale;
 
-    for (let i = 0; i < copies; i++) {
-      labelsArea.appendChild(createLabel(payload, name, price, discountedPrice, pieceType));
+    previewPH.style.display  = 'none';
+    previewDiv.style.display = 'flex';
+    previewDiv.innerHTML     = '';
+    previewDiv.style.gap     = gapPx + 'px';
+
+    for (let i = 0; i < generatedCopies; i++) {
+      previewDiv.appendChild(createLabelEl(generatedPayload, generatedData, wPx, hPx, qrPx, false));
     }
 
-    labelCount.textContent = copies;
-    btnPrint.style.display = copies > 0 ? 'inline-block' : 'none';
-    labelsArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    labelCount.textContent  = generatedCopies;
+    previewSizeInfo.textContent = `| ${p.label}${gap ? ', ' + gap + '" gap' : ''}`;
+  }
+
+  /* ================================================================== */
+  /*  GENERATE BUTTON                                                     */
+  /* ================================================================== */
+  btnGenerate.addEventListener('click', function () {
+    const name  = document.getElementById('b-name').value.trim();
+    const cat   = document.getElementById('b-category').value;
+    const price = parseFloat(document.getElementById('b-price').value) || 0;
+    const disc  = parseFloat(document.getElementById('b-disc').value) || 0;
+    const piece = document.getElementById('b-piece').value;
+    const copies = Math.min(200, Math.max(1, parseInt(document.getElementById('b-copies').value) || 1));
+
+    const code = genCode();
+    generatedPayload = buildPayload(code, name, cat, price, disc, piece);
+    generatedData    = { name, cat, price, disc, piece };
+    generatedCopies  = copies;
+
+    /* Show panels */
+    printCard.style.display    = '';
+    printCard.style.removeProperty('display');
+    previewSection.style.display = '';
+
+    refreshPreview();
+    printCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
-  /* ------------------------------------------------------------------ */
-  /*  PRINT BUTTON                                                        */
-  /* ------------------------------------------------------------------ */
-  btnPrint.addEventListener('click', function () { window.print(); });
+  /* live update gap */
+  lblGap.addEventListener('input', refreshPreview);
 
-  /* Enter key triggers generate */
-  ['b-name','b-price','b-disc','b-copies'].forEach(function (id) {
+  /* ================================================================== */
+  /*  BUILD PRINT DOM (exact physical sizes using mm)                    */
+  /* ================================================================== */
+  function buildPrintDOM() {
+    const p      = currentPreset;
+    const gap    = parseFloat(lblGap.value) || 0;
+    const wMM    = (p.w * MM_PER_IN).toFixed(2);
+    const hMM    = (p.h * MM_PER_IN).toFixed(2);
+    const gapMM  = (gap * MM_PER_IN).toFixed(2);
+    const qrMM   = (Math.min(p.h, p.w) * 0.72 * MM_PER_IN).toFixed(2);
+
+    // Each label = one @page exactly
+    // We put all labels in a flex column; browser creates new pages automatically
+    let html = `
+<style>
+  @page { size: ${wMM}mm ${hMM}mm; margin: 0; }
+  #_poa { display: flex; flex-direction: column; align-items: flex-start; gap: ${gapMM}mm; }
+  ._pl {
+    width: ${wMM}mm; height: ${hMM}mm;
+    background: #fff;
+    display: flex; flex-direction: row; align-items: center;
+    padding: 1mm; box-sizing: border-box;
+    gap: 1mm; overflow: hidden;
+    page-break-inside: avoid; break-inside: avoid;
+    page-break-after: always; break-after: page;
+  }
+  ._pl:last-child { page-break-after: auto; break-after: auto; }
+  ._pl .qw { flex:0 0 auto; width:${qrMM}mm; height:${qrMM}mm; display:flex; align-items:center; justify-content:center; }
+  ._pl .qw img, ._pl .qw canvas { width:${qrMM}mm!important; height:${qrMM}mm!important; display:block; }
+  ._pl .tx { flex:1 1 auto; display:flex; flex-direction:column; justify-content:center; gap:0.3mm; overflow:hidden; }
+  ._pl .nm { font-size:7pt; font-weight:700; color:#000; word-break:break-word; line-height:1.1; }
+  ._pl .pr { font-size:8pt; font-weight:900; color:#000; }
+  ._pl .dc { font-size:6pt; color:#c00; text-decoration:line-through; }
+  ._pl .pc { font-size:5pt; color:#444; }
+</style>
+<div id="_poa">`;
+
+    for (let i = 0; i < generatedCopies; i++) {
+      html += `<div class="_pl">
+  <div class="qw" id="_qr${i}"></div>
+  <div class="tx">`;
+      if (generatedData.name)  html += `<div class="nm">${escHtml(generatedData.name)}</div>`;
+      if (generatedData.disc > 0) {
+        html += `<div class="dc">Rs ${parseFloat(generatedData.price).toFixed(0)}</div>`;
+        html += `<div class="pr">Rs ${parseFloat(generatedData.disc).toFixed(0)}</div>`;
+      } else if (generatedData.price > 0) {
+        html += `<div class="pr">Rs ${parseFloat(generatedData.price).toFixed(0)}</div>`;
+      }
+      if (generatedData.piece) html += `<div class="pc">${escHtml(generatedData.piece)}</div>`;
+      html += `</div></div>`;
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ================================================================== */
+  /*  PRINT                                                               */
+  /* ================================================================== */
+  btnPrint.addEventListener('click', function () {
+    if (!generatedPayload) return;
+
+    const area = document.getElementById('print-only-area');
+    area.innerHTML = buildPrintDOM();
+
+    /* Generate QR codes in print area */
+    for (let i = 0; i < generatedCopies; i++) {
+      const el = area.querySelector(`#_qr${i}`);
+      if (el) {
+        try {
+          const p   = currentPreset;
+          const qrMM = Math.min(p.h, p.w) * 0.72 * MM_PER_IN;
+          const qrPx = Math.round(qrMM / MM_PER_IN * 96);
+          new QRCode(el, {
+            text:  generatedPayload,
+            width:  qrPx,
+            height: qrPx,
+            correctLevel: QRCode.CorrectLevel.M
+          });
+        } catch(e) {}
+      }
+    }
+
+    /* Wait for QR images to render, then print */
+    setTimeout(() => {
+      window.print();
+      /* Clean up after print */
+      setTimeout(() => { area.innerHTML = ''; }, 2000);
+    }, 600);
+  });
+
+  /* ================================================================== */
+  /*  PDF DOWNLOAD (uses print dialog → Save as PDF)                     */
+  /* ================================================================== */
+  btnPdf.addEventListener('click', function () {
+    if (!generatedPayload) return;
+    alert('In the print dialog that opens:\n→ Select "Save as PDF" or "Print to PDF" as the printer\n→ Click Save/Print to download your PDF file.');
+    // slight delay so alert closes first
+    setTimeout(() => btnPrint.click(), 300);
+  });
+
+  /* ================================================================== */
+  /*  ENTER KEY                                                           */
+  /* ================================================================== */
+  ['b-name','b-price','b-disc','b-copies'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') btnGenerate.click();
-    });
+    if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') btnGenerate.click(); });
   });
+
+  /* ================================================================== */
+  /*  INIT                                                                */
+  /* ================================================================== */
+  renderPresets();
+  printCard.style.display    = 'none';
+  previewSection.style.display = 'none';
 
 })();
 </script>

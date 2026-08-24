@@ -10,9 +10,24 @@
     visibility: hidden;
   }
 
+  /* Bill print */
   #printSlipArea,
   #printSlipArea * {
     visibility: visible;
+  }
+
+  /* Barcode label print — #print-only-area contains its own style+content */
+  #print-only-area {
+    display: block !important;
+    visibility: visible !important;
+    position: fixed !important;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 99999;
+    background: #fff;
+  }
+  #print-only-area * {
+    visibility: visible !important;
   }
 
   /* Hide print label area on regular print (used only on barcode page) */
