@@ -1,14 +1,12 @@
 <!-- =========================================================
-     CREATE BARCODE  –  QR Label Generator (Perfect Crop & PNG Download)
+     CREATE BARCODE  –  QR Label Generator (v5 - Full Features)
      ========================================================= -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <style>
-  /* ---- Page ---- */
   #barcode-page { max-width: 680px; margin: 0 auto; padding-bottom: 60px; }
 
-  /* ---- Preset chips ---- */
   .preset-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
   .preset-chip {
     position: relative; display: inline-flex; align-items: center;
@@ -21,7 +19,7 @@
   .preset-chip.holding { border-color: #dc3545; background: #fdecea; }
   .preset-chip .hold-bar {
     position: absolute; bottom: 0; left: 0; height: 3px; width: 0%;
-    background: #dc3545; border-radius: 0 0 20px 20px; transition: none;
+    background: #dc3545; border-radius: 0 0 20px 20px;
   }
   .preset-add-btn {
     display: inline-flex; align-items: center; gap: 4px;
@@ -30,14 +28,9 @@
   }
   .preset-add-btn:hover { border-color: #0d6efd; color: #0d6efd; }
 
-  /* ---- Preview area ---- */
-  #preview-wrap {
-    background: #e9e9e9; border: 1px solid #ccc;
-    border-radius: 8px; padding: 12px; overflow-x: auto;
-  }
-  #preview-col { display: flex; flex-direction: column; align-items: flex-start; }
+  #preview-wrap { background: #e9e9e9; border: 1px solid #ccc; border-radius: 8px; padding: 12px; overflow-x: auto; }
+  #preview-col  { display: flex; flex-direction: column; align-items: flex-start; }
 
-  /* ---- Preview label ---- */
   .prev-lbl {
     background: #fff; border: 1px solid #bbb; border-radius: 2px;
     display: flex; flex-direction: row; align-items: center;
@@ -45,28 +38,26 @@
   }
   .prev-lbl .qw { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; }
   .prev-lbl .qw img { display: block; width: 100%; height: 100%; object-fit: contain; }
-  .prev-lbl .tx {
-    flex: 1 1 auto; display: flex; flex-direction: column;
-    justify-content: center; overflow: hidden; padding-right: 3px; line-height: 1.15;
-  }
+  .prev-lbl .tx { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; overflow: hidden; padding-right: 3px; line-height: 1.15; }
   .prev-lbl .nm { font-weight: 700; color: #000; word-break: break-word; }
   .prev-lbl .pr { font-weight: 900; color: #000; }
   .prev-lbl .dc { color: #c00; text-decoration: line-through; }
   .prev-lbl .pc { color: #444; }
+
+  .gap-disabled { opacity: 0.4; pointer-events: none; }
+  .dl-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .dl-row .btn { flex: 1 1 130px; }
 </style>
 
-<!-- Hidden div for generating and cropping QR -->
-<div id="hidden-qr-gen" style="position: absolute; left: -9999px; top: -9999px;"></div>
+<div id="hidden-qr-gen" style="position:absolute;left:-9999px;top:-9999px;"></div>
 
 <div id="barcode-page" class="container-fluid py-3">
 
   <div class="d-flex align-items-center mb-3">
-    <h4 class="mb-0 fw-bold">
-      <i class="fa-solid fa-qrcode me-2 text-primary"></i>Create QR Labels
-    </h4>
+    <h4 class="mb-0 fw-bold"><i class="fa-solid fa-qrcode me-2 text-primary"></i>Create QR Labels</h4>
   </div>
 
-  <!-- LABEL DETAILS FORM -->
+  <!-- LABEL DETAILS -->
   <div class="card shadow-sm mb-3">
     <div class="card-header bg-dark text-white py-2">
       <i class="fa-solid fa-sliders me-2"></i>Label Details
@@ -127,15 +118,12 @@
 
       <!-- Size Presets -->
       <label class="form-label fw-semibold small mb-1">
-        Label Size
-        <span class="text-muted fw-normal ms-1" style="font-size:11px;">(hold 2s to delete custom)</span>
+        Label Size <span class="text-muted fw-normal" style="font-size:11px;">(hold 2s to delete custom)</span>
       </label>
       <div class="preset-row" id="preset-row"></div>
       <button class="preset-add-btn mt-2" id="btn-add-preset" type="button">
         <i class="fa-solid fa-plus"></i> Add Custom Size
       </button>
-
-      <!-- Custom size inputs -->
       <div id="custom-inputs" class="row g-2 mt-2" style="display:none;">
         <div class="col-4">
           <input type="number" class="form-control form-control-sm" id="cw" placeholder="Width (in)" step="0.1" min="0.5">
@@ -149,468 +137,330 @@
           </button>
         </div>
         <div class="col-12">
-          <input type="text" class="form-control form-control-sm" id="cn" placeholder="Name (optional, e.g. My Label)">
+          <input type="text" class="form-control form-control-sm" id="cn" placeholder="Name (optional)">
         </div>
       </div>
 
-      <!-- Gap -->
-      <div class="mb-3 mt-3">
-        <label class="form-label fw-semibold small" for="lbl-gap">Gap Between Labels (For Printer)</label>
-        <div class="input-group input-group-sm">
+      <!-- Gap with Toggle -->
+      <div class="mt-3 mb-3">
+        <div class="d-flex align-items-center justify-content-between mb-1">
+          <label class="form-label fw-semibold small mb-0">Gap Between Labels</label>
+          <div class="form-check form-switch mb-0 d-flex align-items-center gap-2">
+            <input class="form-check-input" type="checkbox" id="gap-toggle" style="cursor:pointer;width:40px;height:20px;" checked>
+            <label class="form-check-label small fw-semibold mb-0" id="gap-lbl" for="gap-toggle" style="cursor:pointer;min-width:28px;">ON</label>
+          </div>
+        </div>
+        <div class="input-group input-group-sm" id="gap-wrap">
           <input type="number" class="form-control" id="lbl-gap" value="0.125" min="0" max="1" step="0.0625">
           <span class="input-group-text">inch</span>
         </div>
+        <small id="gap-hint" class="text-success" style="font-size:11px;">
+          Gap ON: your printer uses sensor gaps between labels.
+        </small>
       </div>
 
-      <!-- Action Buttons -->
-      <div class="d-flex gap-2">
-        <button class="btn btn-success flex-grow-1 py-2" id="btn-print" type="button">
-          <i class="fa-solid fa-print me-2"></i>Print
+      <!-- Print -->
+      <button class="btn btn-success w-100 py-2 mb-2" id="btn-print" type="button">
+        <i class="fa-solid fa-print me-2"></i>Print
+      </button>
+
+      <!-- Download buttons -->
+      <div class="dl-row mb-2">
+        <button class="btn btn-primary py-2" id="btn-dl-single" type="button">
+          <i class="fa-solid fa-image me-1"></i>Download Single Label
         </button>
-        <button class="btn btn-danger flex-grow-1 py-2" id="btn-download" type="button">
-          <i class="fa-solid fa-download me-2"></i>Download PNG
+        <button class="btn btn-danger py-2" id="btn-dl-all" type="button">
+          <i class="fa-solid fa-images me-1"></i>Download All Labels
         </button>
       </div>
 
-      <!-- Instructions -->
-      <div class="alert alert-info mt-3 mb-0 py-2 px-3" style="font-size:12px;">
-        <i class="fa-solid fa-circle-info me-1"></i>
-        <strong>Printing:</strong> Use 'Print' to print directly. Use 'Download PNG' to get a perfect image of the label without any extra whitespace, ready for mobile printer apps.
+      <!-- Printer help -->
+      <div class="alert alert-info mt-2 mb-0 py-2 px-3" style="font-size:12px;line-height:1.5;">
+        <i class="fa-solid fa-circle-info me-1"></i><strong>Printer not showing?</strong><br>
+        Your printer must be connected to the phone <em>before</em> pressing Print:
+        <ul class="mb-0 mt-1 ps-3">
+          <li><strong>WiFi printer:</strong> Same WiFi network + install <em>Mopria Print Service</em> from Play Store.</li>
+          <li><strong>Bluetooth printer:</strong> Pair in phone Settings → Bluetooth first.</li>
+          <li><strong>USB/Wired:</strong> Connect via USB-OTG cable + printer manufacturer app.</li>
+        </ul>
+        Once connected, all printers appear automatically in the print dialog.
       </div>
-
     </div>
   </div>
 
   <!-- PREVIEW -->
   <div id="preview-section" style="display:none;">
-    <div class="d-flex align-items-center justify-content-between mb-2">
+    <div class="d-flex align-items-center mb-2">
       <h6 class="mb-0 fw-bold text-secondary">
         <i class="fa-solid fa-eye me-1"></i>Preview
         <span class="badge bg-secondary ms-1" id="lbl-count">0</span>
         <small class="text-muted fw-normal ms-2" id="size-info"></small>
       </h6>
     </div>
-    <div id="preview-wrap">
-      <div id="preview-col"></div>
-    </div>
+    <div id="preview-wrap"><div id="preview-col"></div></div>
   </div>
 
 </div>
 
-<!-- ========================= SCRIPT ========================= -->
 <script>
 (function(){
 'use strict';
 
-const PX = 96; // CSS px per inch for screen preview
-const LS_KEY = 'bcPresets_v4';
-
-/* ── Built-in presets ── */
-const BUILTIN = [
-  { id:'bi_2x1', label:'2×1 in', w:2, h:1, builtin:true },
-  { id:'bi_2x2', label:'2×2 in', w:2, h:2, builtin:true },
+const PX=96, LS_KEY='bcPresets_v5';
+const BUILTIN=[
+  {id:'bi_2x1',label:'2\xD71 in',w:2,h:1,builtin:true},
+  {id:'bi_2x2',label:'2\xD72 in',w:2,h:2,builtin:true}
 ];
+let activePreset=BUILTIN[0], payload=null, labelData={}, copies=0, croppedQRBase64=null, gapOn=true;
 
-/* ── State ── */
-let activePreset = BUILTIN[0];
-let payload = null, labelData = {}, copies = 0;
-let croppedQRBase64 = null; // Perfect QR with no whitespace
+const D=id=>document.getElementById(id);
+const presetRow=D('preset-row'),btnAddPre=D('btn-add-preset'),customInputs=D('custom-inputs'),
+  btnSavePre=D('btn-save-preset'),lblGap=D('lbl-gap'),gapToggle=D('gap-toggle'),
+  gapLbl=D('gap-lbl'),gapWrap=D('gap-wrap'),gapHint=D('gap-hint'),
+  btnGenerate=D('btn-generate'),btnPrint=D('btn-print'),
+  btnDlSingle=D('btn-dl-single'),btnDlAll=D('btn-dl-all'),
+  printCard=D('print-card'),previewSec=D('preview-section'),previewCol=D('preview-col');
 
-/* ── DOM ── */
-const D = id => document.getElementById(id);
-const presetRow   = D('preset-row');
-const btnAddPre   = D('btn-add-preset');
-const customInputs= D('custom-inputs');
-const btnSavePre  = D('btn-save-preset');
-const lblGap      = D('lbl-gap');
-const btnGenerate = D('btn-generate');
-const btnPrint    = D('btn-print');
-const btnDownload = D('btn-download');
-const printCard   = D('print-card');
-const previewSec  = D('preview-section');
-const previewCol  = D('preview-col');
+/* GAP TOGGLE */
+function applyGap(){
+  gapOn=gapToggle.checked;
+  gapLbl.textContent=gapOn?'ON':'OFF';
+  if(gapOn){
+    gapWrap.classList.remove('gap-disabled');
+    gapHint.textContent='Gap ON: printer sensor detects gap between labels.';
+    gapHint.className='text-success';
+    gapHint.style.fontSize='11px';
+  } else {
+    gapWrap.classList.add('gap-disabled');
+    gapHint.textContent='Gap OFF: continuous roll — labels print back-to-back with no gap.';
+    gapHint.className='text-danger';
+    gapHint.style.fontSize='11px';
+  }
+  refreshPreview();
+}
+gapToggle.addEventListener('change',applyGap);
+applyGap();
 
-/* ================================================================
-   PERFECT CROP QR GENERATOR (Removes all whitespace)
-================================================================ */
-function generateCroppedQR(text, callback) {
-  const genDiv = D('hidden-qr-gen');
-  genDiv.innerHTML = '';
-  new QRCode(genDiv, { text: text, width: 250, height: 250, correctLevel: QRCode.CorrectLevel.M });
-  
-  setTimeout(() => {
-    const canvas = genDiv.querySelector('canvas');
-    if (!canvas) return callback('');
-    
-    const ctx = canvas.getContext('2d');
-    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const data = imgData.data;
-    
-    let minX = canvas.width, minY = canvas.height, maxX = 0, maxY = 0;
-    
-    // Find non-white pixels
-    for (let y = 0; y < canvas.height; y++) {
-      for (let x = 0; x < canvas.width; x++) {
-        const i = (y * canvas.width + x) * 4;
-        if (data[i] < 250 || data[i+1] < 250 || data[i+2] < 250) {
-          if (x < minX) minX = x;
-          if (y < minY) minY = y;
-          if (x > maxX) maxX = x;
-          if (y > maxY) maxY = y;
-        }
-      }
+function activeGapIn(){ return (gapOn)?(parseFloat(lblGap.value)||0):0; }
+
+/* CROP QR */
+function generateCroppedQR(text,cb){
+  const g=D('hidden-qr-gen'); g.innerHTML='';
+  new QRCode(g,{text,width:300,height:300,correctLevel:QRCode.CorrectLevel.M});
+  setTimeout(()=>{
+    const cv=g.querySelector('canvas'); if(!cv)return cb('');
+    const ctx=cv.getContext('2d'),id=ctx.getImageData(0,0,cv.width,cv.height),d=id.data;
+    let x0=cv.width,y0=cv.height,x1=0,y1=0;
+    for(let y=0;y<cv.height;y++)for(let x=0;x<cv.width;x++){
+      const i=(y*cv.width+x)*4;
+      if(d[i]<250||d[i+1]<250||d[i+2]<250){if(x<x0)x0=x;if(y<y0)y0=y;if(x>x1)x1=x;if(y>y1)y1=y;}
     }
-    
-    const w = maxX - minX + 1;
-    const h = maxY - minY + 1;
-    
-    const cropCanvas = document.createElement('canvas');
-    cropCanvas.width = w;
-    cropCanvas.height = h;
-    const cropCtx = cropCanvas.getContext('2d');
-    
-    // Draw cropped region with a tiny 2px white border so it looks clean
-    cropCtx.fillStyle = '#ffffff';
-    cropCtx.fillRect(0, 0, w, h);
-    cropCtx.putImageData(ctx.getImageData(minX, minY, w, h), 0, 0);
-    
-    callback(cropCanvas.toDataURL('image/png'));
-  }, 100);
+    const w=x1-x0+1,h=y1-y0+1,c=document.createElement('canvas');
+    c.width=w;c.height=h;
+    const cc=c.getContext('2d');cc.fillStyle='#fff';cc.fillRect(0,0,w,h);
+    cc.putImageData(ctx.getImageData(x0,y0,w,h),0,0);
+    cb(c.toDataURL('image/png'));
+  },120);
 }
 
-/* ================================================================
-   PRESETS
-================================================================ */
-function getCustom(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||'[]'); }catch{ return []; } }
-function saveCustom(arr){ localStorage.setItem(LS_KEY, JSON.stringify(arr)); }
-function allPresets(){ return [...BUILTIN, ...getCustom()]; }
-
-let holdRaf=null, holdStart=0;
+/* PRESETS */
+function getCustom(){try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch{return [];}}
+function saveCustom(a){localStorage.setItem(LS_KEY,JSON.stringify(a));}
+function allPresets(){return[...BUILTIN,...getCustom()];}
+let holdRaf=null,holdStart=0;
 
 function renderPresets(){
   presetRow.innerHTML='';
   allPresets().forEach(p=>{
-    const chip = document.createElement('span');
-    chip.className = 'preset-chip' + (p.id===activePreset.id?' active':'');
-    chip.dataset.id = p.id;
-    chip.innerHTML  = p.label + (p.builtin?'':'<span class="hold-bar"></span>');
-
-    chip.addEventListener('click', ()=>{
-      activePreset = allPresets().find(x=>x.id===p.id)||BUILTIN[0];
-      renderPresets(); refreshPreview();
-    });
-
+    const chip=document.createElement('span');
+    chip.className='preset-chip'+(p.id===activePreset.id?' active':'');
+    chip.innerHTML=p.label+(p.builtin?'':`<span class="hold-bar"></span>`);
+    chip.addEventListener('click',()=>{activePreset=allPresets().find(x=>x.id===p.id)||BUILTIN[0];renderPresets();refreshPreview();});
     if(!p.builtin){
-      let timer=null, bar=chip.querySelector('.hold-bar');
-      const startH = e => {
-        e.preventDefault(); holdStart = Date.now(); chip.classList.add('holding');
-        const tick = ()=>{
-          const pct = Math.min(100,(Date.now()-holdStart)/2000*100);
-          if(bar) bar.style.width=pct+'%';
-          if(pct<100) holdRaf = requestAnimationFrame(tick);
-          else doDelete(p,chip);
-        };
-        holdRaf = requestAnimationFrame(tick);
-      };
-      const endH = ()=>{
-        if(holdRaf) cancelAnimationFrame(holdRaf);
-        chip.classList.remove('holding'); if(bar) bar.style.width='0%';
-      };
-      chip.addEventListener('mousedown', startH); chip.addEventListener('touchstart', startH, {passive:false});
-      chip.addEventListener('mouseup', endH); chip.addEventListener('mouseleave', endH);
-      chip.addEventListener('touchend', endH); chip.addEventListener('touchcancel', endH);
+      const bar=chip.querySelector('.hold-bar');
+      const sH=e=>{e.preventDefault();holdStart=Date.now();chip.classList.add('holding');
+        const t=()=>{const pct=Math.min(100,(Date.now()-holdStart)/2000*100);if(bar)bar.style.width=pct+'%';
+          if(pct<100)holdRaf=requestAnimationFrame(t);else doDel(p,chip);};holdRaf=requestAnimationFrame(t);};
+      const eH=()=>{if(holdRaf)cancelAnimationFrame(holdRaf);chip.classList.remove('holding');if(bar)bar.style.width='0%';};
+      chip.addEventListener('mousedown',sH);chip.addEventListener('touchstart',sH,{passive:false});
+      chip.addEventListener('mouseup',eH);chip.addEventListener('mouseleave',eH);
+      chip.addEventListener('touchend',eH);chip.addEventListener('touchcancel',eH);
     }
     presetRow.appendChild(chip);
   });
 }
-
-function doDelete(p, chip){
+function doDel(p,chip){
   chip.classList.remove('holding');
-  if(confirm(`Delete preset "${p.label}"?`)){
+  if(confirm('Delete preset "'+p.label+'"?')){
     saveCustom(getCustom().filter(x=>x.id!==p.id));
-    if(activePreset.id===p.id) activePreset=BUILTIN[0];
-    renderPresets(); refreshPreview();
+    if(activePreset.id===p.id)activePreset=BUILTIN[0];
+    renderPresets();refreshPreview();
   }
 }
-
-btnAddPre.addEventListener('click', ()=>{
-  customInputs.style.display = customInputs.style.display==='none'?'flex':'none';
-  customInputs.style.flexWrap='wrap';
-});
-btnSavePre.addEventListener('click', ()=>{
-  const w=parseFloat(D('cw').value), h=parseFloat(D('ch').value);
-  if(!w||!h||w<0.5||h<0.5){ alert('Enter valid width & height (min 0.5 in)'); return; }
-  const nm = D('cn').value.trim()||`${w}×${h} in`;
-  const id  = 'c'+Date.now();
-  const arr = getCustom(); arr.push({id,label:nm,w,h,builtin:false});
-  saveCustom(arr);
+btnAddPre.addEventListener('click',()=>{customInputs.style.display=customInputs.style.display==='none'?'flex':'none';customInputs.style.flexWrap='wrap';});
+btnSavePre.addEventListener('click',()=>{
+  const w=parseFloat(D('cw').value),h=parseFloat(D('ch').value);
+  if(!w||!h||w<0.5||h<0.5){alert('Enter valid width & height (min 0.5 in)');return;}
+  const nm=D('cn').value.trim()||(w+'\xD7'+h+' in'),id='c'+Date.now();
+  const a=getCustom();a.push({id,label:nm,w,h,builtin:false});saveCustom(a);
   activePreset={id,label:nm,w,h,builtin:false};
-  customInputs.style.display='none';
-  D('cw').value=D('ch').value=D('cn').value='';
-  renderPresets(); refreshPreview();
+  customInputs.style.display='none';D('cw').value=D('ch').value=D('cn').value='';
+  renderPresets();refreshPreview();
 });
 
-/* ================================================================
-   QR PAYLOAD
-================================================================ */
-function rndCode(){ return String(Math.floor(10000000+Math.random()*90000000)); }
-function mkPayload(code,d){
+/* PAYLOAD */
+function rndCode(){return String(Math.floor(10000000+Math.random()*90000000));}
+function mkPayload(code,data){
   const o={};
-  if(d.name)  o.n=d.name; if(d.cat) o.c=d.cat;
-  if(d.price>0) o.p=d.price; if(d.disc>0) o.d=d.disc;
-  if(d.piece) o.pt=d.piece;
+  if(data.name)o.n=data.name;if(data.cat)o.c=data.cat;
+  if(data.price>0)o.p=data.price;if(data.disc>0)o.d=data.disc;if(data.piece)o.pt=data.piece;
   return 'BCODE:'+code+'|'+JSON.stringify(o);
 }
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-/* ================================================================
-   PREVIEW (Screen)
-================================================================ */
+/* PREVIEW */
 function refreshPreview(){
-  if(!croppedQRBase64 || copies===0) return;
-  const p = activePreset;
-  const gap = parseFloat(lblGap.value)||0;
-
-  // Scale down for screen if needed
-  const maxW = Math.min(previewCol.parentElement.clientWidth-24, 380);
-  const scale = Math.min(1.4, maxW/(p.w*PX));
-  const wPx = Math.round(p.w*PX*scale);
-  const hPx = Math.round(p.h*PX*scale);
-  const gapPx = Math.round(gap*PX*scale);
-  
-  // Use 82% of height for the QR square
-  const qrWrapPx = Math.round(hPx*0.82);
-
-  previewCol.innerHTML='';
-  previewCol.style.gap = gapPx+'px';
-
-  for(let i=0; i<copies; i++){
-    const div = document.createElement('div');
-    div.className = 'prev-lbl';
-    div.style.cssText = `width:${wPx}px;height:${hPx}px;padding:${Math.max(1,hPx*.03)}px;gap:${Math.max(2,wPx*.02)}px;`;
-
-    // QR Area - uses the perfectly cropped Base64 image
-    const qw = document.createElement('div');
-    qw.className = 'qw';
-    qw.style.cssText = `width:${qrWrapPx}px;height:${qrWrapPx}px;`;
-    qw.innerHTML = `<img src="${croppedQRBase64}">`;
-
-    // Text Area
-    const tx = document.createElement('div');
-    tx.className = 'tx';
-    const fBase = Math.max(7, hPx*0.1);
-    
-    if(labelData.name) {
-      const e = document.createElement('div'); e.className='nm'; e.style.fontSize=fBase+'px'; e.textContent=labelData.name; tx.appendChild(e);
-    }
-    if(labelData.disc>0) {
-      const e=document.createElement('div'); e.className='dc'; e.style.fontSize=(fBase*.85)+'px'; e.textContent='Rs '+Math.round(labelData.price); tx.appendChild(e);
-      const e2=document.createElement('div'); e2.className='pr'; e2.style.fontSize=(fBase*1.1)+'px'; e2.textContent='Rs '+Math.round(labelData.disc); tx.appendChild(e2);
-    } else if(labelData.price>0) {
-      const e=document.createElement('div'); e.className='pr'; e.style.fontSize=(fBase*1.1)+'px'; e.textContent='Rs '+Math.round(labelData.price); tx.appendChild(e);
-    }
-    if(labelData.piece) {
-      const e=document.createElement('div'); e.className='pc'; e.style.fontSize=(fBase*.8)+'px'; e.textContent=labelData.piece; tx.appendChild(e);
-    }
-
-    div.appendChild(qw);
-    div.appendChild(tx);
-    previewCol.appendChild(div);
+  if(!croppedQRBase64||copies===0)return;
+  const p=activePreset,gap=activeGapIn();
+  const maxW=Math.min(previewCol.parentElement.clientWidth-24,380);
+  const sc=Math.min(1.4,maxW/(p.w*PX));
+  const wPx=Math.round(p.w*PX*sc),hPx=Math.round(p.h*PX*sc),gapPx=Math.round(gap*PX*sc),qrPx=Math.round(hPx*.82);
+  previewCol.innerHTML='';previewCol.style.gap=gapPx+'px';
+  for(let i=0;i<copies;i++){
+    const div=document.createElement('div');div.className='prev-lbl';
+    div.style.cssText='width:'+wPx+'px;height:'+hPx+'px;padding:'+Math.max(1,hPx*.03)+'px;gap:'+Math.max(2,wPx*.02)+'px;';
+    const qw=document.createElement('div');qw.className='qw';
+    qw.style.cssText='width:'+qrPx+'px;height:'+qrPx+'px;';
+    qw.innerHTML='<img src="'+croppedQRBase64+'">';
+    const tx=document.createElement('div');tx.className='tx';
+    const fB=Math.max(7,hPx*.1);
+    if(labelData.name){const e=document.createElement('div');e.className='nm';e.style.fontSize=fB+'px';e.textContent=labelData.name;tx.appendChild(e);}
+    if(labelData.disc>0){
+      const e=document.createElement('div');e.className='dc';e.style.fontSize=(fB*.85)+'px';e.textContent='Rs '+Math.round(labelData.price);tx.appendChild(e);
+      const e2=document.createElement('div');e2.className='pr';e2.style.fontSize=(fB*1.1)+'px';e2.textContent='Rs '+Math.round(labelData.disc);tx.appendChild(e2);
+    }else if(labelData.price>0){const e=document.createElement('div');e.className='pr';e.style.fontSize=(fB*1.1)+'px';e.textContent='Rs '+Math.round(labelData.price);tx.appendChild(e);}
+    if(labelData.piece){const e=document.createElement('div');e.className='pc';e.style.fontSize=(fB*.8)+'px';e.textContent=labelData.piece;tx.appendChild(e);}
+    div.appendChild(qw);div.appendChild(tx);previewCol.appendChild(div);
   }
-
-  D('lbl-count').textContent = copies;
-  D('size-info').textContent = `${p.label}${gap?', '+gap+'" gap':''}`;
+  D('lbl-count').textContent=copies;
+  D('size-info').textContent=activePreset.label+(gap?', '+gap+'" gap':' (no gap)');
 }
 
-/* ================================================================
-   GENERATE ACTION
-================================================================ */
-btnGenerate.addEventListener('click', () => {
-  const name  = D('b-name').value.trim();
-  const cat   = D('b-category').value;
-  const price = parseFloat(D('b-price').value)||0;
-  const disc  = parseFloat(D('b-disc').value)||0;
-  const piece = D('b-piece').value;
-  const n     = Math.min(200, Math.max(1, parseInt(D('b-copies').value)||1));
-
-  labelData = {name,cat,price,disc,piece};
-  payload   = mkPayload(rndCode(), labelData);
-  copies    = n;
-
-  // Show generating state
-  const origBtnHtml = btnGenerate.innerHTML;
-  btnGenerate.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Generating...';
-  btnGenerate.disabled = true;
-
-  // Create perfect cropped QR once, then reuse it
-  generateCroppedQR(payload, (b64) => {
-    croppedQRBase64 = b64;
-    btnGenerate.innerHTML = origBtnHtml;
-    btnGenerate.disabled = false;
-    
-    printCard.style.display='';
-    previewSec.style.display='';
-    refreshPreview();
-    printCard.scrollIntoView({behavior:'smooth', block:'start'});
+/* GENERATE */
+btnGenerate.addEventListener('click',()=>{
+  const name=D('b-name').value.trim(),cat=D('b-category').value,
+    price=parseFloat(D('b-price').value)||0,disc=parseFloat(D('b-disc').value)||0,
+    piece=D('b-piece').value,n=Math.min(200,Math.max(1,parseInt(D('b-copies').value)||1));
+  labelData={name,cat,price,disc,piece};payload=mkPayload(rndCode(),labelData);copies=n;
+  const orig=btnGenerate.innerHTML;
+  btnGenerate.innerHTML='<i class="fa-solid fa-spinner fa-spin me-2"></i>Generating...';
+  btnGenerate.disabled=true;
+  generateCroppedQR(payload,b64=>{
+    croppedQRBase64=b64;btnGenerate.innerHTML=orig;btnGenerate.disabled=false;
+    printCard.style.display='';previewSec.style.display='';
+    refreshPreview();printCard.scrollIntoView({behavior:'smooth',block:'start'});
   });
 });
-lblGap.addEventListener('input', refreshPreview);
+lblGap.addEventListener('input',refreshPreview);
 
-/* ================================================================
-   PRINT (Uses Hidden Iframe)
-================================================================ */
-function openPrintIframe() {
-  if(!croppedQRBase64) return;
-  const p = activePreset;
-  const gap = parseFloat(lblGap.value)||0;
-
-  // Print sizes in inches
-  const w = p.w;
-  const h = p.h;
-  const qrSize = Math.min(h, w) * 0.84; 
-  const gapIn = gap;
-
-  let html = `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>Labels</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  @page { size: ${w}in ${h}in; margin: 0; }
-  body { margin: 0; padding: 0; background: #fff; font-family: sans-serif; }
-  .lbl {
-    width: ${w}in; height: ${h}in;
-    display: flex; flex-direction: row; align-items: center;
-    overflow: hidden; background: #fff;
-    padding: 0.05in; gap: 0.05in;
-    page-break-after: always; break-after: page;
-    margin-bottom: ${gapIn}in;
-  }
-  .lbl:last-child { page-break-after: auto; break-after: auto; margin-bottom: 0; }
-  .qw {
-    flex: 0 0 auto; width: ${qrSize}in; height: ${qrSize}in;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .qw img { display: block; width: 100%; height: 100%; object-fit: contain; }
-  .tx {
-    flex: 1 1 auto; display: flex; flex-direction: column;
-    justify-content: center; overflow: hidden;
-    padding-right: 0.02in; line-height: 1.15;
-  }
-  .nm { font-size: ${Math.max(7, h*10)}pt; font-weight: 700; word-break: break-word; }
-  .pr { font-size: ${Math.max(9, h*12)}pt; font-weight: 900; }
-  .dc { font-size: ${Math.max(6, h*8)}pt; color: #c00; text-decoration: line-through; }
-  .pc { font-size: ${Math.max(5, h*7)}pt; color: #444; }
-</style>
-</head><body>`;
-
-  for(let i=0; i<copies; i++) {
-    html += `<div class="lbl">
-      <div class="qw"><img src="${croppedQRBase64}"></div>
-      <div class="tx">`;
-    if(labelData.name) html += `<div class="nm">${esc(labelData.name)}</div>`;
-    if(labelData.disc>0) {
-      html += `<div class="dc">Rs ${Math.round(labelData.price)}</div>`;
-      html += `<div class="pr">Rs ${Math.round(labelData.disc)}</div>`;
-    } else if(labelData.price>0) {
-      html += `<div class="pr">Rs ${Math.round(labelData.price)}</div>`;
-    }
-    if(labelData.piece) html += `<div class="pc">${esc(labelData.piece)}</div>`;
-    html += `</div></div>`;
-  }
-  html += `</body></html>`;
-
-  const iframe = document.createElement('iframe');
-  iframe.style.position = 'fixed';
-  iframe.style.right = '0';
-  iframe.style.bottom = '0';
-  iframe.style.width = '0';
-  iframe.style.height = '0';
-  iframe.style.border = '0';
-  document.body.appendChild(iframe);
-
-  iframe.contentWindow.document.open();
-  iframe.contentWindow.document.write(html);
-  iframe.contentWindow.document.close();
-
-  setTimeout(() => {
-    iframe.contentWindow.focus();
-    iframe.contentWindow.print();
-    setTimeout(() => { document.body.removeChild(iframe); }, 3000);
-  }, 250);
+/* BUILD LABEL DIV (for download) */
+function buildLabelDiv(wPx,hPx){
+  const qrPx=Math.min(hPx,wPx)*.84,pad=Math.max(2,wPx*.03),gp=Math.max(2,wPx*.02);
+  const div=document.createElement('div');
+  div.style.cssText='width:'+wPx+'px;height:'+hPx+'px;background:#fff;display:flex;flex-direction:row;align-items:center;padding:'+pad+'px;gap:'+gp+'px;box-sizing:border-box;overflow:hidden;font-family:Arial,sans-serif;';
+  let html='<div style="flex:0 0 auto;width:'+qrPx+'px;height:'+qrPx+'px;"><img src="'+croppedQRBase64+'" style="width:100%;height:100%;object-fit:contain;display:block;"></div>'
+    +'<div style="flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;overflow:hidden;padding-right:2px;line-height:1.15;">';
+  if(labelData.name)html+='<div style="font-size:'+Math.max(10,hPx*.12)+'px;font-weight:700;word-break:break-word;margin-bottom:2px;">'+esc(labelData.name)+'</div>';
+  if(labelData.disc>0){
+    html+='<div style="font-size:'+Math.max(9,hPx*.1)+'px;color:#c00;text-decoration:line-through;">Rs '+Math.round(labelData.price)+'</div>';
+    html+='<div style="font-size:'+Math.max(13,hPx*.15)+'px;font-weight:900;">Rs '+Math.round(labelData.disc)+'</div>';
+  }else if(labelData.price>0){html+='<div style="font-size:'+Math.max(13,hPx*.15)+'px;font-weight:900;">Rs '+Math.round(labelData.price)+'</div>';}
+  if(labelData.piece)html+='<div style="font-size:'+Math.max(8,hPx*.09)+'px;color:#444;margin-top:2px;">'+esc(labelData.piece)+'</div>';
+  html+='</div>';div.innerHTML=html;return div;
 }
 
-btnPrint.addEventListener('click', openPrintIframe);
-
-/* ================================================================
-   DOWNLOAD PNG (High Quality image with exact selected size)
-================================================================ */
-btnDownload.addEventListener('click', async () => {
-  if(!croppedQRBase64) return;
-  const p = activePreset;
-  const origText = btnDownload.innerHTML;
-  btnDownload.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Downloading...';
-  btnDownload.disabled = true;
-
-  // Create an exact physical size container (rendered offscreen)
-  const wPx = p.w * 96;
-  const hPx = p.h * 96;
-  const qrSize = Math.min(hPx, wPx) * 0.84;
-  
-  const div = document.createElement('div');
-  div.style.cssText = `
-    position: fixed; left: -9999px; top: -9999px;
-    width: ${wPx}px; height: ${hPx}px;
-    background: #ffffff;
-    display: flex; flex-direction: row; align-items: center;
-    padding: ${wPx*0.03}px; gap: ${wPx*0.02}px;
-    box-sizing: border-box; overflow: hidden; font-family: Arial, sans-serif;
-  `;
-  
-  let html = `<div style="flex:0 0 auto; width:${qrSize}px; height:${qrSize}px; display:flex; align-items:center; justify-content:center;">
-    <img src="${croppedQRBase64}" style="width:100%;height:100%;object-fit:contain;display:block;">
-  </div>
-  <div style="flex:1 1 auto; display:flex; flex-direction:column; justify-content:center; padding-right:2px; line-height:1.15; overflow:hidden; color:#000;">`;
-  
-  if(labelData.name) html += `<div style="font-size:${Math.max(12, hPx*0.12)}px; font-weight:700; word-break:break-word; margin-bottom:2px;">${esc(labelData.name)}</div>`;
-  if(labelData.disc>0) {
-    html += `<div style="font-size:${Math.max(10, hPx*0.1)}px; color:#c00; text-decoration:line-through;">Rs ${Math.round(labelData.price)}</div>`;
-    html += `<div style="font-size:${Math.max(14, hPx*0.16)}px; font-weight:900;">Rs ${Math.round(labelData.disc)}</div>`;
-  } else if(labelData.price>0) {
-    html += `<div style="font-size:${Math.max(14, hPx*0.16)}px; font-weight:900;">Rs ${Math.round(labelData.price)}</div>`;
+/* PRINT */
+function openPrintIframe(){
+  if(!croppedQRBase64)return;
+  const p=activePreset,gap=activeGapIn(),w=p.w,h=p.h,qrS=Math.min(h,w)*.84;
+  let html='<!DOCTYPE html><html><head><meta charset="utf-8"><title>Labels</title><style>'
+    +'*{box-sizing:border-box;margin:0;padding:0;}'
+    +'@page{size:'+w+'in '+h+'in;margin:0;}'
+    +'body{margin:0;padding:0;background:#fff;font-family:Arial,sans-serif;}'
+    +'.lbl{width:'+w+'in;height:'+h+'in;display:flex;flex-direction:row;align-items:center;overflow:hidden;background:#fff;padding:0.04in;gap:0.04in;page-break-after:always;break-after:page;'+(gap>0?'margin-bottom:'+gap+'in;':'')+'}'
+    +'.lbl:last-child{page-break-after:auto;break-after:auto;margin-bottom:0;}'
+    +'.qw{flex:0 0 auto;width:'+qrS+'in;height:'+qrS+'in;display:flex;align-items:center;justify-content:center;}'
+    +'.qw img{display:block;width:100%;height:100%;object-fit:contain;}'
+    +'.tx{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;overflow:hidden;padding-right:0.03in;line-height:1.15;}'
+    +'.nm{font-size:'+Math.max(7,h*10)+'pt;font-weight:700;word-break:break-word;}'
+    +'.pr{font-size:'+Math.max(9,h*13)+'pt;font-weight:900;}'
+    +'.dc{font-size:'+Math.max(6,h*8)+'pt;color:#c00;text-decoration:line-through;}'
+    +'.pc{font-size:'+Math.max(5,h*7)+'pt;color:#444;}'
+    +'</style></head><body>';
+  for(let i=0;i<copies;i++){
+    html+='<div class="lbl"><div class="qw"><img src="'+croppedQRBase64+'"></div><div class="tx">';
+    if(labelData.name)html+='<div class="nm">'+esc(labelData.name)+'</div>';
+    if(labelData.disc>0){html+='<div class="dc">Rs '+Math.round(labelData.price)+'</div><div class="pr">Rs '+Math.round(labelData.disc)+'</div>';}
+    else if(labelData.price>0)html+='<div class="pr">Rs '+Math.round(labelData.price)+'</div>';
+    if(labelData.piece)html+='<div class="pc">'+esc(labelData.piece)+'</div>';
+    html+='</div></div>';
   }
-  if(labelData.piece) html += `<div style="font-size:${Math.max(9, hPx*0.09)}px; color:#444; margin-top:2px;">${esc(labelData.piece)}</div>`;
-  
-  html += `</div>`;
-  div.innerHTML = html;
+  html+='</body></html>';
+  const ifr=document.createElement('iframe');
+  ifr.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+  document.body.appendChild(ifr);
+  ifr.contentWindow.document.open();ifr.contentWindow.document.write(html);ifr.contentWindow.document.close();
+  setTimeout(()=>{ifr.contentWindow.focus();ifr.contentWindow.print();setTimeout(()=>document.body.removeChild(ifr),3000);},300);
+}
+btnPrint.addEventListener('click',openPrintIframe);
+
+/* DOWNLOAD SINGLE */
+btnDlSingle.addEventListener('click',async()=>{
+  if(!croppedQRBase64)return;
+  const p=activePreset;
+  setBusy(btnDlSingle,true);
+  const div=buildLabelDiv(p.w*PX,p.h*PX);
+  div.style.position='fixed';div.style.left='-9999px';div.style.top='-9999px';
   document.body.appendChild(div);
-
-  try {
-    // Generate image at scale 4 (384 DPI) for print quality
-    const canvas = await html2canvas(div, { scale: 4, useCORS: true, backgroundColor: '#ffffff' });
-    const link = document.createElement('a');
-    link.download = `label_${labelData.name ? labelData.name.replace(/[^a-z0-9]/gi, '_') : 'qrcode'}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-  } catch(e) {
-    alert('Error generating image');
-    console.error(e);
-  } finally {
-    document.body.removeChild(div);
-    btnDownload.innerHTML = origText;
-    btnDownload.disabled = false;
-  }
+  try{
+    const cvs=await html2canvas(div,{scale:4,useCORS:true,backgroundColor:'#ffffff'});
+    const a=document.createElement('a');
+    a.download='label_single_'+(labelData.name||'qr').replace(/[^a-z0-9]/gi,'_')+'.png';
+    a.href=cvs.toDataURL('image/png');a.click();
+  }catch(e){alert('Error generating image');}
+  finally{document.body.removeChild(div);setBusy(btnDlSingle,false);}
 });
 
-/* Enter shortcut */
+/* DOWNLOAD ALL */
+btnDlAll.addEventListener('click',async()=>{
+  if(!croppedQRBase64||copies===0)return;
+  const p=activePreset,wPx=p.w*PX,hPx=p.h*PX,gapPx=Math.round(activeGapIn()*PX);
+  const totalH=hPx*copies+gapPx*Math.max(0,copies-1);
+  setBusy(btnDlAll,true);
+  const wrap=document.createElement('div');
+  wrap.style.cssText='position:fixed;left:-9999px;top:-9999px;width:'+wPx+'px;height:'+totalH+'px;display:flex;flex-direction:column;gap:'+gapPx+'px;background:#fff;box-sizing:border-box;';
+  for(let i=0;i<copies;i++){const l=buildLabelDiv(wPx,hPx);l.style.flexShrink='0';wrap.appendChild(l);}
+  document.body.appendChild(wrap);
+  try{
+    const cvs=await html2canvas(wrap,{scale:4,useCORS:true,backgroundColor:'#ffffff',height:totalH,windowHeight:totalH});
+    const a=document.createElement('a');
+    a.download='labels_all_x'+copies+'_'+(labelData.name||'qr').replace(/[^a-z0-9]/gi,'_')+'.png';
+    a.href=cvs.toDataURL('image/png');a.click();
+  }catch(e){alert('Error generating image');}
+  finally{document.body.removeChild(wrap);setBusy(btnDlAll,false);}
+});
+
+function setBusy(btn,busy){
+  if(busy){btn.setAttribute('data-orig',btn.innerHTML);btn.innerHTML='<i class="fa-solid fa-spinner fa-spin me-1"></i>Please wait...';btn.disabled=true;}
+  else{btn.innerHTML=btn.getAttribute('data-orig');btn.disabled=false;}
+}
+
 ['b-name','b-price','b-disc','b-copies'].forEach(id=>{
-  const el=D(id);
-  if(el) el.addEventListener('keydown',e=>{ if(e.key==='Enter') btnGenerate.click(); });
+  const el=D(id);if(el)el.addEventListener('keydown',e=>{if(e.key==='Enter')btnGenerate.click();});
 });
 
-/* ── INIT ── */
 renderPresets();
 printCard.style.display='none';
 previewSec.style.display='none';
-
 })();
 </script>
