@@ -607,7 +607,8 @@ function calcRemainingBalance() {
       tbody.appendChild(divRow);
 
       returnItems.forEach(function (item, idx) {
-        const soldVal = item.soldFor > 0 ? item.soldFor : item.price;
+        const defaultVal = item.discountedPrice > 0 ? item.discountedPrice : item.price;
+        const soldVal = item.soldFor > 0 ? item.soldFor : defaultVal;
         const lt = soldVal * item.qty;
         const tr = document.createElement('tr');
         tr.style.background = '#fffdf0';
@@ -634,7 +635,7 @@ function calcRemainingBalance() {
           <td>
             <input type="number" class="form-control form-control-sm row-sold-for"
                    data-idx="${idx}"
-                   value="${item.soldFor > 0 ? item.soldFor : (item.price > 0 ? item.price : '')}"
+                   value="${item.soldFor > 0 ? item.soldFor : (defaultVal > 0 ? defaultVal : '')}"
                    placeholder="Sold For" min="0" step="0.01"
                    style="width:80px;padding:2px 4px;font-size:12px;height:26px;background:#fffdf0;font-weight:bold;border:1px solid #ffc107;">
           </td>
@@ -654,7 +655,8 @@ function calcRemainingBalance() {
   function updateGrandTotal() {
     const billTotal   = billItems.reduce((s, i) => s + lineTotal(i), 0);
     const returnTotal = returnItems.reduce((s, i) => {
-      const sf = i.soldFor > 0 ? i.soldFor : i.price;
+      const defaultVal = i.discountedPrice > 0 ? i.discountedPrice : i.price;
+      const sf = i.soldFor > 0 ? i.soldFor : defaultVal;
       return s + (sf * i.qty);
     }, 0);
     const grand = Math.max(0, billTotal - returnTotal);
@@ -695,14 +697,16 @@ function calcRemainingBalance() {
   // ---- Return Item helpers ----
   function readReturnForm() {
     const p = parseFloat(document.getElementById('r-price').value) || 0;
+    const d = parseFloat(document.getElementById('r-disc').value) || 0;
     const sfInp = document.getElementById('r-sold-for').value.trim();
-    // Default soldFor is price if not entered
-    const sf = sfInp !== '' ? (parseFloat(sfInp) || 0) : p;
+    // If disc price is added (> 0), default soldFor to disc price; otherwise default to price!
+    const defaultSold = d > 0 ? d : p;
+    const sf = sfInp !== '' ? (parseFloat(sfInp) || 0) : defaultSold;
     return {
       name:            document.getElementById('r-name').value.trim(),
       category:        document.getElementById('r-category').value,
       price:           p,
-      discountedPrice: parseFloat(document.getElementById('r-disc').value) || 0,
+      discountedPrice: d,
       soldFor:         sf,
       pieceType:       document.getElementById('r-piece').value,
       qty:             parseInt(document.getElementById('r-qty').value) || 1,
@@ -819,20 +823,37 @@ function calcRemainingBalance() {
       updateGrandTotal();
     }
     else if (e.target.classList.contains('row-qty') && type === 'return') {
+      const idx = parseInt(e.target.dataset.idx);
       returnItems[idx].qty = Math.max(1, parseInt(e.target.value) || 1);
-      const soldVal = returnItems[idx].soldFor > 0 ? returnItems[idx].soldFor : returnItems[idx].price;
+      const defaultVal = returnItems[idx].discountedPrice > 0 ? returnItems[idx].discountedPrice : returnItems[idx].price;
+      const soldVal = returnItems[idx].soldFor > 0 ? returnItems[idx].soldFor : defaultVal;
       const ltCell = tr.querySelector('.row-return-total');
       const totalVal = soldVal * returnItems[idx].qty;
       if (ltCell) ltCell.textContent = '- Rs ' + fmt(totalVal);
       updateGrandTotal();
     }
     else if (e.target.classList.contains('row-return-disc')) {
-      returnItems[idx].discountedPrice = parseFloat(e.target.value) || 0;
+      const idx = parseInt(e.target.dataset.idx);
+      const newDisc = parseFloat(e.target.value) || 0;
+      returnItems[idx].discountedPrice = newDisc;
+      const soldInp = tr.querySelector('.row-sold-for');
+      if (soldInp && (!returnItems[idx].soldFor || returnItems[idx].soldFor === returnItems[idx].price)) {
+        const newSold = newDisc > 0 ? newDisc : returnItems[idx].price;
+        returnItems[idx].soldFor = newSold;
+        soldInp.value = newSold > 0 ? newSold : '';
+      }
+      const defaultVal = returnItems[idx].discountedPrice > 0 ? returnItems[idx].discountedPrice : returnItems[idx].price;
+      const soldVal = returnItems[idx].soldFor > 0 ? returnItems[idx].soldFor : defaultVal;
+      const ltCell = tr.querySelector('.row-return-total');
+      if (ltCell) ltCell.textContent = '- Rs ' + fmt(soldVal * returnItems[idx].qty);
+      updateGrandTotal();
     }
     else if (e.target.classList.contains('row-sold-for')) {
+      const idx = parseInt(e.target.dataset.idx);
       const val = parseFloat(e.target.value) || 0;
       returnItems[idx].soldFor = val;
-      const soldVal = val > 0 ? val : returnItems[idx].price;
+      const defaultVal = returnItems[idx].discountedPrice > 0 ? returnItems[idx].discountedPrice : returnItems[idx].price;
+      const soldVal = val > 0 ? val : defaultVal;
       const ltCell = tr.querySelector('.row-return-total');
       const totalVal = soldVal * returnItems[idx].qty;
       if (ltCell) ltCell.textContent = '- Rs ' + fmt(totalVal);
@@ -924,7 +945,8 @@ function calcRemainingBalance() {
       slipTbody.appendChild(divTr);
 
       returnItems.forEach(function (item, idx) {
-        const soldVal = item.soldFor > 0 ? item.soldFor : item.price;
+        const defaultVal = item.discountedPrice > 0 ? item.discountedPrice : item.price;
+        const soldVal = item.soldFor > 0 ? item.soldFor : defaultVal;
         const lt = soldVal * item.qty;
         returnTotal += lt;
         const tr = document.createElement('tr');
@@ -1038,7 +1060,8 @@ function calcRemainingBalance() {
       divTr.innerHTML = `<td colspan="8" style="padding:7px 2px 4px;border-top:1px dashed #000;border-bottom:1px dashed #000;font-weight:900;font-size:9.5pt;letter-spacing:0.5px;">&#8617; RETURNED ITEMS</td>`;
       slipTbody.appendChild(divTr);
       returnItems.forEach(function (item, idx) {
-        const soldVal = item.soldFor > 0 ? item.soldFor : item.price;
+        const defaultVal = item.discountedPrice > 0 ? item.discountedPrice : item.price;
+        const soldVal = item.soldFor > 0 ? item.soldFor : defaultVal;
         const lt = soldVal * item.qty;
         returnTotal += lt;
         const tr = document.createElement('tr');
@@ -1293,7 +1316,9 @@ function calcRemainingBalance() {
         const scannedCat   = data.category || data.cat || data.c || '';
         const scannedPrice = parseFloat(data.price || data.p) || 0;
         const scannedDisc  = parseFloat(data.discountedPrice || data.disc || data.d) || 0;
-        const scannedSold  = parseFloat(data.soldFor || data.sf) || scannedPrice;
+        // If disc price is added (> 0), soldFor defaults to disc price; otherwise regular price!
+        const defaultSold  = scannedDisc > 0 ? scannedDisc : scannedPrice;
+        const scannedSold  = parseFloat(data.soldFor || data.sf) || defaultSold;
         const scannedPiece = data.pieceType || data.piece || data.pt || '';
         const scannedQty   = parseInt(data.quantity || data.qty || data.q) || 1;
 
