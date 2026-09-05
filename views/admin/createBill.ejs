@@ -361,13 +361,14 @@
           <th>Qty</th>
           <th>Price</th>
           <th>Disc. Price</th>
+          <th>Sold For</th>
           <th>Line Total</th>
           <th></th>
         </tr>
       </thead>
       <tbody id="items-tbody">
         <tr id="empty-row">
-          <td colspan="9" class="text-center text-muted py-3">
+          <td colspan="10" class="text-center text-muted py-3">
             <i class="fa-solid fa-cart-plus me-2"></i>No items added yet
           </td>
         </tr>
@@ -554,7 +555,7 @@ function calcRemainingBalance() {
 
     if (!hasItems && !hasReturns) {
       tbody.innerHTML = `<tr id="empty-row">
-        <td colspan="9" class="text-center text-muted py-3">
+        <td colspan="10" class="text-center text-muted py-3">
           <i class="fa-solid fa-cart-plus me-2"></i>No items added yet
         </td></tr>`;
       updateGrandTotal();
@@ -570,7 +571,7 @@ function calcRemainingBalance() {
         <td>${idx + 1}</td>
         <td>${escHtml(item.name)}</td>
         <td>${escHtml(item.category)}</td>
-        <td>${escHtml(item.pieceType)}</td>
+        <td>${escHtml(item.pieceType || '—')}</td>
         <td>
           <input type="number" class="form-control form-control-sm row-qty"
                  data-idx="${idx}" data-type="bill"
@@ -583,8 +584,9 @@ function calcRemainingBalance() {
                  data-idx="${idx}" data-type="bill"
                  value="${item.discountedPrice > 0 ? item.discountedPrice : ''}"
                  placeholder="0.00" min="0" step="0.01"
-                 style="width:80px;padding:2px 4px;font-size:12px;height:26px;">
+                 style="width:75px;padding:2px 4px;font-size:12px;height:26px;">
         </td>
+        <td><span class="text-muted">—</span></td>
         <td class="row-line-total">Rs ${fmt(lt)}</td>
         <td>
           <button class="btn btn-danger btn-sm btn-remove" data-idx="${idx}" data-type="bill">
@@ -597,10 +599,10 @@ function calcRemainingBalance() {
     // -- Returned items divider --
     if (hasReturns) {
       const divRow = document.createElement('tr');
-      divRow.innerHTML = `<td colspan="9" class="py-1 px-2" style="background:#fff3cd;border-top:2px solid #ffc107;border-bottom:2px solid #ffc107;">
+      divRow.innerHTML = `<td colspan="10" class="py-1 px-2" style="background:#212529;color:#fff;border-top:2px solid #000;">
         <i class="fa-solid fa-rotate-left me-2 text-warning"></i>
-        <strong style="color:#856404;">Returned Items</strong>
-        <small class="text-muted ms-2">(deducted from total)</small>
+        <strong>Returned Items</strong>
+        <small class="text-warning ms-2">(Sold For is deducted from total)</small>
       </td>`;
       tbody.appendChild(divRow);
 
@@ -612,12 +614,9 @@ function calcRemainingBalance() {
         tr.className = 'return-item-row';
         tr.innerHTML = `
           <td><span class="badge bg-warning text-dark">R${idx + 1}</span></td>
-          <td>
-            ${escHtml(item.name)}
-            ${item.discountedPrice > 0 ? `<div class="text-muted" style="font-size:10px;">Disc Tag: Rs ${fmt(item.discountedPrice)}</div>` : ''}
-          </td>
+          <td>${escHtml(item.name)}</td>
           <td>${escHtml(item.category)}</td>
-          <td>${escHtml(item.pieceType)}</td>
+          <td>${escHtml(item.pieceType || '—')}</td>
           <td>
             <input type="number" class="form-control form-control-sm row-qty"
                    data-idx="${idx}" data-type="return"
@@ -626,11 +625,18 @@ function calcRemainingBalance() {
           </td>
           <td>Rs ${fmt(item.price)}</td>
           <td>
+            <input type="number" class="form-control form-control-sm row-return-disc"
+                   data-idx="${idx}"
+                   value="${item.discountedPrice > 0 ? item.discountedPrice : ''}"
+                   placeholder="0.00" min="0" step="0.01"
+                   style="width:75px;padding:2px 4px;font-size:12px;height:26px;">
+          </td>
+          <td>
             <input type="number" class="form-control form-control-sm row-sold-for"
                    data-idx="${idx}"
                    value="${item.soldFor > 0 ? item.soldFor : (item.price > 0 ? item.price : '')}"
                    placeholder="Sold For" min="0" step="0.01"
-                   style="width:85px;padding:2px 4px;font-size:12px;height:26px;background:#fffdf0;font-weight:600;">
+                   style="width:80px;padding:2px 4px;font-size:12px;height:26px;background:#fffdf0;font-weight:bold;border:1px solid #ffc107;">
           </td>
           <td class="row-return-total text-danger fw-bold">- Rs ${fmt(lt)}</td>
           <td>
@@ -819,6 +825,9 @@ function calcRemainingBalance() {
       const totalVal = soldVal * returnItems[idx].qty;
       if (ltCell) ltCell.textContent = '- Rs ' + fmt(totalVal);
       updateGrandTotal();
+    }
+    else if (e.target.classList.contains('row-return-disc')) {
+      returnItems[idx].discountedPrice = parseFloat(e.target.value) || 0;
     }
     else if (e.target.classList.contains('row-sold-for')) {
       const val = parseFloat(e.target.value) || 0;
@@ -1280,18 +1289,22 @@ function calcRemainingBalance() {
           if (pipeIdx > 6) { barcodeNum = decodedText.substring(6, pipeIdx); try { data = JSON.parse(decodedText.substring(pipeIdx + 1)); } catch(e) { data = {}; } }
           else { barcodeNum = decodedText.substring(6); }
         } else { try { data = JSON.parse(decodedText); } catch (e) { data = { n: decodedText }; } }
+        const scannedName  = data.name || data.n || barcodeNum || '';
+        const scannedCat   = data.category || data.cat || data.c || '';
         const scannedPrice = parseFloat(data.price || data.p) || 0;
-        const scannedDisc  = parseFloat(data.discountedPrice || data.d) || 0;
-        // Disc price stays in discountedPrice; soldFor defaults to regular price (editable in table)
-        const scannedSold  = scannedPrice;
+        const scannedDisc  = parseFloat(data.discountedPrice || data.disc || data.d) || 0;
+        const scannedSold  = parseFloat(data.soldFor || data.sf) || scannedPrice;
+        const scannedPiece = data.pieceType || data.piece || data.pt || '';
+        const scannedQty   = parseInt(data.quantity || data.qty || data.q) || 1;
+
         addReturnItem({
-          name:            data.name || data.n || barcodeNum || '',
-          category:        data.category || data.c || '',
+          name:            scannedName,
+          category:        scannedCat,
           price:           scannedPrice,
           discountedPrice: scannedDisc,
           soldFor:         scannedSold,
-          pieceType:       data.pieceType || data.pt || '',
-          qty: 1
+          pieceType:       scannedPiece,
+          qty:             scannedQty
         });
         showFlash();
         rStatus.innerHTML = '&#8617; Return added: ' + (data.name||data.n||barcodeNum||'item');
