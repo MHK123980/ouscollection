@@ -85,46 +85,49 @@
   /* ---- Print size btn-group ---- */
   #print-size-group .btn { min-width: 90px; }
 
-  /* ---- PRINT STYLES ---- */
-  @media print {
-    /* Hide everything by default */
-    body * { visibility: hidden !important; }
+  /* ---- PRINT SLIP BASE STYLES (Used for both Print and PDF/Image export) ---- */
+  #print-slip {
+    background: #fff;
+    color: #000;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 8.5pt;
+    line-height: 1.25;
+    box-sizing: border-box;
+    padding: 10px 8px;
+    margin: 0 auto;
+  }
+  #print-slip.print-3inch, body.print-3inch #print-slip { width: 80mm !important; max-width: 80mm !important; }
+  #print-slip.print-4inch, body.print-4inch #print-slip { width: 104mm !important; max-width: 104mm !important; }
 
-    /* Show only slip */
+  #print-slip .slip-header { text-align: center; margin-bottom: 8px; border-bottom: 1px dashed #000; padding-bottom: 8px; }
+  #print-slip .slip-logo { max-width: 85px; height: auto; display: block; margin: 0 auto 5px auto; }
+  #print-slip .slip-shop { font-size: 14pt; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 2px; }
+  #print-slip .slip-subtitle { font-size: 8pt; font-weight: 700; margin-bottom: 2px; }
+  #print-slip .slip-datetime { font-size: 8pt; color: #111; margin-top: 4px; }
+
+  #print-slip table { width: 100% !important; border-collapse: collapse; margin-bottom: 8px; }
+  #print-slip th { border-bottom: 1px solid #000; border-top: 1px solid #000; padding: 4px 2px; font-size: 8pt; text-align: left; font-weight: 700; }
+  #print-slip td { padding: 4px 2px; font-size: 8pt; border-bottom: 1px dotted #ccc; }
+  
+  #print-slip .text-right { text-align: right !important; }
+  #print-slip .text-center { text-align: center !important; }
+  
+  #print-slip tfoot tr td { border-top: 1px dashed #000; border-bottom: none; font-size: 8.5pt; padding-top: 5px; }
+  #print-slip .slip-grand { font-weight: 900; font-size: 12pt; text-align: right; }
+
+  #print-slip .slip-footer { text-align: center; margin-top: 12px; border-top: 1px dashed #000; padding-top: 8px; font-size: 8pt; }
+  #print-slip .slip-footer-thanks { font-weight: 800; font-size: 9.5pt; margin-bottom: 3px; }
+
+  /* ---- PRINT MEDIA ONLY ---- */
+  @media print {
+    body * { visibility: hidden !important; }
     #print-slip, #print-slip * { visibility: visible !important; }
     #print-slip {
       position: fixed !important;
       top: 0; left: 0;
-      width: 100% !important;
       padding: 0 !important;
       margin: 0 !important;
-      background: #fff;
-      color: #000;
-      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     }
-
-    /* Size variants applied via body class */
-    body.print-3inch #print-slip { max-width: 80mm !important; }
-    body.print-4inch #print-slip { max-width: 104mm !important; }
-
-    #print-slip .slip-header { text-align: center; margin-bottom: 10px; border-bottom: 1px dashed #000; padding-bottom: 8px; }
-    #print-slip .slip-logo { max-width: 70px; margin-bottom: 5px; }
-    #print-slip .slip-shop { font-size: 16pt; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 2px; }
-    #print-slip .slip-subtitle { font-size: 8pt; font-weight: 600; margin-bottom: 4px; }
-    #print-slip .slip-datetime { font-size: 8pt; color: #333; }
-
-    #print-slip table { width: 100% !important; border-collapse: collapse; margin-bottom: 10px; }
-    #print-slip th { border-bottom: 1px solid #000; border-top: 1px solid #000; padding: 4px 2px; font-size: 8pt; text-align: left; }
-    #print-slip td { padding: 4px 2px; font-size: 8pt; border-bottom: 1px dotted #ccc; }
-    
-    #print-slip .text-right { text-align: right !important; }
-    #print-slip .text-center { text-align: center !important; }
-    
-    #print-slip tfoot tr td { border-top: 1px dashed #000; border-bottom: none; font-size: 9pt; padding-top: 6px; }
-    #print-slip .slip-grand { font-weight: 900; font-size: 12pt; text-align: right; }
-
-    #print-slip .slip-footer { text-align: center; margin-top: 15px; border-top: 1px dashed #000; padding-top: 10px; font-size: 8pt; }
-    #print-slip .slip-footer-thanks { font-weight: bold; font-size: 10pt; margin-bottom: 4px; }
   }
 </style>
 
@@ -137,31 +140,69 @@
     <span class="badge bg-success fs-6" id="grand-total-badge">Total: Rs 0.00</span>
   </div>
 
-  <!-- ===== BILL ITEMS LIST ===== -->
-  <div id="items-wrapper" class="mb-3">
-    <table class="table table-sm mb-0" id="items-table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Item Name</th>
-          <th>Category</th>
-          <th>Piece</th>
-          <th>Qty</th>
-          <th>Price</th>
-          <th>Disc. Price</th>
-          <th>Line Total</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="items-tbody">
-        <tr id="empty-row">
-          <td colspan="9" class="text-center text-muted py-3">
-            <i class="fa-solid fa-cart-plus me-2"></i>No items added yet
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  <!-- ===== OPTIONAL CUSTOMER DETAILS ===== -->
+  <div class="card shadow-sm mb-3" id="customer-details-card">
+    <div class="card-header bg-dark text-white py-2 d-flex align-items-center">
+      <i class="fa-solid fa-user me-2"></i>
+      <span class="fw-semibold small">Customer Details</span>
+      <span class="badge bg-secondary ms-2" style="font-size:10px;">Optional</span>
+    </div>
+    <div class="card-body py-2">
+      <div class="row g-2">
+        <div class="col-12 col-sm-6 col-md-3">
+          <label class="form-label small mb-1">Customer Name</label>
+          <input type="text" class="form-control form-control-sm" id="cust-name" placeholder="e.g. Ahmed Khan">
+        </div>
+        <div class="col-12 col-sm-6 col-md-3">
+          <label class="form-label small mb-1">Phone No</label>
+          <input type="text" class="form-control form-control-sm" id="cust-phone" placeholder="e.g. 0300-1234567">
+        </div>
+        <div class="col-12 col-sm-6 col-md-3">
+          <label class="form-label small mb-1">City</label>
+          <input type="text" class="form-control form-control-sm" id="cust-city" placeholder="e.g. Lahore">
+        </div>
+        <div class="col-12 col-sm-6 col-md-3">
+          <label class="form-label small mb-1 text-danger fw-bold">Total Discounted Amount</label>
+          <div class="input-group input-group-sm">
+            <span class="input-group-text">Rs</span>
+            <input type="number" class="form-control" id="cust-discount-total" placeholder="Amount to collect" min="0" step="0.01">
+          </div>
+          <small class="text-muted" style="font-size:10px;">If entered, shows on bill as final payable amount</small>
+        </div>
+
+        <!-- Amount Paid -->
+        <div class="col-12 col-sm-6 col-md-3">
+          <label class="form-label small mb-1">Amount Paid <span class="badge bg-secondary" style="font-size:9px;">Optional</span></label>
+          <div class="input-group input-group-sm">
+            <span class="input-group-text">Rs</span>
+            <input type="number" class="form-control" id="cust-amount-paid" placeholder="e.g. 2000" min="0" step="0.01" oninput="calcRemainingBalance()">
+          </div>
+        </div>
+
+        <!-- Remaining Balance (auto-calculated, read-only) -->
+        <div class="col-12 col-sm-6 col-md-3">
+          <label class="form-label small mb-1">Outstanding Balance <span class="badge bg-secondary" style="font-size:9px;">Auto</span></label>
+          <div class="input-group input-group-sm">
+            <span class="input-group-text">Rs</span>
+            <input type="number" class="form-control" id="cust-remaining" placeholder="0.00" readonly style="background:#f8f9fa;">
+          </div>
+          <small class="text-muted" style="font-size:10px;">Grand Total &minus; Amount Paid</small>
+        </div>
+
+        <!-- Payment Method (Compulsory) -->
+        <div class="col-12 col-sm-6 col-md-3">
+          <label class="form-label small mb-1 fw-bold">Payment Method <span class="text-danger">*</span></label>
+          <select class="form-select form-select-sm" id="cust-payment-method">
+            <option value="">-- Select Method --</option>
+            <option value="Cash">Cash</option>
+            <option value="Online">Online</option>
+            <option value="Remaining (Udhaar)">Remaining (Udhaar)</option>
+          </select>
+          <small class="text-danger d-none" id="payment-method-err" style="font-size:10px;">Please select a payment method</small>
+        </div>
+
+      </div>
+    </div>
 
   <!-- ===== MANUAL ADD FORM ===== -->
   <div class="card mb-3 shadow-sm" id="manual-form">
@@ -239,9 +280,9 @@
 
   <!-- ===== RETURN MANUAL ENTRY ===== -->
   <div class="card mb-3 shadow-sm" id="return-form">
-    <div class="card-header py-2 d-flex align-items-center justify-content-between" style="background:#fff3cd;">
+    <div class="card-header bg-dark text-white py-2 d-flex align-items-center justify-content-between">
       <span><i class="fa-solid fa-rotate-left me-2 text-warning"></i><span class="fw-semibold">Return Manual Entry</span></span>
-      <button class="btn btn-sm btn-outline-warning" id="btn-open-return-scan">
+      <button class="btn btn-sm btn-outline-light" id="btn-open-return-scan">
         <i class="fa-solid fa-camera me-1"></i>Add Return via Scanning
       </button>
     </div>
@@ -262,6 +303,12 @@
             <% } %>
           </select>
         </div>
+        <!-- Original / Tag Price -->
+        <div class="col-6 col-sm-4 col-md-2">
+          <label class="form-label" for="r-price" style="font-size:.82rem;font-weight:600;">Price <span class="text-muted small fw-normal">(optional)</span></label>
+          <input type="number" class="form-control" id="r-price" placeholder="0" min="0" step="0.01">
+        </div>
+        <!-- Sold For Price -->
         <div class="col-6 col-sm-4 col-md-2">
           <label class="form-label" for="r-sold-for" style="font-size:.82rem;font-weight:600;">Sold For <span class="text-muted small fw-normal">(optional)</span></label>
           <input type="number" class="form-control" id="r-sold-for" placeholder="0" min="0" step="0.01">
@@ -292,69 +339,33 @@
     </div>
   </div>
 
-  <!-- ===== OPTIONAL CUSTOMER DETAILS ===== -->
-  <div class="card shadow-sm mb-3" id="customer-details-card">
-    <div class="card-header py-2" style="background:#f8f9fa;">
-      <i class="fa-solid fa-user me-2 text-secondary"></i>
-      <span class="fw-semibold small text-secondary">Customer Details</span>
-      <span class="badge bg-secondary ms-2" style="font-size:10px;">Optional</span>
-    </div>
-    <div class="card-body py-2">
-      <div class="row g-2">
-        <div class="col-12 col-sm-6 col-md-3">
-          <label class="form-label small mb-1">Customer Name</label>
-          <input type="text" class="form-control form-control-sm" id="cust-name" placeholder="e.g. Ahmed Khan">
-        </div>
-        <div class="col-12 col-sm-6 col-md-3">
-          <label class="form-label small mb-1">Phone No</label>
-          <input type="text" class="form-control form-control-sm" id="cust-phone" placeholder="e.g. 0300-1234567">
-        </div>
-        <div class="col-12 col-sm-6 col-md-3">
-          <label class="form-label small mb-1">City</label>
-          <input type="text" class="form-control form-control-sm" id="cust-city" placeholder="e.g. Lahore">
-        </div>
-        <div class="col-12 col-sm-6 col-md-3">
-          <label class="form-label small mb-1 text-danger fw-bold">Total Discounted Amount</label>
-          <div class="input-group input-group-sm">
-            <span class="input-group-text">Rs</span>
-            <input type="number" class="form-control" id="cust-discount-total" placeholder="Amount to collect" min="0" step="0.01">
-          </div>
-          <small class="text-muted" style="font-size:10px;">If entered, shows on bill as final payable amount</small>
-        </div>
+  
+  </div>
 
-        <!-- Amount Paid -->
-        <div class="col-12 col-sm-6 col-md-3">
-          <label class="form-label small mb-1">Amount Paid <span class="badge bg-secondary" style="font-size:9px;">Optional</span></label>
-          <div class="input-group input-group-sm">
-            <span class="input-group-text">Rs</span>
-            <input type="number" class="form-control" id="cust-amount-paid" placeholder="e.g. 2000" min="0" step="0.01" oninput="calcRemainingBalance()">
-          </div>
-        </div>
-
-        <!-- Remaining Balance (auto-calculated, read-only) -->
-        <div class="col-12 col-sm-6 col-md-3">
-          <label class="form-label small mb-1">Outstanding Balance <span class="badge bg-secondary" style="font-size:9px;">Auto</span></label>
-          <div class="input-group input-group-sm">
-            <span class="input-group-text">Rs</span>
-            <input type="number" class="form-control" id="cust-remaining" placeholder="0.00" readonly style="background:#f8f9fa;">
-          </div>
-          <small class="text-muted" style="font-size:10px;">Grand Total &minus; Amount Paid</small>
-        </div>
-
-        <!-- Payment Method (Compulsory) -->
-        <div class="col-12 col-sm-6 col-md-3">
-          <label class="form-label small mb-1 fw-bold">Payment Method <span class="text-danger">*</span></label>
-          <select class="form-select form-select-sm" id="cust-payment-method">
-            <option value="">-- Select Method --</option>
-            <option value="Cash">Cash</option>
-            <option value="Online">Online</option>
-            <option value="Remaining (Udhaar)">Remaining (Udhaar)</option>
-          </select>
-          <small class="text-danger d-none" id="payment-method-err" style="font-size:10px;">Please select a payment method</small>
-        </div>
-
-      </div>
-    </div>
+  <!-- ===== BILL ITEMS LIST ===== -->
+  <div id="items-wrapper" class="mb-3">
+    <table class="table table-sm mb-0" id="items-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Item Name</th>
+          <th>Category</th>
+          <th>Piece</th>
+          <th>Qty</th>
+          <th>Price</th>
+          <th>Disc. Price</th>
+          <th>Line Total</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="items-tbody">
+        <tr id="empty-row">
+          <td colspan="9" class="text-center text-muted py-3">
+            <i class="fa-solid fa-cart-plus me-2"></i>No items added yet
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 
   <!-- ===== PRINT SIZE (above actions) ===== -->
@@ -602,7 +613,13 @@ function calcRemainingBalance() {
                    value="${item.qty}" min="1" step="1"
                    style="width:50px;padding:2px 4px;font-size:12px;height:26px;">
           </td>
-          <td><span class="text-muted">—</span></td>
+          <td>
+            <input type="number" class="form-control form-control-sm row-return-price"
+                   data-idx="${idx}"
+                   value="${item.price > 0 ? item.price : ''}"
+                   placeholder="0.00" min="0" step="0.01"
+                   style="width:75px;padding:2px 4px;font-size:12px;height:26px;">
+          </td>
           <td>
             <input type="number" class="form-control form-control-sm row-sold-for"
                    data-idx="${idx}"
@@ -664,16 +681,18 @@ function calcRemainingBalance() {
   // ---- Return Item helpers ----
   function readReturnForm() {
     return {
-      name:     document.getElementById('r-name').value.trim(),
-      category: document.getElementById('r-category').value,
-      soldFor:  parseFloat(document.getElementById('r-sold-for').value) || 0,
-      pieceType:document.getElementById('r-piece').value,
-      qty:      parseInt(document.getElementById('r-qty').value) || 1,
+      name:      document.getElementById('r-name').value.trim(),
+      category:  document.getElementById('r-category').value,
+      price:     parseFloat(document.getElementById('r-price').value) || 0,
+      soldFor:   parseFloat(document.getElementById('r-sold-for').value) || 0,
+      pieceType: document.getElementById('r-piece').value,
+      qty:       parseInt(document.getElementById('r-qty').value) || 1,
     };
   }
   function clearReturnForm() {
     document.getElementById('r-name').value     = '';
     document.getElementById('r-category').value = '';
+    document.getElementById('r-price').value    = '';
     document.getElementById('r-sold-for').value = '';
     document.getElementById('r-piece').value    = '';
     document.getElementById('r-qty').value      = 1;
@@ -788,6 +807,9 @@ function calcRemainingBalance() {
       if (ltCell) ltCell.textContent = '- Rs ' + fmt(val);
       updateGrandTotal();
     }
+    else if (e.target.classList.contains('row-return-price')) {
+      returnItems[idx].price = parseFloat(e.target.value) || 0;
+    }
   });
 
   /* ------------------------------------------------------------------ */
@@ -810,9 +832,15 @@ function calcRemainingBalance() {
     if (!btn) return;
     selectedSize = btn.dataset.size;
     document.querySelectorAll('#print-size-group .btn').forEach(function (b) {
-      b.classList.toggle('active',       b === btn);
-      b.classList.toggle('btn-light',    b === btn);
-      b.classList.toggle('btn-outline-light', b !== btn);
+      const isSel = (b === btn);
+      b.classList.toggle('active', isSel);
+      if (isSel) {
+        b.classList.add('btn-dark');
+        b.classList.remove('btn-outline-dark');
+      } else {
+        b.classList.remove('btn-dark');
+        b.classList.add('btn-outline-dark');
+      }
     });
   });
 
@@ -862,9 +890,14 @@ function calcRemainingBalance() {
     // Returned items (conditional)
     let returnTotal = 0;
     if (returnItems.length > 0) {
-      // Divider row
+      // Divider / Header row: Returned title larger & "Sold For" in Disc column
       const divTr = document.createElement('tr');
-      divTr.innerHTML = `<td colspan="8" style="padding:5px 2px 3px;border-top:1px dashed #666;border-bottom:1px dashed #666;font-weight:bold;font-size:8pt;">&#8617; Returned</td>`;
+      divTr.innerHTML = `
+        <td colspan="5" style="padding:6px 2px 4px;border-top:1px dashed #000;border-bottom:1px dashed #000;font-weight:900;font-size:10pt;">&#8617; Returned</td>
+        <td class="text-right" style="padding:6px 2px 4px;border-top:1px dashed #000;border-bottom:1px dashed #000;font-weight:bold;font-size:8pt;">Price</td>
+        <td class="text-right" style="padding:6px 2px 4px;border-top:1px dashed #000;border-bottom:1px dashed #000;font-weight:bold;font-size:8pt;">Sold For</td>
+        <td class="text-right" style="padding:6px 2px 4px;border-top:1px dashed #000;border-bottom:1px dashed #000;font-weight:bold;font-size:8pt;">Total</td>
+      `;
       slipTbody.appendChild(divTr);
 
       returnItems.forEach(function (item, idx) {
@@ -877,7 +910,7 @@ function calcRemainingBalance() {
           <td>${escHtml(item.category)}</td>
           <td>${escHtml(item.pieceType)}</td>
           <td class="text-center">${item.qty}</td>
-          <td class="text-right">—</td>
+          <td class="text-right">${item.price > 0 ? fmt(item.price) : '—'}</td>
           <td class="text-right">${item.soldFor > 0 ? fmt(item.soldFor) : '—'}</td>
           <td class="text-right">- ${fmt(lt)}</td>`;
         slipTbody.appendChild(tr);
@@ -978,13 +1011,26 @@ function calcRemainingBalance() {
     let returnTotal = 0;
     if (returnItems.length > 0) {
       const divTr = document.createElement('tr');
-      divTr.innerHTML = `<td colspan="8" style="padding:5px 2px 3px;border-top:1px dashed #666;border-bottom:1px dashed #666;font-weight:bold;font-size:8pt;">&#8617; Returned</td>`;
+      divTr.innerHTML = `
+        <td colspan="5" style="padding:6px 2px 4px;border-top:1px dashed #000;border-bottom:1px dashed #000;font-weight:900;font-size:10pt;">&#8617; Returned</td>
+        <td class="text-right" style="padding:6px 2px 4px;border-top:1px dashed #000;border-bottom:1px dashed #000;font-weight:bold;font-size:8pt;">Price</td>
+        <td class="text-right" style="padding:6px 2px 4px;border-top:1px dashed #000;border-bottom:1px dashed #000;font-weight:bold;font-size:8pt;">Sold For</td>
+        <td class="text-right" style="padding:6px 2px 4px;border-top:1px dashed #000;border-bottom:1px dashed #000;font-weight:bold;font-size:8pt;">Total</td>
+      `;
       slipTbody.appendChild(divTr);
       returnItems.forEach(function (item, idx) {
         const lt = item.soldFor > 0 ? item.soldFor * item.qty : 0;
         returnTotal += lt;
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>R${idx + 1}</td><td>${escHtml(item.name)}</td><td>${escHtml(item.category)}</td><td>${escHtml(item.pieceType)}</td><td class="text-center">${item.qty}</td><td class="text-right">&mdash;</td><td class="text-right">${item.soldFor > 0 ? fmt(item.soldFor) : '&mdash;'}</td><td class="text-right">- ${fmt(lt)}</td>`;
+        tr.innerHTML = `
+          <td>R${idx + 1}</td>
+          <td>${escHtml(item.name)}</td>
+          <td>${escHtml(item.category)}</td>
+          <td>${escHtml(item.pieceType)}</td>
+          <td class="text-center">${item.qty}</td>
+          <td class="text-right">${item.price > 0 ? fmt(item.price) : '—'}</td>
+          <td class="text-right">${item.soldFor > 0 ? fmt(item.soldFor) : '—'}</td>
+          <td class="text-right">- ${fmt(lt)}</td>`;
         slipTbody.appendChild(tr);
       });
     }
@@ -1020,42 +1066,59 @@ function calcRemainingBalance() {
 
   function captureSlip(onCanvas) {
     const slip = document.getElementById('print-slip');
-    slip.style.display = 'block';
-    const slipW = selectedSize === '4inch' ? '104mm' : '80mm';
-    slip.style.width      = slipW;
-    slip.style.maxWidth   = slipW;
-    slip.style.padding    = '8px';
-    slip.style.fontFamily = 'Helvetica Neue, Helvetica, Arial, sans-serif';
-    slip.style.color      = '#000';
-    slip.style.background = '#fff';
-    // Force layout
-    slip.offsetHeight;
-    html2canvas(slip, {
-      scale: 3,
-      useCORS: true,
-      backgroundColor: '#ffffff',
-      logging: false,
-      width:        slip.scrollWidth,
-      height:       slip.scrollHeight,
-      windowWidth:  slip.scrollWidth,
-      windowHeight: slip.scrollHeight
-    }).then(function(canvas) {
-      slip.style.display   = 'none';
-      slip.style.width     = '';
-      slip.style.maxWidth  = '';
-      slip.style.padding   = '';
-      onCanvas(canvas);
-    }).catch(function(err) {
-      slip.style.display = 'none';
-      toastr.error('Export failed: ' + err);
-    });
+    const targetMm = (selectedSize === '4inch') ? 104 : 80;
+
+    // Apply exact size class and render offscreen
+    slip.className = 'print-' + selectedSize;
+    slip.style.display    = 'block';
+    slip.style.position   = 'fixed';
+    slip.style.left       = '0px';
+    slip.style.top        = '0px';
+    slip.style.zIndex     = '-999';
+    slip.style.width      = targetMm + 'mm';
+    slip.style.maxWidth   = targetMm + 'mm';
+    slip.style.background = '#ffffff';
+
+    setTimeout(function () {
+      html2canvas(slip, {
+        scale: 3,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        width:        slip.offsetWidth,
+        height:       slip.offsetHeight,
+        windowWidth:  slip.offsetWidth,
+        windowHeight: slip.offsetHeight
+      }).then(function(canvas) {
+        slip.style.display    = 'none';
+        slip.style.position   = '';
+        slip.style.left       = '';
+        slip.style.top        = '';
+        slip.style.zIndex     = '';
+        slip.style.width      = '';
+        slip.style.maxWidth   = '';
+        slip.className        = '';
+        onCanvas(canvas, targetMm);
+      }).catch(function(err) {
+        slip.style.display    = 'none';
+        slip.style.position   = '';
+        slip.style.left       = '';
+        slip.style.top        = '';
+        slip.style.zIndex     = '';
+        slip.style.width      = '';
+        slip.style.maxWidth   = '';
+        slip.className        = '';
+        toastr.error('Export failed: ' + err);
+      });
+    }, 120);
   }
 
   document.getElementById('btn-download-img').addEventListener('click', function () {
     buildSlipForExport(function() {
-      captureSlip(function(canvas) {
+      captureSlip(function(canvas, targetMm) {
         const link = document.createElement('a');
-        link.download = 'bill_' + Date.now() + '.png';
+        link.download = 'bill_' + selectedSize + '_' + Date.now() + '.png';
         link.href = canvas.toDataURL('image/png', 1.0);
         link.click();
       });
@@ -1064,14 +1127,17 @@ function calcRemainingBalance() {
 
   document.getElementById('btn-download-pdf').addEventListener('click', function () {
     buildSlipForExport(function() {
-      captureSlip(function(canvas) {
+      captureSlip(function(canvas, targetMm) {
         const { jsPDF } = window.jspdf;
-        const mmPerPx = 25.4 / (96 * 3);
-        const docW = canvas.width  * mmPerPx;
-        const docH = canvas.height * mmPerPx;
-        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [docW, docH] });
-        pdf.addImage(canvas.toDataURL('image/png', 1.0), 'PNG', 0, 0, docW, docH);
-        pdf.save('bill_' + Date.now() + '.pdf');
+        const pdfW = targetMm;
+        const pdfH = (canvas.height / canvas.width) * targetMm;
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: [pdfW, pdfH]
+        });
+        pdf.addImage(canvas.toDataURL('image/png', 1.0), 'PNG', 0, 0, pdfW, pdfH);
+        pdf.save('bill_' + selectedSize + '_' + Date.now() + '.pdf');
       });
     });
   });
@@ -1203,7 +1269,17 @@ function calcRemainingBalance() {
           if (pipeIdx > 6) { barcodeNum = decodedText.substring(6, pipeIdx); try { data = JSON.parse(decodedText.substring(pipeIdx + 1)); } catch(e) { data = {}; } }
           else { barcodeNum = decodedText.substring(6); }
         } else { try { data = JSON.parse(decodedText); } catch (e) { data = { n: decodedText }; } }
-        addReturnItem({ name: data.name||data.n||barcodeNum||'', category: data.category||data.c||'', soldFor: parseFloat(data.discountedPrice||data.d||data.price||data.p)||0, pieceType: data.pieceType||data.pt||'', qty: 1 });
+        const scannedPrice = parseFloat(data.price || data.p) || 0;
+        const scannedDisc  = parseFloat(data.discountedPrice || data.d) || 0;
+        const scannedSold  = scannedDisc > 0 ? scannedDisc : scannedPrice;
+        addReturnItem({
+          name:      data.name || data.n || barcodeNum || '',
+          category:  data.category || data.c || '',
+          price:     scannedPrice,
+          soldFor:   scannedSold,
+          pieceType: data.pieceType || data.pt || '',
+          qty: 1
+        });
         showFlash();
         rStatus.innerHTML = '&#8617; Return added: ' + (data.name||data.n||barcodeNum||'item');
         rStatus.style.color = '#ffc107';
