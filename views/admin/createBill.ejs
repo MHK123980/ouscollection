@@ -283,15 +283,17 @@
     <div class="card-header bg-dark text-white py-2 d-flex align-items-center justify-content-between">
       <span><i class="fa-solid fa-rotate-left me-2 text-warning"></i><span class="fw-semibold">Return Manual Entry</span></span>
       <button class="btn btn-sm btn-outline-light" id="btn-open-return-scan">
-        <i class="fa-solid fa-camera me-1"></i>Add Return via Scanning
+        <i class="fa-solid fa-camera me-1"></i>Add Return Via Scan
       </button>
     </div>
     <div class="card-body py-3">
       <div class="row g-2 align-items-end">
-        <div class="col-12 col-sm-6 col-md-3">
+        <!-- Item Name (Compulsory) -->
+        <div class="col-12 col-sm-6 col-md-2">
           <label class="form-label" for="r-name" style="font-size:.82rem;font-weight:600;">Item Name <span class="text-danger">*</span></label>
-          <input type="text" class="form-control" id="r-name" placeholder="e.g. Zellbury Shirt">
+          <input type="text" class="form-control" id="r-name" placeholder="e.g. Shirt">
         </div>
+        <!-- Category -->
         <div class="col-12 col-sm-6 col-md-2">
           <label class="form-label" for="r-category" style="font-size:.82rem;font-weight:600;">Category</label>
           <select class="form-select" id="r-category">
@@ -303,16 +305,22 @@
             <% } %>
           </select>
         </div>
-        <!-- Original / Tag Price -->
+        <!-- Price (Compulsory) -->
         <div class="col-6 col-sm-4 col-md-2">
-          <label class="form-label" for="r-price" style="font-size:.82rem;font-weight:600;">Price <span class="text-muted small fw-normal">(optional)</span></label>
+          <label class="form-label" for="r-price" style="font-size:.82rem;font-weight:600;">Price <span class="text-danger">*</span></label>
           <input type="number" class="form-control" id="r-price" placeholder="0" min="0" step="0.01">
         </div>
-        <!-- Sold For Price -->
-        <div class="col-6 col-sm-4 col-md-2">
-          <label class="form-label" for="r-sold-for" style="font-size:.82rem;font-weight:600;">Sold For <span class="text-muted small fw-normal">(optional)</span></label>
-          <input type="number" class="form-control" id="r-sold-for" placeholder="0" min="0" step="0.01">
+        <!-- Disc Price (Optional) -->
+        <div class="col-6 col-sm-4 col-md-1">
+          <label class="form-label" for="r-disc" style="font-size:.82rem;font-weight:600;">Disc. Price</label>
+          <input type="number" class="form-control" id="r-disc" placeholder="0" min="0" step="0.01">
         </div>
+        <!-- Sold For (Optional - defaults to Price) -->
+        <div class="col-6 col-sm-4 col-md-2">
+          <label class="form-label" for="r-sold-for" style="font-size:.82rem;font-weight:600;">Sold For</label>
+          <input type="number" class="form-control" id="r-sold-for" placeholder="Auto / Price" min="0" step="0.01">
+        </div>
+        <!-- Piece -->
         <div class="col-6 col-sm-4 col-md-1">
           <label class="form-label" for="r-piece" style="font-size:.82rem;font-weight:600;">Piece</label>
           <select class="form-select" id="r-piece">
@@ -322,6 +330,7 @@
             <% }); %>
           </select>
         </div>
+        <!-- Qty -->
         <div class="col-6 col-sm-4 col-md-1">
           <label class="form-label" style="font-size:.82rem;font-weight:600;">Qty</label>
           <div class="qty-control">
@@ -330,6 +339,7 @@
             <button class="btn btn-outline-secondary btn-sm" id="r-qty-inc" type="button">+</button>
           </div>
         </div>
+        <!-- Add Button -->
         <div class="col-12 col-md-1 d-flex align-items-end">
           <button class="btn btn-warning w-100" id="btn-add-return" type="button">
             <i class="fa-solid fa-plus me-1"></i>Add
@@ -337,9 +347,6 @@
         </div>
       </div>
     </div>
-  </div>
-
-  
   </div>
 
   <!-- ===== BILL ITEMS LIST ===== -->
@@ -598,13 +605,17 @@ function calcRemainingBalance() {
       tbody.appendChild(divRow);
 
       returnItems.forEach(function (item, idx) {
-        const lt = item.soldFor > 0 ? item.soldFor * item.qty : 0;
+        const soldVal = item.soldFor > 0 ? item.soldFor : item.price;
+        const lt = soldVal * item.qty;
         const tr = document.createElement('tr');
         tr.style.background = '#fffdf0';
         tr.className = 'return-item-row';
         tr.innerHTML = `
           <td><span class="badge bg-warning text-dark">R${idx + 1}</span></td>
-          <td>${escHtml(item.name)}</td>
+          <td>
+            ${escHtml(item.name)}
+            ${item.discountedPrice > 0 ? `<div class="text-muted" style="font-size:10px;">Disc Tag: Rs ${fmt(item.discountedPrice)}</div>` : ''}
+          </td>
           <td>${escHtml(item.category)}</td>
           <td>${escHtml(item.pieceType)}</td>
           <td>
@@ -613,21 +624,15 @@ function calcRemainingBalance() {
                    value="${item.qty}" min="1" step="1"
                    style="width:50px;padding:2px 4px;font-size:12px;height:26px;">
           </td>
-          <td>
-            <input type="number" class="form-control form-control-sm row-return-price"
-                   data-idx="${idx}"
-                   value="${item.price > 0 ? item.price : ''}"
-                   placeholder="0.00" min="0" step="0.01"
-                   style="width:75px;padding:2px 4px;font-size:12px;height:26px;">
-          </td>
+          <td>Rs ${fmt(item.price)}</td>
           <td>
             <input type="number" class="form-control form-control-sm row-sold-for"
                    data-idx="${idx}"
-                   value="${item.soldFor > 0 ? item.soldFor : ''}"
+                   value="${item.soldFor > 0 ? item.soldFor : (item.price > 0 ? item.price : '')}"
                    placeholder="Sold For" min="0" step="0.01"
-                   style="width:80px;padding:2px 4px;font-size:12px;height:26px;background:#fffdf0;">
+                   style="width:85px;padding:2px 4px;font-size:12px;height:26px;background:#fffdf0;font-weight:600;">
           </td>
-          <td class="row-return-total text-danger">- Rs ${fmt(lt)}</td>
+          <td class="row-return-total text-danger fw-bold">- Rs ${fmt(lt)}</td>
           <td>
             <button class="btn btn-danger btn-sm btn-remove" data-idx="${idx}" data-type="return">
               <i class="fa-solid fa-xmark"></i>
@@ -642,7 +647,10 @@ function calcRemainingBalance() {
 
   function updateGrandTotal() {
     const billTotal   = billItems.reduce((s, i) => s + lineTotal(i), 0);
-    const returnTotal = returnItems.reduce((s, i) => s + (i.soldFor > 0 ? i.soldFor * i.qty : 0), 0);
+    const returnTotal = returnItems.reduce((s, i) => {
+      const sf = i.soldFor > 0 ? i.soldFor : i.price;
+      return s + (sf * i.qty);
+    }, 0);
     const grand = Math.max(0, billTotal - returnTotal);
     document.getElementById('grand-total-badge').textContent = 'Total: Rs ' + fmt(grand);
     if (document.getElementById('cust-amount-paid').value) {
@@ -680,19 +688,25 @@ function calcRemainingBalance() {
   
   // ---- Return Item helpers ----
   function readReturnForm() {
+    const p = parseFloat(document.getElementById('r-price').value) || 0;
+    const sfInp = document.getElementById('r-sold-for').value.trim();
+    // Default soldFor is price if not entered
+    const sf = sfInp !== '' ? (parseFloat(sfInp) || 0) : p;
     return {
-      name:      document.getElementById('r-name').value.trim(),
-      category:  document.getElementById('r-category').value,
-      price:     parseFloat(document.getElementById('r-price').value) || 0,
-      soldFor:   parseFloat(document.getElementById('r-sold-for').value) || 0,
-      pieceType: document.getElementById('r-piece').value,
-      qty:       parseInt(document.getElementById('r-qty').value) || 1,
+      name:            document.getElementById('r-name').value.trim(),
+      category:        document.getElementById('r-category').value,
+      price:           p,
+      discountedPrice: parseFloat(document.getElementById('r-disc').value) || 0,
+      soldFor:         sf,
+      pieceType:       document.getElementById('r-piece').value,
+      qty:             parseInt(document.getElementById('r-qty').value) || 1,
     };
   }
   function clearReturnForm() {
     document.getElementById('r-name').value     = '';
     document.getElementById('r-category').value = '';
     document.getElementById('r-price').value    = '';
+    document.getElementById('r-disc').value     = '';
     document.getElementById('r-sold-for').value = '';
     document.getElementById('r-piece').value    = '';
     document.getElementById('r-qty').value      = 1;
@@ -709,6 +723,11 @@ function calcRemainingBalance() {
     if (!item.name) {
       toastr.warning('Please enter a return item name.');
       document.getElementById('r-name').focus();
+      return;
+    }
+    if (!item.price || item.price <= 0) {
+      toastr.warning('Please enter a valid price for the return item.');
+      document.getElementById('r-price').focus();
       return;
     }
     addReturnItem(item);
@@ -795,20 +814,20 @@ function calcRemainingBalance() {
     }
     else if (e.target.classList.contains('row-qty') && type === 'return') {
       returnItems[idx].qty = Math.max(1, parseInt(e.target.value) || 1);
+      const soldVal = returnItems[idx].soldFor > 0 ? returnItems[idx].soldFor : returnItems[idx].price;
       const ltCell = tr.querySelector('.row-return-total');
-      const val = returnItems[idx].soldFor > 0 ? returnItems[idx].soldFor * returnItems[idx].qty : 0;
-      if (ltCell) ltCell.textContent = '- Rs ' + fmt(val);
+      const totalVal = soldVal * returnItems[idx].qty;
+      if (ltCell) ltCell.textContent = '- Rs ' + fmt(totalVal);
       updateGrandTotal();
     }
     else if (e.target.classList.contains('row-sold-for')) {
-      returnItems[idx].soldFor = parseFloat(e.target.value) || 0;
+      const val = parseFloat(e.target.value) || 0;
+      returnItems[idx].soldFor = val;
+      const soldVal = val > 0 ? val : returnItems[idx].price;
       const ltCell = tr.querySelector('.row-return-total');
-      const val = returnItems[idx].soldFor * returnItems[idx].qty;
-      if (ltCell) ltCell.textContent = '- Rs ' + fmt(val);
+      const totalVal = soldVal * returnItems[idx].qty;
+      if (ltCell) ltCell.textContent = '- Rs ' + fmt(totalVal);
       updateGrandTotal();
-    }
-    else if (e.target.classList.contains('row-return-price')) {
-      returnItems[idx].price = parseFloat(e.target.value) || 0;
     }
   });
 
@@ -890,28 +909,24 @@ function calcRemainingBalance() {
     // Returned items (conditional)
     let returnTotal = 0;
     if (returnItems.length > 0) {
-      // Divider / Header row: Returned title larger & "Sold For" in Disc column
+      // Clean, professional section divider
       const divTr = document.createElement('tr');
-      divTr.innerHTML = `
-        <td colspan="5" style="padding:6px 2px 4px;border-top:1px dashed #000;border-bottom:1px dashed #000;font-weight:900;font-size:10pt;">&#8617; Returned</td>
-        <td class="text-right" style="padding:6px 2px 4px;border-top:1px dashed #000;border-bottom:1px dashed #000;font-weight:bold;font-size:8pt;">Price</td>
-        <td class="text-right" style="padding:6px 2px 4px;border-top:1px dashed #000;border-bottom:1px dashed #000;font-weight:bold;font-size:8pt;">Sold For</td>
-        <td class="text-right" style="padding:6px 2px 4px;border-top:1px dashed #000;border-bottom:1px dashed #000;font-weight:bold;font-size:8pt;">Total</td>
-      `;
+      divTr.innerHTML = `<td colspan="8" style="padding:7px 2px 4px;border-top:1px dashed #000;border-bottom:1px dashed #000;font-weight:900;font-size:9.5pt;letter-spacing:0.5px;">&#8617; RETURNED ITEMS</td>`;
       slipTbody.appendChild(divTr);
 
       returnItems.forEach(function (item, idx) {
-        const lt = item.soldFor > 0 ? item.soldFor * item.qty : 0;
+        const soldVal = item.soldFor > 0 ? item.soldFor : item.price;
+        const lt = soldVal * item.qty;
         returnTotal += lt;
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>R${idx + 1}</td>
           <td>${escHtml(item.name)}</td>
           <td>${escHtml(item.category)}</td>
-          <td>${escHtml(item.pieceType)}</td>
+          <td>${escHtml(item.pieceType || '—')}</td>
           <td class="text-center">${item.qty}</td>
           <td class="text-right">${item.price > 0 ? fmt(item.price) : '—'}</td>
-          <td class="text-right">${item.soldFor > 0 ? fmt(item.soldFor) : '—'}</td>
+          <td class="text-right">${soldVal > 0 ? fmt(soldVal) : '—'}</td>
           <td class="text-right">- ${fmt(lt)}</td>`;
         slipTbody.appendChild(tr);
       });
@@ -1011,25 +1026,21 @@ function calcRemainingBalance() {
     let returnTotal = 0;
     if (returnItems.length > 0) {
       const divTr = document.createElement('tr');
-      divTr.innerHTML = `
-        <td colspan="5" style="padding:6px 2px 4px;border-top:1px dashed #000;border-bottom:1px dashed #000;font-weight:900;font-size:10pt;">&#8617; Returned</td>
-        <td class="text-right" style="padding:6px 2px 4px;border-top:1px dashed #000;border-bottom:1px dashed #000;font-weight:bold;font-size:8pt;">Price</td>
-        <td class="text-right" style="padding:6px 2px 4px;border-top:1px dashed #000;border-bottom:1px dashed #000;font-weight:bold;font-size:8pt;">Sold For</td>
-        <td class="text-right" style="padding:6px 2px 4px;border-top:1px dashed #000;border-bottom:1px dashed #000;font-weight:bold;font-size:8pt;">Total</td>
-      `;
+      divTr.innerHTML = `<td colspan="8" style="padding:7px 2px 4px;border-top:1px dashed #000;border-bottom:1px dashed #000;font-weight:900;font-size:9.5pt;letter-spacing:0.5px;">&#8617; RETURNED ITEMS</td>`;
       slipTbody.appendChild(divTr);
       returnItems.forEach(function (item, idx) {
-        const lt = item.soldFor > 0 ? item.soldFor * item.qty : 0;
+        const soldVal = item.soldFor > 0 ? item.soldFor : item.price;
+        const lt = soldVal * item.qty;
         returnTotal += lt;
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>R${idx + 1}</td>
           <td>${escHtml(item.name)}</td>
           <td>${escHtml(item.category)}</td>
-          <td>${escHtml(item.pieceType)}</td>
+          <td>${escHtml(item.pieceType || '—')}</td>
           <td class="text-center">${item.qty}</td>
           <td class="text-right">${item.price > 0 ? fmt(item.price) : '—'}</td>
-          <td class="text-right">${item.soldFor > 0 ? fmt(item.soldFor) : '—'}</td>
+          <td class="text-right">${soldVal > 0 ? fmt(soldVal) : '—'}</td>
           <td class="text-right">- ${fmt(lt)}</td>`;
         slipTbody.appendChild(tr);
       });
@@ -1271,13 +1282,15 @@ function calcRemainingBalance() {
         } else { try { data = JSON.parse(decodedText); } catch (e) { data = { n: decodedText }; } }
         const scannedPrice = parseFloat(data.price || data.p) || 0;
         const scannedDisc  = parseFloat(data.discountedPrice || data.d) || 0;
-        const scannedSold  = scannedDisc > 0 ? scannedDisc : scannedPrice;
+        // Disc price stays in discountedPrice; soldFor defaults to regular price (editable in table)
+        const scannedSold  = scannedPrice;
         addReturnItem({
-          name:      data.name || data.n || barcodeNum || '',
-          category:  data.category || data.c || '',
-          price:     scannedPrice,
-          soldFor:   scannedSold,
-          pieceType: data.pieceType || data.pt || '',
+          name:            data.name || data.n || barcodeNum || '',
+          category:        data.category || data.c || '',
+          price:           scannedPrice,
+          discountedPrice: scannedDisc,
+          soldFor:         scannedSold,
+          pieceType:       data.pieceType || data.pt || '',
           qty: 1
         });
         showFlash();
