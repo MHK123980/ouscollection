@@ -85,38 +85,38 @@
   /* ---- Print size btn-group ---- */
   #print-size-group .btn { min-width: 90px; }
 
-  /* ---- PRINT SLIP BASE STYLES (Used for both Print and PDF/Image export) ---- */
+  /* ---- PRINT SLIP BASE STYLES (Clean, Spacious, Professional Thermal Receipt) ---- */
   #print-slip {
     background: #fff;
     color: #000;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     font-size: 8.5pt;
-    line-height: 1.25;
+    line-height: 1.35;
     box-sizing: border-box;
-    padding: 10px 8px;
+    padding: 14px 10px;
     margin: 0 auto;
   }
   #print-slip.print-3inch, body.print-3inch #print-slip { width: 80mm !important; max-width: 80mm !important; }
   #print-slip.print-4inch, body.print-4inch #print-slip { width: 104mm !important; max-width: 104mm !important; }
 
-  #print-slip .slip-header { text-align: center; margin-bottom: 8px; border-bottom: 1px dashed #000; padding-bottom: 8px; }
-  #print-slip .slip-logo { max-width: 85px; height: auto; display: block; margin: 0 auto 5px auto; }
-  #print-slip .slip-shop { font-size: 14pt; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 2px; }
-  #print-slip .slip-subtitle { font-size: 8pt; font-weight: 700; margin-bottom: 2px; }
-  #print-slip .slip-datetime { font-size: 8pt; color: #111; margin-top: 4px; }
+  #print-slip .slip-header { text-align: center; margin-bottom: 12px; border-bottom: 1px dashed #222; padding-bottom: 10px; }
+  #print-slip .slip-logo { max-width: 90px; height: auto; display: block; margin: 0 auto 6px auto; }
+  #print-slip .slip-shop { font-size: 14pt; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 3px; }
+  #print-slip .slip-subtitle { font-size: 8.5pt; font-weight: 700; margin-bottom: 3px; }
+  #print-slip .slip-datetime { font-size: 8.5pt; color: #222; margin-top: 5px; }
 
-  #print-slip table { width: 100% !important; border-collapse: collapse; margin-bottom: 8px; }
-  #print-slip th { border-bottom: 1px solid #000; border-top: 1px solid #000; padding: 4px 2px; font-size: 8pt; text-align: left; font-weight: 700; }
-  #print-slip td { padding: 4px 2px; font-size: 8pt; border-bottom: 1px dotted #ccc; }
+  #print-slip table { width: 100% !important; border-collapse: collapse; margin-top: 6px; margin-bottom: 12px; }
+  #print-slip th { border-bottom: 1px solid #000; border-top: 1px solid #000; padding: 6px 3px; font-size: 8pt; text-align: left; font-weight: 700; }
+  #print-slip td { padding: 5px 3px; font-size: 8.5pt; border-bottom: 1px dotted #ddd; }
   
   #print-slip .text-right { text-align: right !important; }
   #print-slip .text-center { text-align: center !important; }
   
-  #print-slip tfoot tr td { border-top: 1px dashed #000; border-bottom: none; font-size: 8.5pt; padding-top: 5px; }
-  #print-slip .slip-grand { font-weight: 900; font-size: 12pt; text-align: right; }
+  #print-slip tfoot tr td { border-top: 1px dashed #222; border-bottom: none; font-size: 9pt; padding: 6px 3px; }
+  #print-slip .slip-grand { font-weight: 900; font-size: 13pt; text-align: right; }
 
-  #print-slip .slip-footer { text-align: center; margin-top: 12px; border-top: 1px dashed #000; padding-top: 8px; font-size: 8pt; }
-  #print-slip .slip-footer-thanks { font-weight: 800; font-size: 9.5pt; margin-bottom: 3px; }
+  #print-slip .slip-footer { text-align: center; margin-top: 16px; border-top: 1px dashed #222; padding-top: 10px; font-size: 8.5pt; }
+  #print-slip .slip-footer-thanks { font-weight: 800; font-size: 10.5pt; margin-bottom: 4px; }
 
   /* ---- PRINT MEDIA ONLY ---- */
   @media print {
@@ -745,6 +745,26 @@ function calcRemainingBalance() {
     document.getElementById('r-name').focus();
   });
 
+  // Live auto-calculation in Return Manual Entry form:
+  function syncReturnFormSoldFor() {
+    const priceVal = parseFloat(document.getElementById('r-price').value) || 0;
+    const discVal  = parseFloat(document.getElementById('r-disc').value) || 0;
+    const soldInp  = document.getElementById('r-sold-for');
+    
+    // If disc price is entered (> 0), sold for becomes disc price
+    // If disc price is 0 or empty, sold for becomes regular price
+    if (discVal > 0) {
+      soldInp.value = discVal;
+    } else if (priceVal > 0) {
+      soldInp.value = priceVal;
+    } else {
+      soldInp.value = '';
+    }
+  }
+
+  document.getElementById('r-price').addEventListener('input', syncReturnFormSoldFor);
+  document.getElementById('r-disc').addEventListener('input', syncReturnFormSoldFor);
+
   document.getElementById('r-qty-dec').addEventListener('click', function () {
     const inp = document.getElementById('r-qty');
     inp.value = Math.max(1, (parseInt(inp.value) || 1) - 1);
@@ -836,27 +856,27 @@ function calcRemainingBalance() {
       const idx = parseInt(e.target.dataset.idx);
       const newDisc = parseFloat(e.target.value) || 0;
       returnItems[idx].discountedPrice = newDisc;
+      
+      // Live sync Sold For: if Disc Price entered (>0) show Disc Price, else show regular Price
+      const newSold = newDisc > 0 ? newDisc : returnItems[idx].price;
+      returnItems[idx].soldFor = newSold;
       const soldInp = tr.querySelector('.row-sold-for');
-      if (soldInp && (!returnItems[idx].soldFor || returnItems[idx].soldFor === returnItems[idx].price)) {
-        const newSold = newDisc > 0 ? newDisc : returnItems[idx].price;
-        returnItems[idx].soldFor = newSold;
-        soldInp.value = newSold > 0 ? newSold : '';
-      }
-      const defaultVal = returnItems[idx].discountedPrice > 0 ? returnItems[idx].discountedPrice : returnItems[idx].price;
-      const soldVal = returnItems[idx].soldFor > 0 ? returnItems[idx].soldFor : defaultVal;
+      if (soldInp) soldInp.value = newSold > 0 ? newSold : '';
+
       const ltCell = tr.querySelector('.row-return-total');
-      if (ltCell) ltCell.textContent = '- Rs ' + fmt(soldVal * returnItems[idx].qty);
+      if (ltCell) ltCell.textContent = '- Rs ' + fmt(newSold * returnItems[idx].qty);
       updateGrandTotal();
     }
     else if (e.target.classList.contains('row-sold-for')) {
       const idx = parseInt(e.target.dataset.idx);
       const val = parseFloat(e.target.value) || 0;
-      returnItems[idx].soldFor = val;
       const defaultVal = returnItems[idx].discountedPrice > 0 ? returnItems[idx].discountedPrice : returnItems[idx].price;
-      const soldVal = val > 0 ? val : defaultVal;
+      // If user typed custom value, use it. If cleared, revert to defaultVal
+      const finalVal = val > 0 ? val : defaultVal;
+      returnItems[idx].soldFor = val > 0 ? val : finalVal;
+      
       const ltCell = tr.querySelector('.row-return-total');
-      const totalVal = soldVal * returnItems[idx].qty;
-      if (ltCell) ltCell.textContent = '- Rs ' + fmt(totalVal);
+      if (ltCell) ltCell.textContent = '- Rs ' + fmt(finalVal * returnItems[idx].qty);
       updateGrandTotal();
     }
   });
