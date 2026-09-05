@@ -989,7 +989,7 @@ function calcRemainingBalance() {
           <td>${escHtml(item.pieceType || '—')}</td>
           <td class="text-center">${item.qty}</td>
           <td class="text-right">${item.price > 0 ? fmt(item.price) : '—'}</td>
-          <td class="text-right">${soldVal > 0 ? fmt(soldVal) : '—'}</td>
+          <td class="text-right">${item.discountedPrice > 0 ? fmt(item.discountedPrice) : ''}</td>
           <td class="text-right">- ${fmt(lt)}</td>`;
         slipTbody.appendChild(tr);
       });
@@ -1105,7 +1105,7 @@ function calcRemainingBalance() {
           <td>${escHtml(item.pieceType || '—')}</td>
           <td class="text-center">${item.qty}</td>
           <td class="text-right">${item.price > 0 ? fmt(item.price) : '—'}</td>
-          <td class="text-right">${soldVal > 0 ? fmt(soldVal) : '—'}</td>
+          <td class="text-right">${item.discountedPrice > 0 ? fmt(item.discountedPrice) : ''}</td>
           <td class="text-right">- ${fmt(lt)}</td>`;
         slipTbody.appendChild(tr);
       });
