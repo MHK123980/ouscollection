@@ -106,14 +106,14 @@
   #print-slip .slip-datetime { font-size: 8.5pt; color: #222; margin-top: 5px; }
 
   #print-slip table { width: 100% !important; border-collapse: collapse; margin-top: 6px; margin-bottom: 12px; }
-  #print-slip th { border-bottom: 1px solid #000; border-top: 1px solid #000; padding: 6px 3px; font-size: 8pt; text-align: left; font-weight: 700; }
-  #print-slip td { padding: 5px 3px; font-size: 8.5pt; border-bottom: 1px dotted #ddd; }
+  #print-slip th { border-bottom: 1px solid #000; border-top: 1px solid #000; padding: 6px 2px; font-size: 8pt; text-align: left; font-weight: 700; }
+  #print-slip td { padding: 5px 2px; font-size: 8.5pt; border-bottom: 1px dotted #ddd; }
   
   #print-slip .text-right { text-align: right !important; }
   #print-slip .text-center { text-align: center !important; }
   
-  #print-slip tfoot tr td { border-top: 1px dashed #222; border-bottom: none; font-size: 9pt; padding: 6px 3px; }
-  #print-slip .slip-grand { font-weight: 900; font-size: 13pt; text-align: right; }
+  #print-slip tfoot tr td { border-top: 1px dashed #222; border-bottom: none; font-size: 9pt; padding: 7px 3px; }
+  #print-slip .slip-grand { font-weight: 900; font-size: 13pt; white-space: nowrap; }
 
   #print-slip .slip-footer { text-align: center; margin-top: 16px; border-top: 1px dashed #222; padding-top: 10px; font-size: 8.5pt; }
   #print-slip .slip-footer-thanks { font-weight: 800; font-size: 10.5pt; margin-bottom: 4px; }
@@ -459,28 +459,33 @@
     <tbody id="slip-tbody"></tbody>
     <tfoot>
       <tr>
-        <td colspan="7" class="text-right" style="font-weight:bold;">Grand Total:</td>
-        <td class="slip-grand" id="slip-grand"></td>
+        <td colspan="8" style="text-align:right; font-weight:bold; padding:8px 3px 6px;">
+          Grand Total:&nbsp;&nbsp;<span class="slip-grand" id="slip-grand" style="font-size:13pt; font-weight:900;"></span>
+        </td>
       </tr>
       <!-- Discounted total row: shown only if entered -->
       <tr id="slip-disc-row" style="display:none;">
-        <td colspan="7" class="text-right" style="font-weight:900; font-size:11pt; color:#c00;">Amount to Pay:</td>
-        <td style="font-weight:900; font-size:11pt; color:#c00;" id="slip-disc-total"></td>
+        <td colspan="8" style="text-align:right; font-weight:900; font-size:11pt; color:#c00; padding:4px 3px;">
+          Amount to Pay:&nbsp;&nbsp;<span id="slip-disc-total" style="font-size:12pt; font-weight:900;"></span>
+        </td>
       </tr>
       <!-- Payment Method row -->
       <tr id="slip-payment-row">
-        <td colspan="7" class="text-right" style="font-weight:bold;">Payment Method:</td>
-        <td style="font-weight:bold;" id="slip-payment-method"></td>
+        <td colspan="8" style="text-align:center; font-weight:bold; font-size:9pt; padding:6px 3px 4px; border-top:1px dashed #222;">
+          Payment Method: <span id="slip-payment-method"></span>
+        </td>
       </tr>
       <!-- Amount Paid row: shown only if entered -->
       <tr id="slip-paid-row" style="display:none;">
-        <td colspan="7" class="text-right" style="font-weight:bold; color:#007700;">Amount Received:</td>
-        <td style="font-weight:bold; color:#007700;" id="slip-amount-paid"></td>
+        <td colspan="8" style="text-align:center; font-weight:bold; font-size:9pt; color:#007700; padding:3px;">
+          Amount Received: <span id="slip-amount-paid"></span>
+        </td>
       </tr>
       <!-- Remaining Balance row: shown only if > 0 -->
       <tr id="slip-remaining-row" style="display:none;">
-        <td colspan="7" class="text-right" style="font-weight:900; font-size:10pt; color:#c00;">Outstanding Balance:</td>
-        <td style="font-weight:900; font-size:10pt; color:#c00;" id="slip-remaining"></td>
+        <td colspan="8" style="text-align:center; font-weight:900; font-size:9.5pt; color:#c00; padding:3px;">
+          Outstanding Balance: <span id="slip-remaining"></span>
+        </td>
       </tr>
     </tfoot>
   </table>
