@@ -5,6 +5,8 @@
 
 <!-- html5-qrcode CDN -->
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
   /* ---- Page Layout ---- */
@@ -235,6 +237,61 @@
     </div>
   </div>
 
+  <!-- ===== RETURN MANUAL ENTRY ===== -->
+  <div class="card mb-3 shadow-sm" id="return-form">
+    <div class="card-header py-2 d-flex align-items-center justify-content-between" style="background:#fff3cd;">
+      <span><i class="fa-solid fa-rotate-left me-2 text-warning"></i><span class="fw-semibold">Return Manual Entry</span></span>
+      <button class="btn btn-sm btn-outline-warning" id="btn-open-return-scan">
+        <i class="fa-solid fa-camera me-1"></i>Add Return via Scanning
+      </button>
+    </div>
+    <div class="card-body py-3">
+      <div class="row g-2 align-items-end">
+        <div class="col-12 col-sm-6 col-md-3">
+          <label class="form-label" for="r-name" style="font-size:.82rem;font-weight:600;">Item Name <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="r-name" placeholder="e.g. Zellbury Shirt">
+        </div>
+        <div class="col-12 col-sm-6 col-md-2">
+          <label class="form-label" for="r-category" style="font-size:.82rem;font-weight:600;">Category</label>
+          <select class="form-select" id="r-category">
+            <option value="">-- Select --</option>
+            <% if (typeof allCategories !== 'undefined' && allCategories.length) { %>
+              <% allCategories.forEach(function(cat){ %>
+                <option value="<%= cat.categoryName %>"><%= cat.categoryName %></option>
+              <% }); %>
+            <% } %>
+          </select>
+        </div>
+        <div class="col-6 col-sm-4 col-md-2">
+          <label class="form-label" for="r-sold-for" style="font-size:.82rem;font-weight:600;">Sold For <span class="text-muted small fw-normal">(optional)</span></label>
+          <input type="number" class="form-control" id="r-sold-for" placeholder="0" min="0" step="0.01">
+        </div>
+        <div class="col-6 col-sm-4 col-md-1">
+          <label class="form-label" for="r-piece" style="font-size:.82rem;font-weight:600;">Piece</label>
+          <select class="form-select" id="r-piece">
+            <option value="">--</option>
+            <% ['1pc','2pc','3pc','4pc','5pc','6pc','7pc','8pc','9pc','10pc'].forEach(function(p){ %>
+              <option value="<%= p %>"><%= p %></option>
+            <% }); %>
+          </select>
+        </div>
+        <div class="col-6 col-sm-4 col-md-1">
+          <label class="form-label" style="font-size:.82rem;font-weight:600;">Qty</label>
+          <div class="qty-control">
+            <button class="btn btn-outline-secondary btn-sm" id="r-qty-dec" type="button">&minus;</button>
+            <input type="number" class="form-control" id="r-qty" value="1" min="1">
+            <button class="btn btn-outline-secondary btn-sm" id="r-qty-inc" type="button">+</button>
+          </div>
+        </div>
+        <div class="col-12 col-md-1 d-flex align-items-end">
+          <button class="btn btn-warning w-100" id="btn-add-return" type="button">
+            <i class="fa-solid fa-plus me-1"></i>Add
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== OPTIONAL CUSTOMER DETAILS ===== -->
   <div class="card shadow-sm mb-3" id="customer-details-card">
     <div class="card-header py-2" style="background:#f8f9fa;">
@@ -300,23 +357,29 @@
     </div>
   </div>
 
+  <!-- ===== PRINT SIZE (above actions) ===== -->
+  <div class="card shadow-sm mb-2">
+    <div class="card-body py-2 bg-light d-flex align-items-center gap-3">
+      <span class="fw-semibold small">Print Size:</span>
+      <div class="btn-group" id="print-size-group" role="group">
+        <button type="button" class="btn btn-sm btn-dark active" data-size="3inch">3 Inch</button>
+        <button type="button" class="btn btn-sm btn-outline-dark" data-size="4inch">4 Inch</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== BOTTOM ACTIONS ===== -->
   <div class="card shadow-sm">
-    <div class="card-body bg-dark rounded d-flex flex-wrap align-items-center gap-3">
-
-      <!-- Print size selector -->
-      <div>
-        <span class="text-white me-2 fw-semibold small">Print Size:</span>
-        <div class="btn-group" id="print-size-group" role="group">
-          <button type="button" class="btn btn-sm btn-light active" data-size="3inch">3 Inch</button>
-          <button type="button" class="btn btn-sm btn-outline-light"  data-size="4inch">4 Inch</button>
-        </div>
-      </div>
-
-      <button class="btn btn-success ms-auto" id="btn-save-print" type="button">
+    <div class="card-body bg-dark rounded d-flex flex-wrap align-items-center gap-2">
+      <button class="btn btn-success" id="btn-save-print" type="button">
         <i class="fa-solid fa-print me-2"></i>Save & Print Slip
       </button>
-
+      <button class="btn btn-danger" id="btn-download-pdf" type="button">
+        <i class="fa-solid fa-file-pdf me-2"></i>Download PDF
+      </button>
+      <button class="btn btn-info text-white" id="btn-download-img" type="button">
+        <i class="fa-solid fa-image me-2"></i>Download Image
+      </button>
     </div>
   </div>
 
@@ -333,6 +396,16 @@
 
 <!-- Flash on scan -->
 <div id="scan-flash"></div>
+
+<!-- ===== RETURN CAMERA OVERLAY ===== -->
+<div id="return-camera-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;flex-direction:column;align-items:center;justify-content:center;">
+  <div style="color:#ffc107;font-weight:bold;margin-bottom:10px;font-size:1rem;"><i class="fa-solid fa-rotate-left me-2"></i>Return Scanning Mode</div>
+  <div id="return-qr-reader" style="width:min(94vw,420px);border-radius:10px;overflow:hidden;background:#000;"></div>
+  <div id="return-scan-status" style="margin-top:14px;font-size:.95rem;color:#fff;min-height:28px;text-align:center;">Point camera at barcode…</div>
+  <button class="btn btn-danger mt-3" id="btn-stop-return-scan">
+    <i class="fa-solid fa-stop me-2"></i>Stop Return Scanning
+  </button>
+</div>
 
 <!-- ===== PRINT SLIP (hidden until print) ===== -->
 <div id="print-slip" style="display:none;">
@@ -403,16 +476,19 @@
 <script>
 // Global: called from oninput attribute on Amount Paid field
 function calcRemainingBalance() {
-  // Access billItems from the enclosing scope via a module-level getter
-  const rows = document.querySelectorAll('#items-tbody tr.bill-item-row');
-  // Simpler: compute from DOM line totals
   let grand = 0;
   document.querySelectorAll('.row-line-total').forEach(function(cell) {
     const val = cell.textContent.replace(/[^0-9.]/g,'');
     grand += parseFloat(val) || 0;
   });
+  let returnTotal = 0;
+  document.querySelectorAll('.row-return-total').forEach(function(cell) {
+    const val = cell.textContent.replace(/[^0-9.]/g,'');
+    returnTotal += parseFloat(val) || 0;
+  });
+  const netGrand = Math.max(0, grand - returnTotal);
   const discTotal = parseFloat(document.getElementById('cust-discount-total').value) || 0;
-  const baseAmt   = discTotal > 0 ? discTotal : grand;
+  const baseAmt   = discTotal > 0 ? discTotal : netGrand;
   const paid      = parseFloat(document.getElementById('cust-amount-paid').value) || 0;
   const rem       = Math.max(0, baseAmt - paid);
   document.getElementById('cust-remaining').value = paid > 0 ? rem.toFixed(2) : '';
@@ -425,6 +501,7 @@ function calcRemainingBalance() {
   /*  STATE                                                               */
   /* ------------------------------------------------------------------ */
   let billItems = [];
+  let returnItems = [];
   let selectedSize = '3inch';
   let html5QrCode = null;
   let scannerRunning = false;
@@ -454,7 +531,10 @@ function calcRemainingBalance() {
     const tbody = document.getElementById('items-tbody');
     tbody.innerHTML = '';
 
-    if (!billItems.length) {
+    const hasItems   = billItems.length > 0;
+    const hasReturns = returnItems.length > 0;
+
+    if (!hasItems && !hasReturns) {
       tbody.innerHTML = `<tr id="empty-row">
         <td colspan="9" class="text-center text-muted py-3">
           <i class="fa-solid fa-cart-plus me-2"></i>No items added yet
@@ -463,46 +543,91 @@ function calcRemainingBalance() {
       return;
     }
 
+    // -- Normal bill items --
     billItems.forEach(function (item, idx) {
       const lt = lineTotal(item);
       const tr = document.createElement('tr');
+      tr.className = 'bill-item-row';
       tr.innerHTML = `
         <td>${idx + 1}</td>
         <td>${escHtml(item.name)}</td>
         <td>${escHtml(item.category)}</td>
         <td>${escHtml(item.pieceType)}</td>
         <td>
-          <input type="number" class="form-control form-control-sm row-qty" 
-                 data-idx="${idx}" 
-                 value="${item.qty}" 
-                 min="1" step="1"
-                 style="width: 50px; padding: 2px 4px; font-size: 12px; height: 26px;">
+          <input type="number" class="form-control form-control-sm row-qty"
+                 data-idx="${idx}" data-type="bill"
+                 value="${item.qty}" min="1" step="1"
+                 style="width:50px;padding:2px 4px;font-size:12px;height:26px;">
         </td>
         <td>Rs ${fmt(item.price)}</td>
         <td>
-          <input type="number" class="form-control form-control-sm row-disc-price" 
-                 data-idx="${idx}" 
-                 value="${item.discountedPrice > 0 ? item.discountedPrice : ''}" 
-                 placeholder="0.00" 
-                 min="0" step="0.01"
-                 style="width: 80px; padding: 2px 4px; font-size: 12px; height: 26px;">
+          <input type="number" class="form-control form-control-sm row-disc-price"
+                 data-idx="${idx}" data-type="bill"
+                 value="${item.discountedPrice > 0 ? item.discountedPrice : ''}"
+                 placeholder="0.00" min="0" step="0.01"
+                 style="width:80px;padding:2px 4px;font-size:12px;height:26px;">
         </td>
         <td class="row-line-total">Rs ${fmt(lt)}</td>
         <td>
-          <button class="btn btn-danger btn-sm btn-remove" data-idx="${idx}">
+          <button class="btn btn-danger btn-sm btn-remove" data-idx="${idx}" data-type="bill">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </td>`;
       tbody.appendChild(tr);
     });
 
+    // -- Returned items divider --
+    if (hasReturns) {
+      const divRow = document.createElement('tr');
+      divRow.innerHTML = `<td colspan="9" class="py-1 px-2" style="background:#fff3cd;border-top:2px solid #ffc107;border-bottom:2px solid #ffc107;">
+        <i class="fa-solid fa-rotate-left me-2 text-warning"></i>
+        <strong style="color:#856404;">Returned Items</strong>
+        <small class="text-muted ms-2">(deducted from total)</small>
+      </td>`;
+      tbody.appendChild(divRow);
+
+      returnItems.forEach(function (item, idx) {
+        const lt = item.soldFor > 0 ? item.soldFor * item.qty : 0;
+        const tr = document.createElement('tr');
+        tr.style.background = '#fffdf0';
+        tr.className = 'return-item-row';
+        tr.innerHTML = `
+          <td><span class="badge bg-warning text-dark">R${idx + 1}</span></td>
+          <td>${escHtml(item.name)}</td>
+          <td>${escHtml(item.category)}</td>
+          <td>${escHtml(item.pieceType)}</td>
+          <td>
+            <input type="number" class="form-control form-control-sm row-qty"
+                   data-idx="${idx}" data-type="return"
+                   value="${item.qty}" min="1" step="1"
+                   style="width:50px;padding:2px 4px;font-size:12px;height:26px;">
+          </td>
+          <td><span class="text-muted">—</span></td>
+          <td>
+            <input type="number" class="form-control form-control-sm row-sold-for"
+                   data-idx="${idx}"
+                   value="${item.soldFor > 0 ? item.soldFor : ''}"
+                   placeholder="Sold For" min="0" step="0.01"
+                   style="width:80px;padding:2px 4px;font-size:12px;height:26px;background:#fffdf0;">
+          </td>
+          <td class="row-return-total text-danger">- Rs ${fmt(lt)}</td>
+          <td>
+            <button class="btn btn-danger btn-sm btn-remove" data-idx="${idx}" data-type="return">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
     updateGrandTotal();
   }
 
   function updateGrandTotal() {
-    const total = billItems.reduce((s, i) => s + lineTotal(i), 0);
-    document.getElementById('grand-total-badge').textContent = 'Total: Rs ' + fmt(total);
-    // Keep remaining balance in sync
+    const billTotal   = billItems.reduce((s, i) => s + lineTotal(i), 0);
+    const returnTotal = returnItems.reduce((s, i) => s + (i.soldFor > 0 ? i.soldFor * i.qty : 0), 0);
+    const grand = Math.max(0, billTotal - returnTotal);
+    document.getElementById('grand-total-badge').textContent = 'Total: Rs ' + fmt(grand);
     if (document.getElementById('cust-amount-paid').value) {
       calcRemainingBalance();
     }
@@ -534,6 +659,52 @@ function calcRemainingBalance() {
     document.getElementById('f-piece').value    = '';
     document.getElementById('f-qty').value      = 1;
   }
+
+  
+  // ---- Return Item helpers ----
+  function readReturnForm() {
+    return {
+      name:     document.getElementById('r-name').value.trim(),
+      category: document.getElementById('r-category').value,
+      soldFor:  parseFloat(document.getElementById('r-sold-for').value) || 0,
+      pieceType:document.getElementById('r-piece').value,
+      qty:      parseInt(document.getElementById('r-qty').value) || 1,
+    };
+  }
+  function clearReturnForm() {
+    document.getElementById('r-name').value     = '';
+    document.getElementById('r-category').value = '';
+    document.getElementById('r-sold-for').value = '';
+    document.getElementById('r-piece').value    = '';
+    document.getElementById('r-qty').value      = 1;
+  }
+  function addReturnItem(itemData) {
+    returnItems.push(itemData);
+    renderTable();
+    const w = document.getElementById('items-wrapper');
+    w.scrollTop = w.scrollHeight;
+  }
+
+  document.getElementById('btn-add-return').addEventListener('click', function () {
+    const item = readReturnForm();
+    if (!item.name) {
+      toastr.warning('Please enter a return item name.');
+      document.getElementById('r-name').focus();
+      return;
+    }
+    addReturnItem(item);
+    clearReturnForm();
+    document.getElementById('r-name').focus();
+  });
+
+  document.getElementById('r-qty-dec').addEventListener('click', function () {
+    const inp = document.getElementById('r-qty');
+    inp.value = Math.max(1, (parseInt(inp.value) || 1) - 1);
+  });
+  document.getElementById('r-qty-inc').addEventListener('click', function () {
+    const inp = document.getElementById('r-qty');
+    inp.value = (parseInt(inp.value) || 1) + 1;
+  });
 
   function fillForm(data) {
     if (data.name)           document.getElementById('f-name').value          = data.name;
@@ -572,8 +743,13 @@ function calcRemainingBalance() {
   document.getElementById('items-tbody').addEventListener('click', function (e) {
     const btn = e.target.closest('.btn-remove');
     if (!btn) return;
-    const idx = parseInt(btn.dataset.idx);
-    billItems.splice(idx, 1);
+    const idx  = parseInt(btn.dataset.idx);
+    const type = btn.dataset.type;
+    if (type === 'return') {
+      returnItems.splice(idx, 1);
+    } else {
+      billItems.splice(idx, 1);
+    }
     renderTable();
   });
 
@@ -581,29 +757,35 @@ function calcRemainingBalance() {
   /*  EDIT DISCOUNT PRICE OR QTY IN ROW                                 */
   /* ------------------------------------------------------------------ */
   document.getElementById('items-tbody').addEventListener('input', function (e) {
-    const tr = e.target.closest('tr');
+    const tr  = e.target.closest('tr');
     if (!tr) return;
+    const idx  = parseInt(e.target.dataset.idx);
+    const type = e.target.dataset.type;
 
-    if (e.target.classList.contains('row-disc-price')) {
-      const idx = parseInt(e.target.dataset.idx);
-      const val = parseFloat(e.target.value) || 0;
-      billItems[idx].discountedPrice = val;
-      
+    if (e.target.classList.contains('row-disc-price') && type === 'bill') {
+      billItems[idx].discountedPrice = parseFloat(e.target.value) || 0;
       const ltCell = tr.querySelector('.row-line-total');
-      if (ltCell) {
-        ltCell.textContent = 'Rs ' + fmt(lineTotal(billItems[idx]));
-      }
+      if (ltCell) ltCell.textContent = 'Rs ' + fmt(lineTotal(billItems[idx]));
       updateGrandTotal();
     }
-    else if (e.target.classList.contains('row-qty')) {
-      const idx = parseInt(e.target.dataset.idx);
-      const val = parseInt(e.target.value) || 1;
-      billItems[idx].qty = Math.max(1, val);
-      
+    else if (e.target.classList.contains('row-qty') && type === 'bill') {
+      billItems[idx].qty = Math.max(1, parseInt(e.target.value) || 1);
       const ltCell = tr.querySelector('.row-line-total');
-      if (ltCell) {
-        ltCell.textContent = 'Rs ' + fmt(lineTotal(billItems[idx]));
-      }
+      if (ltCell) ltCell.textContent = 'Rs ' + fmt(lineTotal(billItems[idx]));
+      updateGrandTotal();
+    }
+    else if (e.target.classList.contains('row-qty') && type === 'return') {
+      returnItems[idx].qty = Math.max(1, parseInt(e.target.value) || 1);
+      const ltCell = tr.querySelector('.row-return-total');
+      const val = returnItems[idx].soldFor > 0 ? returnItems[idx].soldFor * returnItems[idx].qty : 0;
+      if (ltCell) ltCell.textContent = '- Rs ' + fmt(val);
+      updateGrandTotal();
+    }
+    else if (e.target.classList.contains('row-sold-for')) {
+      returnItems[idx].soldFor = parseFloat(e.target.value) || 0;
+      const ltCell = tr.querySelector('.row-return-total');
+      const val = returnItems[idx].soldFor * returnItems[idx].qty;
+      if (ltCell) ltCell.textContent = '- Rs ' + fmt(val);
       updateGrandTotal();
     }
   });
@@ -659,6 +841,8 @@ function calcRemainingBalance() {
     const slipTbody = document.getElementById('slip-tbody');
     slipTbody.innerHTML = '';
     let grand = 0;
+
+    // Normal items
     billItems.forEach(function (item, idx) {
       const lt = lineTotal(item);
       grand += lt;
@@ -674,7 +858,34 @@ function calcRemainingBalance() {
         <td class="text-right">${fmt(lt)}</td>`;
       slipTbody.appendChild(tr);
     });
-    document.getElementById('slip-grand').textContent = 'Rs ' + fmt(grand);
+
+    // Returned items (conditional)
+    let returnTotal = 0;
+    if (returnItems.length > 0) {
+      // Divider row
+      const divTr = document.createElement('tr');
+      divTr.innerHTML = `<td colspan="8" style="padding:5px 2px 3px;border-top:1px dashed #666;border-bottom:1px dashed #666;font-weight:bold;font-size:8pt;">&#8617; Returned</td>`;
+      slipTbody.appendChild(divTr);
+
+      returnItems.forEach(function (item, idx) {
+        const lt = item.soldFor > 0 ? item.soldFor * item.qty : 0;
+        returnTotal += lt;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>R${idx + 1}</td>
+          <td>${escHtml(item.name)}</td>
+          <td>${escHtml(item.category)}</td>
+          <td>${escHtml(item.pieceType)}</td>
+          <td class="text-center">${item.qty}</td>
+          <td class="text-right">—</td>
+          <td class="text-right">${item.soldFor > 0 ? fmt(item.soldFor) : '—'}</td>
+          <td class="text-right">- ${fmt(lt)}</td>`;
+        slipTbody.appendChild(tr);
+      });
+    }
+
+    const finalGrand = Math.max(0, grand - returnTotal);
+    document.getElementById('slip-grand').textContent = 'Rs ' + fmt(finalGrand);
 
     // --- Customer Details ---
     const custName  = document.getElementById('cust-name').value.trim();
@@ -706,7 +917,7 @@ function calcRemainingBalance() {
 
     // --- Amount Paid & Outstanding Balance ---
     const amountPaid = parseFloat(document.getElementById('cust-amount-paid').value) || 0;
-    const baseForBalance = custDiscTotal > 0 ? custDiscTotal : grand;
+    const baseForBalance = custDiscTotal > 0 ? custDiscTotal : finalGrand;
     const remaining = baseForBalance - amountPaid;
 
     const paidRow = document.getElementById('slip-paid-row');
@@ -740,6 +951,129 @@ function calcRemainingBalance() {
 
     // Hide again after print dialog closes
     setTimeout(function () { slip.style.display = 'none'; }, 500);
+  });
+
+
+  /* ------------------------------------------------------------------ */
+  /*  EXPORT HELPERS (Image + PDF)                                        */
+  /* ------------------------------------------------------------------ */
+  function buildSlipForExport(callback) {
+    if (!billItems.length) { toastr.warning('No items in the bill.'); return; }
+    const paymentMethod = document.getElementById('cust-payment-method').value;
+    if (!paymentMethod) { document.getElementById('payment-method-err').classList.remove('d-none'); toastr.error('Please select a Payment Method.'); return; }
+    document.getElementById('payment-method-err').classList.add('d-none');
+    // Populate slip
+    document.getElementById('slip-datetime').textContent = now();
+    // Reuse the same population logic by triggering it inline
+    const slipTbody = document.getElementById('slip-tbody');
+    slipTbody.innerHTML = '';
+    let grand = 0;
+    billItems.forEach(function (item, idx) {
+      const lt = lineTotal(item);
+      grand += lt;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${idx + 1}</td><td>${escHtml(item.name)}</td><td>${escHtml(item.category)}</td><td>${escHtml(item.pieceType)}</td><td class="text-center">${item.qty}</td><td class="text-right">${fmt(item.price)}</td><td class="text-right">${item.discountedPrice > 0 ? fmt(item.discountedPrice) : ''}</td><td class="text-right">${fmt(lt)}</td>`;
+      slipTbody.appendChild(tr);
+    });
+    let returnTotal = 0;
+    if (returnItems.length > 0) {
+      const divTr = document.createElement('tr');
+      divTr.innerHTML = `<td colspan="8" style="padding:5px 2px 3px;border-top:1px dashed #666;border-bottom:1px dashed #666;font-weight:bold;font-size:8pt;">&#8617; Returned</td>`;
+      slipTbody.appendChild(divTr);
+      returnItems.forEach(function (item, idx) {
+        const lt = item.soldFor > 0 ? item.soldFor * item.qty : 0;
+        returnTotal += lt;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>R${idx + 1}</td><td>${escHtml(item.name)}</td><td>${escHtml(item.category)}</td><td>${escHtml(item.pieceType)}</td><td class="text-center">${item.qty}</td><td class="text-right">&mdash;</td><td class="text-right">${item.soldFor > 0 ? fmt(item.soldFor) : '&mdash;'}</td><td class="text-right">- ${fmt(lt)}</td>`;
+        slipTbody.appendChild(tr);
+      });
+    }
+    const finalGrand = Math.max(0, grand - returnTotal);
+    document.getElementById('slip-grand').textContent = 'Rs ' + fmt(finalGrand);
+    const custName  = document.getElementById('cust-name').value.trim();
+    const custPhone = document.getElementById('cust-phone').value.trim();
+    const custCity  = document.getElementById('cust-city').value.trim();
+    const custDiscTotal = parseFloat(document.getElementById('cust-discount-total').value) || 0;
+    const custBlock = document.getElementById('slip-cust-block');
+    if (custName || custPhone || custCity) {
+      custBlock.style.display = 'block';
+      document.getElementById('slip-cust-name').textContent  = custName  ? 'Customer: ' + custName  : '';
+      document.getElementById('slip-cust-phone').textContent = custPhone ? 'Phone: '    + custPhone : '';
+      document.getElementById('slip-cust-city').textContent  = custCity  ? 'City: '     + custCity  : '';
+    } else { custBlock.style.display = 'none'; }
+    const discRow = document.getElementById('slip-disc-row');
+    if (custDiscTotal > 0) { discRow.style.display = ''; document.getElementById('slip-disc-total').textContent = 'Rs ' + fmt(custDiscTotal); }
+    else { discRow.style.display = 'none'; }
+    document.getElementById('slip-payment-method').textContent = paymentMethod;
+    const amountPaid = parseFloat(document.getElementById('cust-amount-paid').value) || 0;
+    const baseForBalance = custDiscTotal > 0 ? custDiscTotal : finalGrand;
+    const remaining = baseForBalance - amountPaid;
+    const paidRow = document.getElementById('slip-paid-row');
+    const remRow  = document.getElementById('slip-remaining-row');
+    const isFullUdhaar = (paymentMethod === 'Remaining (Udhaar)' && amountPaid === 0);
+    if (amountPaid > 0 || isFullUdhaar) { paidRow.style.display = ''; document.getElementById('slip-amount-paid').textContent = 'Rs ' + fmt(amountPaid); }
+    else { paidRow.style.display = 'none'; }
+    if ((amountPaid > 0 && remaining > 0) || isFullUdhaar) { remRow.style.display = ''; document.getElementById('slip-remaining').textContent = 'Rs ' + fmt(isFullUdhaar ? baseForBalance : remaining); }
+    else { remRow.style.display = 'none'; }
+    callback();
+  }
+
+  function captureSlip(onCanvas) {
+    const slip = document.getElementById('print-slip');
+    slip.style.display = 'block';
+    const slipW = selectedSize === '4inch' ? '104mm' : '80mm';
+    slip.style.width      = slipW;
+    slip.style.maxWidth   = slipW;
+    slip.style.padding    = '8px';
+    slip.style.fontFamily = 'Helvetica Neue, Helvetica, Arial, sans-serif';
+    slip.style.color      = '#000';
+    slip.style.background = '#fff';
+    // Force layout
+    slip.offsetHeight;
+    html2canvas(slip, {
+      scale: 3,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      width:        slip.scrollWidth,
+      height:       slip.scrollHeight,
+      windowWidth:  slip.scrollWidth,
+      windowHeight: slip.scrollHeight
+    }).then(function(canvas) {
+      slip.style.display   = 'none';
+      slip.style.width     = '';
+      slip.style.maxWidth  = '';
+      slip.style.padding   = '';
+      onCanvas(canvas);
+    }).catch(function(err) {
+      slip.style.display = 'none';
+      toastr.error('Export failed: ' + err);
+    });
+  }
+
+  document.getElementById('btn-download-img').addEventListener('click', function () {
+    buildSlipForExport(function() {
+      captureSlip(function(canvas) {
+        const link = document.createElement('a');
+        link.download = 'bill_' + Date.now() + '.png';
+        link.href = canvas.toDataURL('image/png', 1.0);
+        link.click();
+      });
+    });
+  });
+
+  document.getElementById('btn-download-pdf').addEventListener('click', function () {
+    buildSlipForExport(function() {
+      captureSlip(function(canvas) {
+        const { jsPDF } = window.jspdf;
+        const mmPerPx = 25.4 / (96 * 3);
+        const docW = canvas.width  * mmPerPx;
+        const docH = canvas.height * mmPerPx;
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [docW, docH] });
+        pdf.addImage(canvas.toDataURL('image/png', 1.0), 'PNG', 0, 0, docW, docH);
+        pdf.save('bill_' + Date.now() + '.pdf');
+      });
+    });
   });
 
   /* ------------------------------------------------------------------ */
@@ -843,6 +1177,54 @@ function calcRemainingBalance() {
 
   document.getElementById('btn-open-scan').addEventListener('click', openScanner);
   document.getElementById('btn-stop-scan').addEventListener('click', stopScanner);
+
+  // ---- Return Scanner ----
+  let returnScannerRunning = false;
+  let returnHtml5QrCode    = null;
+  let lastReturnScannedCode = '';
+  let lastReturnScanTime    = 0;
+
+  function openReturnScanner() {
+    if (returnScannerRunning) return;
+    document.getElementById('return-camera-overlay').style.display = 'flex';
+    const rStatus = document.getElementById('return-scan-status');
+    rStatus.textContent = 'Starting camera…'; rStatus.style.color = '#fff';
+    returnHtml5QrCode = new Html5Qrcode('return-qr-reader');
+    returnHtml5QrCode.start(
+      { facingMode: 'environment' },
+      { fps: 15, qrbox: { width: 260, height: 260 }, aspectRatio: 1.0 },
+      function(decodedText) {
+        const now_ms = Date.now();
+        if (decodedText === lastReturnScannedCode && now_ms - lastReturnScanTime < 1500) return;
+        lastReturnScannedCode = decodedText; lastReturnScanTime = now_ms;
+        let data = {}, barcodeNum = '';
+        if (decodedText.startsWith('BCODE:')) {
+          const pipeIdx = decodedText.indexOf('|');
+          if (pipeIdx > 6) { barcodeNum = decodedText.substring(6, pipeIdx); try { data = JSON.parse(decodedText.substring(pipeIdx + 1)); } catch(e) { data = {}; } }
+          else { barcodeNum = decodedText.substring(6); }
+        } else { try { data = JSON.parse(decodedText); } catch (e) { data = { n: decodedText }; } }
+        addReturnItem({ name: data.name||data.n||barcodeNum||'', category: data.category||data.c||'', soldFor: parseFloat(data.discountedPrice||data.d||data.price||data.p)||0, pieceType: data.pieceType||data.pt||'', qty: 1 });
+        showFlash();
+        rStatus.innerHTML = '&#8617; Return added: ' + (data.name||data.n||barcodeNum||'item');
+        rStatus.style.color = '#ffc107';
+        setTimeout(function() { rStatus.textContent = 'Point camera at barcode…'; rStatus.style.color = '#fff'; }, 1800);
+      },
+      function() {}
+    ).then(function() { returnScannerRunning = true; rStatus.textContent = 'Point camera at barcode…'; })
+     .catch(function(err) { rStatus.textContent = 'Camera error: ' + err; rStatus.style.color = '#ff6b6b'; });
+  }
+
+  function stopReturnScanner() {
+    if (!returnScannerRunning || !returnHtml5QrCode) return;
+    returnHtml5QrCode.stop().then(function() {
+      returnHtml5QrCode = null; returnScannerRunning = false;
+      document.getElementById('return-camera-overlay').style.display = 'none';
+    }).catch(function(err) { console.error(err); document.getElementById('return-camera-overlay').style.display = 'none'; });
+  }
+
+  document.getElementById('btn-open-return-scan').addEventListener('click', openReturnScanner);
+  document.getElementById('btn-stop-return-scan').addEventListener('click', stopReturnScanner);
+
 
   // Keep remaining balance in sync when discount total changes
   document.getElementById('cust-discount-total').addEventListener('input', calcRemainingBalance);
