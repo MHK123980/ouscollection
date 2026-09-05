@@ -510,12 +510,12 @@ function calcRemainingBalance() {
     const val = cell.textContent.replace(/[^0-9.]/g,'');
     returnTotal += parseFloat(val) || 0;
   });
-  const netGrand = Math.max(0, grand - returnTotal);
+  const netGrand = grand - returnTotal;
   const discTotal = parseFloat(document.getElementById('cust-discount-total').value) || 0;
-  const baseAmt   = discTotal > 0 ? discTotal : netGrand;
+  const baseAmt   = discTotal !== 0 ? discTotal : netGrand;
   const paid      = parseFloat(document.getElementById('cust-amount-paid').value) || 0;
-  const rem       = Math.max(0, baseAmt - paid);
-  document.getElementById('cust-remaining').value = paid > 0 ? rem.toFixed(2) : '';
+  const rem       = baseAmt - paid;
+  document.getElementById('cust-remaining').value = (paid > 0 || netGrand < 0) ? rem.toFixed(2) : '';
 }
 
 (function () {
@@ -664,11 +664,18 @@ function calcRemainingBalance() {
       const sf = i.soldFor > 0 ? i.soldFor : defaultVal;
       return s + (sf * i.qty);
     }, 0);
-    const grand = Math.max(0, billTotal - returnTotal);
-    document.getElementById('grand-total-badge').textContent = 'Total: Rs ' + fmt(grand);
-    if (document.getElementById('cust-amount-paid').value) {
-      calcRemainingBalance();
+    const grand = billTotal - returnTotal;
+    const badge = document.getElementById('grand-total-badge');
+    if (grand < 0) {
+      badge.textContent = 'Total: - Rs ' + fmt(Math.abs(grand));
+      badge.classList.remove('bg-success');
+      badge.classList.add('bg-danger');
+    } else {
+      badge.textContent = 'Total: Rs ' + fmt(grand);
+      badge.classList.remove('bg-danger');
+      badge.classList.add('bg-success');
     }
+    calcRemainingBalance();
   }
 
   function escHtml(str) {
@@ -988,8 +995,8 @@ function calcRemainingBalance() {
       });
     }
 
-    const finalGrand = Math.max(0, grand - returnTotal);
-    document.getElementById('slip-grand').textContent = 'Rs ' + fmt(finalGrand);
+    const finalGrand = grand - returnTotal;
+    document.getElementById('slip-grand').textContent = finalGrand < 0 ? ('- Rs ' + fmt(Math.abs(finalGrand))) : ('Rs ' + fmt(finalGrand));
 
     // --- Customer Details ---
     const custName  = document.getElementById('cust-name').value.trim();
@@ -1021,7 +1028,7 @@ function calcRemainingBalance() {
 
     // --- Amount Paid & Outstanding Balance ---
     const amountPaid = parseFloat(document.getElementById('cust-amount-paid').value) || 0;
-    const baseForBalance = custDiscTotal > 0 ? custDiscTotal : finalGrand;
+    const baseForBalance = custDiscTotal !== 0 ? custDiscTotal : finalGrand;
     const remaining = baseForBalance - amountPaid;
 
     const paidRow = document.getElementById('slip-paid-row');
@@ -1036,9 +1043,10 @@ function calcRemainingBalance() {
       paidRow.style.display = 'none';
     }
 
-    if ((amountPaid > 0 && remaining > 0) || isFullUdhaar) {
+    if ((amountPaid > 0 && remaining !== 0) || isFullUdhaar || remaining < 0) {
       remRow.style.display = '';
-      document.getElementById('slip-remaining').textContent = 'Rs ' + fmt(isFullUdhaar ? baseForBalance : remaining);
+      const remVal = isFullUdhaar ? baseForBalance : remaining;
+      document.getElementById('slip-remaining').textContent = remVal < 0 ? ('- Rs ' + fmt(Math.abs(remVal))) : ('Rs ' + fmt(remVal));
     } else {
       remRow.style.display = 'none';
     }
@@ -1102,8 +1110,8 @@ function calcRemainingBalance() {
         slipTbody.appendChild(tr);
       });
     }
-    const finalGrand = Math.max(0, grand - returnTotal);
-    document.getElementById('slip-grand').textContent = 'Rs ' + fmt(finalGrand);
+    const finalGrand = grand - returnTotal;
+    document.getElementById('slip-grand').textContent = finalGrand < 0 ? ('- Rs ' + fmt(Math.abs(finalGrand))) : ('Rs ' + fmt(finalGrand));
     const custName  = document.getElementById('cust-name').value.trim();
     const custPhone = document.getElementById('cust-phone').value.trim();
     const custCity  = document.getElementById('cust-city').value.trim();
@@ -1120,15 +1128,18 @@ function calcRemainingBalance() {
     else { discRow.style.display = 'none'; }
     document.getElementById('slip-payment-method').textContent = paymentMethod;
     const amountPaid = parseFloat(document.getElementById('cust-amount-paid').value) || 0;
-    const baseForBalance = custDiscTotal > 0 ? custDiscTotal : finalGrand;
+    const baseForBalance = custDiscTotal !== 0 ? custDiscTotal : finalGrand;
     const remaining = baseForBalance - amountPaid;
     const paidRow = document.getElementById('slip-paid-row');
     const remRow  = document.getElementById('slip-remaining-row');
     const isFullUdhaar = (paymentMethod === 'Remaining (Udhaar)' && amountPaid === 0);
     if (amountPaid > 0 || isFullUdhaar) { paidRow.style.display = ''; document.getElementById('slip-amount-paid').textContent = 'Rs ' + fmt(amountPaid); }
     else { paidRow.style.display = 'none'; }
-    if ((amountPaid > 0 && remaining > 0) || isFullUdhaar) { remRow.style.display = ''; document.getElementById('slip-remaining').textContent = 'Rs ' + fmt(isFullUdhaar ? baseForBalance : remaining); }
-    else { remRow.style.display = 'none'; }
+    if ((amountPaid > 0 && remaining !== 0) || isFullUdhaar || remaining < 0) {
+      remRow.style.display = '';
+      const remVal = isFullUdhaar ? baseForBalance : remaining;
+      document.getElementById('slip-remaining').textContent = remVal < 0 ? ('- Rs ' + fmt(Math.abs(remVal))) : ('Rs ' + fmt(remVal));
+    } else { remRow.style.display = 'none'; }
     callback();
   }
 
