@@ -69,6 +69,7 @@ router.post("/domain-timing", domainTimingControl.addTiming)
 
 router.put("/activateCoupon/:id", couponControl.activate)
 router.put("/deactivateCoupon/:id", couponControl.deactivate)
+router.delete("/deleteCoupon/:id", couponControl.deleteCoupon)
 router.get("/editProductModal/:id", adminControl.getEditProductModal)
 router.put("/editProduct/:id", multer.productImage, productControl.editProduct)
 router.put("/markOutOfStock/:id", productControl.markOutOfStock)

@@ -16,12 +16,12 @@
             <input type="text" value="" name="couponCode" required class="form-control">
           </div>
           <div>
-            <label class="form-label">Discount*</label>
-            <input type="number" name="discount" min="5" value="" required class="form-control">
+            <label class="form-label">Discount % (Percentage)* <small class="text-muted">(e.g. 10 = 10% off)</small></label>
+            <input type="number" name="discount" min="1" max="100" value="" required class="form-control" placeholder="e.g. 10">
           </div>
           <div>
-            <label class="form-label">Coupon Limit*</label>
-            <input type="number" name="maxLimit" value="" required class="form-control">
+            <label class="form-label">Max Discount Amount (Rs)* <small class="text-muted">(e.g. 500 = max Rs 500 discount)</small></label>
+            <input type="number" name="maxLimit" value="" required class="form-control" placeholder="e.g. 500">
           </div>
           <div>
             <label class="form-label">Min Purchase*</label>

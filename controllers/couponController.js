@@ -1,6 +1,7 @@
 const Coupon = require("../models/coupon");
 const User = require("../models/users");
 const Cart = require("../models/cart");
+const Product = require("../models/product");
 
 module.exports = {
   addCoupon: async (req, res) => {
@@ -47,7 +48,7 @@ module.exports = {
         return res.status(404).json({ message: "Coupon is inactive or expired" });
       }
 
-      // Calculate cart subtotal (effective price)
+      // Calculate cart subtotal using FRESH product prices from DB (not stale cart cache)
       let subTotal = 0;
       if (req.user) {
         const userId = req.user.id;
@@ -57,13 +58,39 @@ module.exports = {
           return res.status(403).json({ message: "Coupon already redeemed" });
         }
         const findCart = await Cart.findOne({ userId });
-        if (findCart && findCart.products) {
-          subTotal = findCart.products.reduce((acc, curr) => acc + curr.quantity * (curr.offerPrice || curr.price), 0);
+        if (findCart && findCart.products && findCart.products.length > 0) {
+          // Fetch fresh product data to avoid stale cached prices
+          const productIds = findCart.products.map(p => p.productId);
+          const freshProducts = await Product.find({ _id: { $in: productIds } });
+          subTotal = findCart.products.reduce((acc, cartItem) => {
+            const prod = freshProducts.find(p => p._id.toString() === cartItem.productId.toString());
+            if (prod) {
+              const multiplier = prod.isWholesaleSet ? (prod.piecesPerSet || 1) : 1;
+              const effectivePrice = (prod.offerPrice && prod.offerPrice > 0)
+                ? prod.offerPrice * multiplier
+                : prod.price * multiplier;
+              return acc + cartItem.quantity * effectivePrice;
+            }
+            // fallback to stored cart price if product not found
+            return acc + cartItem.quantity * (cartItem.offerPrice || cartItem.price);
+          }, 0);
         }
       } else {
         const sessionCart = req.session.cart || { products: [] };
-        if (sessionCart.products) {
-          subTotal = sessionCart.products.reduce((acc, curr) => acc + curr.quantity * (curr.offerPrice || curr.price), 0);
+        if (sessionCart.products && sessionCart.products.length > 0) {
+          const productIds = sessionCart.products.map(p => p.productId);
+          const freshProducts = await Product.find({ _id: { $in: productIds } });
+          subTotal = sessionCart.products.reduce((acc, cartItem) => {
+            const prod = freshProducts.find(p => p._id.toString() === cartItem.productId.toString());
+            if (prod) {
+              const multiplier = prod.isWholesaleSet ? (prod.piecesPerSet || 1) : 1;
+              const effectivePrice = (prod.offerPrice && prod.offerPrice > 0)
+                ? prod.offerPrice * multiplier
+                : prod.price * multiplier;
+              return acc + cartItem.quantity * effectivePrice;
+            }
+            return acc + cartItem.quantity * (cartItem.offerPrice || cartItem.price);
+          }, 0);
         }
       }
 
@@ -124,6 +151,24 @@ module.exports = {
       res.status(201).json({ message: "coupon deactivated" });
     } catch (err) {
       res.status(500).json({ err });
+    }
+  },
+
+  deleteCoupon: async (req, res) => {
+    const couponId = req.params.id;
+    try {
+      const coupon = await Coupon.findById(couponId);
+      if (!coupon) {
+        return res.status(404).json({ message: "Coupon not found" });
+      }
+      if (coupon.isActive) {
+        return res.status(400).json({ message: "Cannot delete an active coupon. Deactivate it first." });
+      }
+      await Coupon.findByIdAndDelete(couponId);
+      return res.status(200).json({ message: "Coupon deleted successfully" });
+    } catch (err) {
+      console.log(err);
+      return res.status(500).json({ message: "Error deleting coupon" });
     }
   },
 };
