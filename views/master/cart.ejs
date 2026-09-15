@@ -38,7 +38,7 @@
                 </thead>
                 <tbody>
                   <% findCart.products.forEach(item=>{ %>
-                    <tr id="cartItem-<%= item.productId.id %>">
+                    <tr id="cartItem-<%= item.productId.id %>" data-price="<%= item.price %>" data-offer-price="<%= item.offerPrice || '' %>">
                       <td class="shoping__cart__item">
                         <img
                           src="<%= item.productId.productImagePath[0].startsWith('http') ? item.productId.productImagePath[0] : '/files/' + item.productId.productImagePath[0] %>"
@@ -84,9 +84,8 @@
                               </div>
                             </td>
                             <td class="shoping__cart__total" id="item-<%=item.productId.id %>">
-                              <% if(item.offerPrice) {%> Rs <%= (item.offerPrice * item.quantity).toFixed(2) %>
-                                  <% }else {%> Rs <%= (item.price * item.quantity).toFixed(2) %>
-                                      <% } %>
+                              <% const effPrice = (item.offerPrice && item.offerPrice > 0) ? item.offerPrice : item.price; %>
+                              Rs <%= (effPrice * item.quantity).toFixed(2) %>
                                         <% // show per-item delivery charge %>
                                         <% let itemDelivery = 0; %>
                                         <% if (item.productId.isFreeDelivery) { %>
@@ -126,8 +125,6 @@
           <div class="col-lg-12">
             <div class="shoping__cart__btns">
               <a href="/" class="primary-btn cart-btn">CONTINUE SHOPPING</a>
-              <!-- <a href="#" class="primary-btn cart-btn cart-btn-right"><span class="icon_loading"></span>
-            Upadate Cart</a> -->
             </div>
           </div>
           <div class="col-lg-6">
@@ -135,8 +132,8 @@
               <div class="shoping__discount">
                 <h5>Discount Codes</h5>
                 <form id="couponForm">
-                  <input type="text" placeholder="Enter your coupon code" id="couponCode" />
-                  <button type="submit" class="site-btn">APPLY COUPON</button>
+                  <input type="text" placeholder="Enter your coupon code" id="couponCode" value="<%= couponCode || '' %>" />
+                  <button type="submit" id="applyCouponBtn" class="site-btn" style="<%= couponCode ? 'background-color: #28a745; border-color: #28a745; color: #ffffff;' : '' %>">APPLY COUPON</button>
                 </form>
               </div>
             </div>
@@ -144,52 +141,30 @@
           <div class="col-lg-6">
             <div class="shoping__checkout" id="checkoutBox">
               <h5>Cart Total</h5>
+              <% const cDiscount = Number(couponDiscount || 0); %>
+              <% const delCharges = Number(findCart.totalDeliveryCharges || 0); %>
+              <% const cartSubTotal = Number(findCart.subTotal || 0); %>
+              <% const cartGrandTotal = Math.max(0, cartSubTotal - cDiscount + delCharges); %>
               <ul id="total-list">
                 <li>
                   Subtotal
-                  <% if(findCart.subTotal !== findCart.total) { %>
-                    <span>
-                      <del class="text-muted mr-2">Rs <%= findCart.subTotal.toFixed(2) %></del>
-                      Rs <%= findCart.total.toFixed(2) %>
-                    </span>
-                  <% } else { %>
-                    <span>Rs <%= findCart.subTotal.toFixed(2) %></span>
-                  <% } %>
+                  <span>Rs <%= cartSubTotal.toFixed(2) %></span>
                 </li>
-                <% let discount=findCart.subTotal - findCart.total %>
+                <li>
+                  Cart Discount <span class="text-muted">Rs <%= cDiscount.toFixed(2) %></span>
+                </li>
+                <% if(couponCode){ %>
                   <li>
-                    Cart Discount <span class="text-muted">Rs <%=discount.toFixed(2)%></span>
+                    Coupon <span class="text-muted"><i class="fa-solid fa-tags"></i> <%= couponCode %> <i class="fa-solid fa-trash-can fa-xs trash" style="cursor:pointer; color:#dc3545;" onclick="removeCoupon()"></i></span>
                   </li>
-                  <% if(couponCode){%>
-                    <li>
-                      Coupon <span class="text-muted"><i class="fa-solid fa-tags"></i>
-                        <%=couponCode%> <i class="fa-solid fa-trash-can fa-xs trash" onclick="removeCoupon()"></i>
-                      </span>
-                    </li>
-                    <li>
-                      Coupon Discount <span class="text-muted">
-                        <%=couponDiscount.toFixed(2)%>
-                      </span>
-                    </li>
-                    <li>
-                      Delivery Charges <span class="text-muted">Rs <%= (findCart.totalDeliveryCharges || 0).toFixed(2)
-                          %></span>
-                    </li>
-                    <li>
-                      Total
-                      <span>Rs <%= (findCart.total + (findCart.totalDeliveryCharges || 0) - couponDiscount).toFixed(2)
-                          %></span>
-                    </li>
-                    <% }else{%>
-                      <li>
-                        Delivery Charges <span class="text-muted">Rs <%= (findCart.totalDeliveryCharges || 0).toFixed(2)
-                            %></span>
-                      </li>
-                      <li>
-                        Total
-                        <span>Rs <%= (findCart.total + (findCart.totalDeliveryCharges || 0)).toFixed(2) %></span>
-                      </li>
-                      <% } %>
+                <% } %>
+                <li>
+                  Delivery Charges <span class="text-muted">Rs <%= delCharges.toFixed(2) %></span>
+                </li>
+                <li>
+                  Total
+                  <span>Rs <%= cartGrandTotal.toFixed(2) %></span>
+                </li>
               </ul>
               <a href="/user/checkout" class="primary-btn">PROCEED TO CHECKOUT</a>
             </div>
@@ -217,73 +192,77 @@
             if (window.location.pathname === '/user/cart' || window.location.pathname === '/user/checkout') {
               updateCartTotals();
             }
+
+            const couponInput = document.getElementById("couponCode");
+            if (couponInput) {
+              couponInput.addEventListener("input", function() {
+                const btn = document.getElementById("applyCouponBtn") || document.querySelector("#couponForm button");
+                if (btn) {
+                  btn.style.backgroundColor = "";
+                  btn.style.borderColor = "";
+                  btn.style.color = "";
+                }
+              });
+            }
           });
 
           document.forms["couponForm"].addEventListener("submit", async (event) => {
             event.preventDefault();
-            const couponCode = document.getElementById("couponCode").value;
-            let response;
+            const couponInput = document.getElementById("couponCode");
+            const couponCode = (couponInput?.value || "").trim();
+            const btn = document.getElementById("applyCouponBtn") || document.querySelector("#couponForm button");
+
+            if (!couponCode) return;
+
             try {
-              response = await axios.post(`/user/redeem/${couponCode}`)
-              if (response.status == 200) {
-                $("#checkoutBox").load(location.href + " #checkoutBox>*", "");
-                celebrate()
-                await Swal.fire({
-                  icon: "success",
-                  title: `Congrats you have saved ${response.data.couponDiscount}`,
-                  showConfirmButton: false,
-                  timer: 1500,
-                  width: "25em",
+              const response = await axios.post(`/user/redeem/${encodeURIComponent(couponCode)}`);
+              if (response.status === 200) {
+                if (btn) {
+                  btn.style.backgroundColor = "#28a745";
+                  btn.style.borderColor = "#28a745";
+                  btn.style.color = "#ffffff";
+                }
+                $("#checkoutBox").load(location.href + " #checkoutBox>*", "", function() {
+                  updateCartTotals();
                 });
+                celebrate();
+                toastr.options = { "positionClass": "toast-bottom-right" };
+                toastr.success(`Coupon applied successfully! You saved Rs ${response.data.couponDiscount}`);
               }
-
             } catch (err) {
-
-              if (err.response.status == 400) {
-                $("#checkoutBox").load(location.href + " #checkoutBox>*", "");
-                Swal.fire({
-                  icon: "warning",
-                  title: `minimum purchase is ${err.response.data.minPurchase}`,
-                  showConfirmButton: false,
-                  timer: 1500,
-                  width: "25em",
-                });
-
+              if (btn) {
+                btn.style.backgroundColor = "#dc3545";
+                btn.style.borderColor = "#dc3545";
+                btn.style.color = "#ffffff";
               }
-              else if (err.response.status == 403) {
-                $("#checkoutBox").load(location.href + " #checkoutBox>*", "");
-                Swal.fire({
-                  icon: "warning",
-                  title: "Coupon already redeemed",
-                  showConfirmButton: false,
-                  timer: 1500,
-                  width: "25em",
-                });
-
-
-              } else if (err.response.status == 404) {
-                $("#checkoutBox").load(location.href + " #checkoutBox>*", "");
-                Swal.fire({
-                  icon: "warning",
-                  title: "Invalid Coupon or Expired",
-                  showConfirmButton: false,
-                  timer: 1500,
-                  width: "25em",
-                });
-              }
+              const errorMsg = err.response?.data?.message || "Invalid coupon code";
+              $("#checkoutBox").load(location.href + " #checkoutBox>*", "", function() {
+                updateCartTotals();
+              });
+              toastr.options = { "positionClass": "toast-bottom-right" };
+              toastr.error(errorMsg);
             }
           });
 
           async function removeCoupon() {
-            console.log("hi")
             try {
-              const response = await axios.delete("/user/removeCoupon")
-              $("#checkoutBox").load(location.href + " #checkoutBox>*", "");
+              await axios.delete("/user/removeCoupon");
+              const btn = document.getElementById("applyCouponBtn") || document.querySelector("#couponForm button");
+              if (btn) {
+                btn.style.backgroundColor = "";
+                btn.style.borderColor = "";
+                btn.style.color = "";
+              }
+              const couponInput = document.getElementById("couponCode");
+              if (couponInput) couponInput.value = "";
+              $("#checkoutBox").load(location.href + " #checkoutBox>*", "", function() {
+                updateCartTotals();
+              });
+              toastr.options = { "positionClass": "toast-bottom-right" };
+              toastr.info("Coupon removed.");
             } catch (err) {
-              $("#checkoutBox").load(location.href + " #checkoutBox>*", "");
-              console.error(err)
+              console.error(err);
             }
-
           }
 
           //celebration

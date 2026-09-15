@@ -149,23 +149,15 @@
                 </ul>
               </div>
 
-              <% if(findCart.subTotal !== findCart.total) { %>
-                <div class="checkout__order__subtotal">Subtotal <span><del>Rs <%= findCart.subTotal.toFixed(2) %></del></span></div>
-              <% } else { %>
-                <div class="checkout__order__subtotal">Subtotal <span>Rs <%= findCart.subTotal.toFixed(2) %></span></div>
+              <div class="checkout__order__subtotal">Subtotal <span>Rs <%= findCart.subTotal.toFixed(2) %></span></div>
+              <div class="checkout__order__total">Cart Discount <span class="text-muted">Rs <%= Number(couponDiscount || 0).toFixed(2) %></span></div>
+              <% if(couponCode){ %>
+                <div class="checkout__order__total">Coupon <span class="text-muted"><i class="fa-solid fa-tags"></i> <%= couponCode %></span></div>
               <% } %>
-              <% if(couponCode){%>
-              <div class="checkout__order__total">Cart Discount <span class="text-muted">Rs <%= (findCart.subTotal - findCart.total ).toFixed(2)%></span></div>
-              <div class="checkout__order__total">Coupon <span class="text-muted"><i class="fa-solid fa-tags"></i> <%=couponCode %></span></div>
-              <div class="checkout__order__total">Coupon Discount <span class="text-muted">Rs <%=couponDiscount %> </span></div>
               <div class="checkout__order__total">Delivery Charges <span class="text-muted">+ Rs <%= (findCart.totalDeliveryCharges || 0).toFixed(2) %></span></div>
-              <div class="checkout__order__total">Total <span>Rs <%= (findCart.total + (findCart.totalDeliveryCharges || 0) - couponDiscount).toFixed(2) %></span></div>
-              <%}else{ %>
-              <div class="checkout__order__total">Cart Discount <span class="text-muted">Rs <%= (findCart.subTotal - findCart.total).toFixed(2) %> </span></div>
-              <div class="checkout__order__total">Delivery Charges <span class="text-muted">+ Rs <%= (findCart.totalDeliveryCharges || 0).toFixed(2) %></span></div>
-              <% let finalTotal = findCart.total + (findCart.totalDeliveryCharges || 0) %>
-              <div class="checkout__order__total">Total <span>Rs <%= finalTotal.toFixed(2) %></span></div>
-              <% } %>
+              <% const cDiscountVal = Number(couponDiscount || 0); %>
+              <% const checkoutGrandTotal = Math.max(0, findCart.subTotal - cDiscountVal + (findCart.totalDeliveryCharges || 0)); %>
+              <div class="checkout__order__total">Total <span>Rs <%= checkoutGrandTotal.toFixed(2) %></span></div>
 
               <div class="form-check">
                 <label for="cod">
@@ -182,7 +174,7 @@
                 </label>
               </div>
 
-              <button type="submit" class="site-btn" id="rzp-button1" style="cursor: pointer; pointer-events: auto;">PLACE ORDER <span id="btn-total-price"><% if(couponCode){%> (Rs <%= (findCart.total + (findCart.totalDeliveryCharges || 0) - couponDiscount).toFixed(2) %>)<% }else{%> (Rs <%= (findCart.total + (findCart.totalDeliveryCharges || 0)).toFixed(2) %>)<% }%></span></button>
+              <button type="submit" class="site-btn" id="rzp-button1" style="cursor: pointer; pointer-events: auto;">PLACE ORDER <span id="btn-total-price">(Rs <%= checkoutGrandTotal.toFixed(2) %>)</span></button>
             </div>
 
           </div>
@@ -202,9 +194,10 @@
  
 // generating orderId for razorpay 
   const couponDiscount = Number('<%=couponDiscount%>' || 0);
-  const cartTotal = Number('<%= (findCart.total + (findCart.totalDeliveryCharges || 0)) %>');
-  let amount = couponDiscount ? (cartTotal - couponDiscount) * 100 : cartTotal * 100;
-  amount = parseInt(amount);
+  const cartSubTotal = Number('<%= findCart.subTotal %>');
+  const deliveryCharges = Number('<%= (findCart.totalDeliveryCharges || 0) %>');
+  const baseGrandTotal = Math.max(0, cartSubTotal - couponDiscount + deliveryCharges);
+  let amount = parseInt(baseGrandTotal * 100);
   
   const codRadio = document.getElementById('cod');
   const onlineRadio = document.getElementById('online-payment');

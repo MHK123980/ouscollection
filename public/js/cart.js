@@ -202,7 +202,6 @@ function updateCartTotals() {
     console.log('updateCartTotals called');
 
     let totalDeliveryCharges = 0;
-    let totalCartValue = 0;
     let subTotal = 0;
 
     // Calculate totals for each cart item
@@ -215,35 +214,15 @@ function updateCartTotals() {
         if (!quantityInput) return;
 
         const quantity = parseInt(quantityInput.value) || 0;
-        console.log(`Processing item ${productId}, quantity: ${quantity}`);
 
-        // Get price and offer price from the item data
-        const priceElement = item.querySelector('.shoping__cart__price');
-        let price = 0;
-        let offerPrice = null;
+        // Read price and offer price from data attributes on the tr
+        const dataPrice = parseFloat(item.getAttribute('data-price')) || 0;
+        const dataOfferStr = item.getAttribute('data-offer-price');
+        const dataOfferPrice = (dataOfferStr && !isNaN(parseFloat(dataOfferStr)) && parseFloat(dataOfferStr) > 0) ? parseFloat(dataOfferStr) : null;
 
-        if (priceElement) {
-            const priceText = priceElement.textContent.trim();
-            console.log(`Price text: "${priceText}"`);
-
-            // Extract price from text (handles both regular and offer price cases)
-            const priceMatch = priceText.match(/Rs\s+([\d.]+)/);
-            if (priceMatch) {
-                price = parseFloat(priceMatch[1]);
-                console.log(`Extracted price: ${price}`);
-            }
-
-            // Check if there's an offer price (crossed out price)
-            const delElement = priceElement.querySelector('del');
-            if (delElement) {
-                const delMatch = delElement.textContent.match(/Rs\s+([\d.]+)/);
-                if (delMatch) {
-                    price = parseFloat(delMatch[1]); // Original price
-                    offerPrice = parseFloat(priceMatch[1]); // Offer price
-                    console.log(`Offer price detected - original: ${price}, offer: ${offerPrice}`);
-                }
-            }
-        }
+        const effectivePrice = dataOfferPrice !== null ? dataOfferPrice : dataPrice;
+        const itemTotal = effectivePrice * quantity;
+        subTotal += itemTotal;
 
         // Get delivery charge data
         const deliveryCharges = parseFloat(quantityInput.getAttribute('data-delivery-charges')) || 0;
@@ -277,14 +256,6 @@ function updateCartTotals() {
 
         totalDeliveryCharges += itemDelivery;
 
-        // Calculate item total
-        const itemPrice = offerPrice || price;
-        const itemTotal = itemPrice * quantity;
-        totalCartValue += itemTotal;
-        subTotal += price * quantity;
-
-        console.log(`Item calculations - price: ${itemPrice}, total: ${itemTotal}, subtotal contribution: ${price * quantity}`);
-
         // Update item total display
         const itemTotalElement = document.getElementById(`item-${productId}`);
         if (itemTotalElement) {
@@ -292,72 +263,44 @@ function updateCartTotals() {
         }
     });
 
-    console.log(`Final calculations - subtotal: ${subTotal}, cart value: ${totalCartValue}, delivery: ${totalDeliveryCharges}`);
+    console.log(`Final calculations - subtotal: ${subTotal}, delivery: ${totalDeliveryCharges}`);
 
     // Update checkout box totals
     const totalList = document.getElementById('total-list');
     if (totalList) {
-        console.log('Found total-list element');
         const listItems = totalList.querySelectorAll('li');
-        console.log('Found list items:', listItems.length);
+        let couponDiscount = 0;
+
+        // Find Coupon / Cart discount if present
+        const discountLi = Array.from(listItems).find(li => li.textContent.includes('Cart Discount') || li.textContent.includes('Coupon Discount'));
+        if (discountLi) {
+            const span = discountLi.querySelector('span');
+            if (span) {
+                const match = span.textContent.match(/Rs\s+([\d.]+)/);
+                if (match) couponDiscount = parseFloat(match[1]) || 0;
+            }
+        }
 
         listItems.forEach(li => {
             const text = li.textContent.trim();
-            console.log('Processing li:', text);
 
-            // Update subtotal (crossed out value)
             if (text.startsWith('Subtotal')) {
-                console.log('Found subtotal li');
                 const span = li.querySelector('span');
                 if (span) {
-                    const discount = subTotal - totalCartValue;
-                    if (discount > 0) {
-                        span.innerHTML = `<del class="text-muted mr-2">Rs ${subTotal.toFixed(2)}</del> Rs ${totalCartValue.toFixed(2)}`;
-                    } else {
-                        span.innerHTML = `Rs ${subTotal.toFixed(2)}`;
-                    }
-                    console.log('Updated subtotal');
+                    span.innerHTML = `Rs ${subTotal.toFixed(2)}`;
                 }
             }
-
-            // Update cart discount
-            else if (text.includes('Cart Discount')) {
-                console.log('Found discount li');
-                const span = li.querySelector('span');
-                if (span) {
-                    const discount = subTotal - totalCartValue;
-                    span.textContent = `Rs ${discount.toFixed(2)}`;
-                    console.log('Updated discount');
-                }
-            }
-
-            // Update delivery charges
             else if (text.includes('Delivery Charges')) {
-                console.log('Found delivery li');
                 const span = li.querySelector('span');
                 if (span) {
                     span.textContent = `Rs ${totalDeliveryCharges.toFixed(2)}`;
-                    console.log('Updated delivery charges');
                 }
             }
-
-            // Update total
             else if (text.startsWith('Total') && !text.includes('Subtotal')) {
-                console.log('Found total li');
                 const span = li.querySelector('span');
                 if (span) {
-                    // Check if there's a coupon discount
-                    let couponDiscount = 0;
-                    const couponDiscountLi = Array.from(listItems).find(li => li.textContent.includes('Coupon Discount'));
-                    if (couponDiscountLi) {
-                        const discountMatch = couponDiscountLi.textContent.match(/Rs\s+([\d.]+)/);
-                        if (discountMatch) {
-                            couponDiscount = parseFloat(discountMatch[1]);
-                        }
-                    }
-                    const finalTotal = totalCartValue + totalDeliveryCharges - couponDiscount;
+                    const finalTotal = Math.max(0, subTotal - couponDiscount + totalDeliveryCharges);
                     span.textContent = `Rs ${finalTotal.toFixed(2)}`;
-                    console.log('Updated final total');
                 }
             }
         });

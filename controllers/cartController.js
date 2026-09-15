@@ -48,14 +48,15 @@ module.exports = {
                         cart.products.push({ productId, quantity, name, price, offerPrice });
                         itemTotal = offerPrice ? offerPrice * quantity : price * quantity
                     }
-                    cart.subTotal = cart.products.reduce((acc, curr) => acc + (curr.quantity * curr.price), 0)
-                    cart.total = cart.products.reduce((acc, curr) => acc + curr.quantity * (curr.offerPrice || curr.price), 0)
+                    cart.subTotal = cart.products.reduce((acc, curr) => acc + curr.quantity * (curr.offerPrice || curr.price), 0);
+                    cart.total = cart.subTotal;
                     // NOTE: Delivery charges are recalculated when viewing cart, not on every addToCart
                     // This significantly speeds up the addToCart response
                     await cart.save();
                 } else {
-                    const subTotal = (quantity * price)
-                    const total = offerPrice ? (quantity * offerPrice) : subTotal
+                    const effPrice = offerPrice || price;
+                    const subTotal = quantity * effPrice;
+                    const total = subTotal;
                     // NOTE: deliveryCharges computed on cart page view only (speeds up addToCart)
                     const totalDelivery = calculateDeliveryCharge(findProduct, quantity);
                     cart = await Cart.create({
@@ -79,8 +80,8 @@ module.exports = {
                     cart.products.push({ productId, quantity: Number(quantity), name, price: Number(price), offerPrice: offerPrice ? Number(offerPrice) : null })
                     itemTotal = offerPrice ? Number(offerPrice) * Number(quantity) : Number(price) * Number(quantity)
                 }
-                cart.subTotal = cart.products.reduce((acc, curr) => acc + (curr.quantity * curr.price), 0)
-                cart.total = cart.products.reduce((acc, curr) => acc + curr.quantity * (curr.offerPrice || curr.price), 0)
+                cart.subTotal = cart.products.reduce((acc, curr) => acc + curr.quantity * (curr.offerPrice || curr.price), 0);
+                cart.total = cart.subTotal;
                 // NOTE: Session cart delivery charges computed on cart page view only
             }
             //removing coupon from session if exist
@@ -112,12 +113,12 @@ module.exports = {
                     })
                     findCart.totalDeliveryCharges = totalDelivery
                     // Recalculate totals from cart items to ensure offerPrice is reflected
-                    findCart.subTotal = findCart.products.reduce((acc, curr) => acc + (curr.quantity * curr.price), 0)
-                    findCart.total = findCart.products.reduce((acc, curr) => acc + curr.quantity * (curr.offerPrice || curr.price), 0)
+                    findCart.subTotal = findCart.products.reduce((acc, curr) => acc + curr.quantity * (curr.offerPrice || curr.price), 0);
+                    findCart.total = findCart.subTotal;
                     await findCart.save()
                 }
                 const couponCode = req.session.coupon?.code
-                const couponDiscount = Number(req.session.coupon?.discount)
+                const couponDiscount = Number(req.session.coupon?.discount || 0)
                 res.render("master/cart", { allCategories: allCategories, findCart: findCart, errorMessage: errorMessage, couponCode: couponCode, couponDiscount: couponDiscount })
             } else {
                 const sessionCart = req.session.cart || { products: [], subTotal: 0, total: 0 }
@@ -131,16 +132,21 @@ module.exports = {
                     price: item.price,
                     offerPrice: item.offerPrice
                 }))
-                // Calculate total delivery charges
+                // Calculate total delivery charges & subTotal
                 let totalDelivery = 0
+                let computedSubTotal = 0
                 populatedProducts.forEach(item => {
                     if (item.productId) {
                         totalDelivery += calculateDeliveryCharge(item.productId, item.quantity);
                     }
+                    const effPrice = item.offerPrice || item.price;
+                    computedSubTotal += item.quantity * effPrice;
                 })
+                sessionCart.subTotal = computedSubTotal;
+                sessionCart.total = computedSubTotal;
                 const findCart = { products: populatedProducts, subTotal: sessionCart.subTotal, total: sessionCart.total, totalDeliveryCharges: totalDelivery }
                 const couponCode = req.session.coupon?.code
-                const couponDiscount = Number(req.session.coupon?.discount)
+                const couponDiscount = Number(req.session.coupon?.discount || 0)
                 res.render("master/cart", { allCategories: allCategories, findCart: findCart, errorMessage: errorMessage, couponCode: couponCode, couponDiscount: couponDiscount })
             }
         } catch (err) {
@@ -179,8 +185,8 @@ module.exports = {
                 const cart = await Cart.findOne({ userId })
                 const itemIndex = cart.products.findIndex(product => product.productId == productId);
                 cart.products.splice(itemIndex, 1)
-                cart.subTotal = cart.products.reduce((acc, curr) => acc + curr.quantity * curr.price, 0)
-                cart.total = cart.products.reduce((acc, curr) => acc + curr.quantity * (curr.offerPrice || curr.price), 0)
+                cart.subTotal = cart.products.reduce((acc, curr) => acc + curr.quantity * (curr.offerPrice || curr.price), 0);
+                cart.total = cart.subTotal;
                 // recompute delivery for persisted cart after deletion
                 const prodIds = cart.products.map(p => p.productId)
                 const prods = await Product.find({ _id: { $in: prodIds } })
@@ -199,8 +205,8 @@ module.exports = {
                 req.session.cart = req.session.cart || { products: [], subTotal: 0, total: 0 }
                 const idx = req.session.cart.products.findIndex(p => p.productId == productId)
                 if (idx > -1) req.session.cart.products.splice(idx, 1)
-                req.session.cart.subTotal = req.session.cart.products.reduce((acc, curr) => acc + curr.quantity * curr.price, 0)
-                req.session.cart.total = req.session.cart.products.reduce((acc, curr) => acc + curr.quantity * (curr.offerPrice || curr.price), 0)
+                req.session.cart.subTotal = req.session.cart.products.reduce((acc, curr) => acc + curr.quantity * (curr.offerPrice || curr.price), 0);
+                req.session.cart.total = req.session.cart.subTotal;
                 // recompute session cart delivery
                 const prodIds = req.session.cart.products.map(p => p.productId)
                 const prods = await Product.find({ _id: { $in: prodIds } })

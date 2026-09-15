@@ -132,7 +132,8 @@ module.exports = {
             const couponCode = req.session.coupon?.code
             const couponId = req.session.coupon?.id
 
-            let finalTotal = (total + totalDeliveryCharges) - couponDiscount;
+            let finalTotal = (subTotal + totalDeliveryCharges) - couponDiscount;
+            if (finalTotal < 0) finalTotal = 0;
             if (req.body.paymentType == "cod") {
                 finalTotal = finalTotal * 1.04;
             }
