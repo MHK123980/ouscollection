@@ -1,4 +1,4 @@
-<!-- =========================================================
+﻿<!-- =========================================================
      CREATE BILL  –  POS Page
      Requires: Bootstrap 5, FontAwesome 6, jQuery (from layout)
      ========================================================= -->
@@ -458,9 +458,27 @@
     </thead>
     <tbody id="slip-tbody"></tbody>
     <tfoot>
+      <!-- Bill subtotal: always shown -->
+      <tr id="slip-bill-subtotal-row">
+        <td colspan="8" style="text-align:right; font-weight:bold; padding:7px 3px 4px; border-top:1px dashed #222;">
+          Bill Total:&nbsp;&nbsp;<span id="slip-bill-subtotal" style="font-size:11pt; font-weight:900;"></span>
+        </td>
+      </tr>
+      <!-- Return subtotal: shown only when returns exist -->
+      <tr id="slip-return-subtotal-row" style="display:none;">
+        <td colspan="8" style="text-align:right; font-weight:bold; color:#333; padding:3px 3px 2px;">
+          Return Amount:&nbsp;&nbsp;<span id="slip-return-subtotal" style="font-size:10.5pt;"></span>
+        </td>
+      </tr>
+      <tr id="slip-return-deduct-row" style="display:none;">
+        <td colspan="8" style="text-align:right; font-weight:bold; color:#c00; padding:2px 3px 5px;">
+          (&minus;) Return Deduction:&nbsp;&nbsp;<span id="slip-return-deduct" style="font-size:10.5pt;"></span>
+        </td>
+      </tr>
+      <!-- Grand Total / Total Payable -->
       <tr>
-        <td colspan="8" style="text-align:right; font-weight:bold; padding:8px 3px 6px;">
-          Grand Total:&nbsp;&nbsp;<span class="slip-grand" id="slip-grand" style="font-size:13pt; font-weight:900;"></span>
+        <td colspan="8" style="text-align:right; font-weight:bold; padding:7px 3px 6px; border-top:2px solid #000;">
+          <span id="slip-grand-label" style="font-weight:900; font-size:10pt;">Grand Total:</span>&nbsp;&nbsp;<span class="slip-grand" id="slip-grand" style="font-size:13pt; font-weight:900;"></span>
         </td>
       </tr>
       <!-- Discounted total row: shown only if entered -->
@@ -492,7 +510,12 @@
   <div class="slip-footer">
     <div class="slip-footer-thanks">Thanks For Choosing OUS Collection</div>
     <div style="font-weight: bold; margin-bottom: 6px; font-size: 9pt;">Please Shop Again!</div>
-    <div>Powered By MHT Devs</div>
+    <div style="font-weight:900; font-size:9pt; margin-bottom:4px; letter-spacing:0.2px;">
+      Shop More From Our Website:<br>
+      <span style="text-decoration:underline; font-size:9.5pt; font-weight:900;">www.ouscollection.store</span>
+    </div>
+    <div style="font-size:8pt; color:#444; margin-bottom:1px;">Powered By MHT Devs</div>
+    <div style="font-size:8pt; color:#444;">+923313884546</div>
   </div>
 </div>
 
@@ -956,7 +979,7 @@ function calcRemainingBalance() {
       const lt = lineTotal(item);
       grand += lt;
       const tr = document.createElement('tr');
-      tr.innerHTML = `
+      tr.innerHTML = ` 
         <td>${idx + 1}</td>
         <td>${escHtml(item.name)}</td>
         <td>${escHtml(item.category)}</td>
@@ -968,12 +991,14 @@ function calcRemainingBalance() {
       slipTbody.appendChild(tr);
     });
 
+    // Bill subtotal (always shown)
+    document.getElementById('slip-bill-subtotal').textContent = 'Rs ' + fmt(grand);
+
     // Returned items (conditional)
     let returnTotal = 0;
     if (returnItems.length > 0) {
-      // Clean, professional section divider
       const divTr = document.createElement('tr');
-      divTr.innerHTML = `<td colspan="8" style="padding:7px 2px 4px;border-top:1px dashed #000;border-bottom:1px dashed #000;font-weight:900;font-size:9.5pt;letter-spacing:0.5px;">&#8617; RETURNED ITEMS</td>`;
+      divTr.innerHTML = `<td colspan="8" style="padding:6px 2px 4px;border-top:1px dashed #aaa;border-bottom:1px dashed #aaa;font-weight:900;font-size:9pt;letter-spacing:0.4px;text-align:left;">&#8617; RETURNED ITEMS</td>`;
       slipTbody.appendChild(divTr);
 
       returnItems.forEach(function (item, idx) {
@@ -982,17 +1007,28 @@ function calcRemainingBalance() {
         const lt = soldVal * item.qty;
         returnTotal += lt;
         const tr = document.createElement('tr');
-        tr.innerHTML = `
+        tr.innerHTML = `  
           <td>R${idx + 1}</td>
           <td>${escHtml(item.name)}</td>
           <td>${escHtml(item.category)}</td>
-          <td>${escHtml(item.pieceType || '—')}</td>
+          <td>${escHtml(item.pieceType || '-')}</td>
           <td class="text-center">${item.qty}</td>
-          <td class="text-right">${item.price > 0 ? fmt(item.price) : '—'}</td>
+          <td class="text-right">${item.price > 0 ? fmt(item.price) : '-'}</td>
           <td class="text-right">${item.discountedPrice > 0 ? fmt(item.discountedPrice) : ''}</td>
           <td class="text-right">- ${fmt(lt)}</td>`;
         slipTbody.appendChild(tr);
       });
+
+      // Show return summary rows
+      document.getElementById('slip-return-subtotal-row').style.display = '';
+      document.getElementById('slip-return-deduct-row').style.display   = '';
+      document.getElementById('slip-return-subtotal').textContent = 'Rs ' + fmt(returnTotal);
+      document.getElementById('slip-return-deduct').textContent   = 'Rs ' + fmt(returnTotal);
+      document.getElementById('slip-grand-label').textContent     = 'Total Payable:';
+    } else {
+      document.getElementById('slip-return-subtotal-row').style.display = 'none';
+      document.getElementById('slip-return-deduct-row').style.display   = 'none';
+      document.getElementById('slip-grand-label').textContent           = 'Grand Total:';
     }
 
     const finalGrand = grand - returnTotal;
@@ -1084,13 +1120,14 @@ function calcRemainingBalance() {
       const lt = lineTotal(item);
       grand += lt;
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${idx + 1}</td><td>${escHtml(item.name)}</td><td>${escHtml(item.category)}</td><td>${escHtml(item.pieceType)}</td><td class="text-center">${item.qty}</td><td class="text-right">${fmt(item.price)}</td><td class="text-right">${item.discountedPrice > 0 ? fmt(item.discountedPrice) : ''}</td><td class="text-right">${fmt(lt)}</td>`;
+      tr.innerHTML = ` <td> ${idx + 1}</td><td>${escHtml(item.name)}</td><td>${escHtml(item.category)}</td><td>${escHtml(item.pieceType)}</td><td class="text-center">${item.qty}</td><td class="text-right">${fmt(item.price)}</td><td class="text-right">${item.discountedPrice > 0 ? fmt(item.discountedPrice) : ''}</td><td class="text-right">${fmt(lt)}</td>`;
       slipTbody.appendChild(tr);
     });
+    document.getElementById('slip-bill-subtotal').textContent = 'Rs ' + fmt(grand);
     let returnTotal = 0;
     if (returnItems.length > 0) {
       const divTr = document.createElement('tr');
-      divTr.innerHTML = `<td colspan="8" style="padding:7px 2px 4px;border-top:1px dashed #000;border-bottom:1px dashed #000;font-weight:900;font-size:9.5pt;letter-spacing:0.5px;">&#8617; RETURNED ITEMS</td>`;
+      divTr.innerHTML = ` <td colspan="8" style="padding:6px 2px 4px;border-top:1px dashed #aaa;border-bottom:1px dashed #aaa;font-weight:900;font-size:9pt;letter-spacing:0.4px;text-align:left;">&#8617; RETURNED ITEMS</td>`;
       slipTbody.appendChild(divTr);
       returnItems.forEach(function (item, idx) {
         const defaultVal = item.discountedPrice > 0 ? item.discountedPrice : item.price;
@@ -1098,17 +1135,18 @@ function calcRemainingBalance() {
         const lt = soldVal * item.qty;
         returnTotal += lt;
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>R${idx + 1}</td>
-          <td>${escHtml(item.name)}</td>
-          <td>${escHtml(item.category)}</td>
-          <td>${escHtml(item.pieceType || '—')}</td>
-          <td class="text-center">${item.qty}</td>
-          <td class="text-right">${item.price > 0 ? fmt(item.price) : '—'}</td>
-          <td class="text-right">${item.discountedPrice > 0 ? fmt(item.discountedPrice) : ''}</td>
-          <td class="text-right">- ${fmt(lt)}</td>`;
+        tr.innerHTML = ` <td>R${idx + 1}</td><td>${escHtml(item.name)}</td><td>${escHtml(item.category)}</td><td>${escHtml(item.pieceType || '-')}</td><td class="text-center">${item.qty}</td><td class="text-right">${item.price > 0 ? fmt(item.price) : '-'}</td><td class="text-right">${item.discountedPrice > 0 ? fmt(item.discountedPrice) : ''}</td><td class="text-right">- ${fmt(lt)}</td>`;
         slipTbody.appendChild(tr);
       });
+      document.getElementById('slip-return-subtotal-row').style.display = '';
+      document.getElementById('slip-return-deduct-row').style.display   = '';
+      document.getElementById('slip-return-subtotal').textContent = 'Rs ' + fmt(returnTotal);
+      document.getElementById('slip-return-deduct').textContent   = 'Rs ' + fmt(returnTotal);
+      document.getElementById('slip-grand-label').textContent     = 'Total Payable:';
+    } else {
+      document.getElementById('slip-return-subtotal-row').style.display = 'none';
+      document.getElementById('slip-return-deduct-row').style.display   = 'none';
+      document.getElementById('slip-grand-label').textContent           = 'Grand Total:';
     }
     const finalGrand = grand - returnTotal;
     document.getElementById('slip-grand').textContent = finalGrand < 0 ? ('- Rs ' + fmt(Math.abs(finalGrand))) : ('Rs ' + fmt(finalGrand));
