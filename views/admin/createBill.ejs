@@ -138,7 +138,7 @@
   <!-- Page Header -->
   <div class="d-flex align-items-center justify-content-between mb-3">
     <h4 class="mb-0 fw-bold"><i class="fa-solid fa-file-invoice-dollar me-2 text-primary"></i>Create Bill</h4>
-    <span class="badge bg-success fs-6" id="grand-total-badge">Total: Rs 0.00</span>
+    <span class="badge bg-success fs-6" id="grand-total-badge">Total: Rs 0</span>
   </div>
 
   <!-- ===== OPTIONAL CUSTOMER DETAILS ===== -->
@@ -185,7 +185,7 @@
           <label class="form-label small mb-1">Outstanding Balance <span class="badge bg-secondary" style="font-size:9px;">Auto</span></label>
           <div class="input-group input-group-sm">
             <span class="input-group-text">Rs</span>
-            <input type="number" class="form-control" id="cust-remaining" placeholder="0.00" readonly style="background:#f8f9fa;">
+            <input type="number" class="form-control" id="cust-remaining" placeholder="0" readonly style="background:#f8f9fa;">
           </div>
           <small class="text-muted" style="font-size:10px;">Grand Total &minus; Amount Paid</small>
         </div>
@@ -533,7 +533,8 @@ function calcRemainingBalance() {
   const baseAmt   = discTotal !== 0 ? discTotal : netGrand;
   const paid      = parseFloat(document.getElementById('cust-amount-paid').value) || 0;
   const rem       = baseAmt - paid;
-  document.getElementById('cust-remaining').value = (paid > 0 || netGrand < 0) ? rem.toFixed(2) : '';
+  const remVal = (rem % 1 === 0) ? rem.toString() : parseFloat(rem.toFixed(2)).toString();
+  document.getElementById('cust-remaining').value = (paid > 0 || netGrand < 0) ? remVal : '';
 }
 
 (function () {
@@ -553,7 +554,7 @@ function calcRemainingBalance() {
   /* ------------------------------------------------------------------ */
   /*  HELPERS                                                             */
   /* ------------------------------------------------------------------ */
-  const fmt = v => parseFloat(v || 0).toFixed(2);
+  const fmt = v => { const n = parseFloat(v || 0); return (n % 1 === 0) ? n.toString() : parseFloat(n.toFixed(2)).toString(); };
 
   function lineTotal(item) {
     const unitPrice = item.discountedPrice > 0 ? item.discountedPrice : item.price;
@@ -606,7 +607,7 @@ function calcRemainingBalance() {
           <input type="number" class="form-control form-control-sm row-disc-price"
                  data-idx="${idx}" data-type="bill"
                  value="${item.discountedPrice > 0 ? item.discountedPrice : ''}"
-                 placeholder="0.00" min="0" step="0.01"
+                 placeholder="0" min="0" step="0.01"
                  style="width:75px;padding:2px 4px;font-size:12px;height:26px;">
         </td>
         <td><span class="text-muted">—</span></td>
@@ -652,7 +653,7 @@ function calcRemainingBalance() {
             <input type="number" class="form-control form-control-sm row-return-disc"
                    data-idx="${idx}"
                    value="${item.discountedPrice > 0 ? item.discountedPrice : ''}"
-                   placeholder="0.00" min="0" step="0.01"
+                   placeholder="0" min="0" step="0.01"
                    style="width:75px;padding:2px 4px;font-size:12px;height:26px;">
           </td>
           <td>
