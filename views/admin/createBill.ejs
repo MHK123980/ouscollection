@@ -85,38 +85,39 @@
   /* ---- Print size btn-group ---- */
   #print-size-group .btn { min-width: 90px; }
 
-  /* ---- PRINT SLIP BASE STYLES (Clean, Spacious, Professional Thermal Receipt) ---- */
+  /* ---- PRINT SLIP BASE STYLES (Clean, Compact, Professional Thermal Receipt) ---- */
   #print-slip {
     background: #fff;
     color: #000;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    font-size: 8.5pt;
-    line-height: 1.35;
+    font-size: 8pt;
+    line-height: 1.25;
     box-sizing: border-box;
-    padding: 14px 10px;
+    padding: 8px 6px;
     margin: 0 auto;
   }
   #print-slip.print-3inch, body.print-3inch #print-slip { width: 80mm !important; max-width: 80mm !important; }
   #print-slip.print-4inch, body.print-4inch #print-slip { width: 104mm !important; max-width: 104mm !important; }
 
-  #print-slip .slip-header { text-align: center; margin-bottom: 12px; border-bottom: 1px dashed #222; padding-bottom: 10px; }
-  #print-slip .slip-logo { max-width: 90px; height: auto; display: block; margin: 0 auto 6px auto; }
-  #print-slip .slip-shop { font-size: 14pt; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 3px; }
-  #print-slip .slip-subtitle { font-size: 8.5pt; font-weight: 700; margin-bottom: 3px; }
-  #print-slip .slip-datetime { font-size: 8.5pt; color: #222; margin-top: 5px; }
+  #print-slip .slip-header { text-align: center; margin-bottom: 5px; border-bottom: 1px dashed #333; padding-bottom: 5px; }
+  #print-slip .slip-logo { max-width: 70px; height: auto; display: block; margin: 0 auto 3px auto; }
+  #print-slip .slip-shop { font-size: 13pt; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 2px; }
+  #print-slip .slip-subtitle { font-size: 8pt; font-weight: 700; margin-bottom: 2px; }
+  #print-slip .slip-phone { font-size: 8.5pt; font-weight: bold; margin: 2px 0 1px 0; }
+  #print-slip .slip-datetime { font-size: 7.5pt; color: #333; margin-top: 2px; }
 
-  #print-slip table { width: 100% !important; border-collapse: collapse; margin-top: 6px; margin-bottom: 12px; }
-  #print-slip th { border-bottom: 1px solid #000; border-top: 1px solid #000; padding: 6px 2px; font-size: 8pt; text-align: left; font-weight: 700; }
-  #print-slip td { padding: 5px 2px; font-size: 8.5pt; border-bottom: 1px dotted #ddd; }
+  #print-slip table { width: 100% !important; border-collapse: collapse; margin-top: 4px; margin-bottom: 4px; }
+  #print-slip th { border-bottom: 1px solid #000; border-top: 1px solid #000; padding: 4px 2px; font-size: 7.5pt; text-align: left; font-weight: 700; }
+  #print-slip td { padding: 3px 2px; font-size: 8pt; border-bottom: 1px dotted #e5e5e5; }
   
   #print-slip .text-right { text-align: right !important; }
   #print-slip .text-center { text-align: center !important; }
   
-  #print-slip tfoot tr td { border-top: 1px dashed #222; border-bottom: none; font-size: 9pt; padding: 7px 3px; }
-  #print-slip .slip-grand { font-weight: 900; font-size: 13pt; white-space: nowrap; }
+  #print-slip tfoot tr td { border-bottom: none; font-size: 8.5pt; padding: 2px 2px; }
+  #print-slip .slip-grand { font-weight: 900; font-size: 11.5pt; white-space: nowrap; }
 
-  #print-slip .slip-footer { text-align: center; margin-top: 16px; border-top: 1px dashed #222; padding-top: 10px; font-size: 8.5pt; }
-  #print-slip .slip-footer-thanks { font-weight: 800; font-size: 10.5pt; margin-bottom: 4px; }
+  #print-slip .slip-footer { text-align: center; margin-top: 8px; border-top: 1px dashed #333; padding-top: 6px; font-size: 7.5pt; line-height: 1.3; }
+  #print-slip .slip-footer-thanks { font-weight: 800; font-size: 9.5pt; margin-bottom: 2px; }
 
   /* ---- PRINT MEDIA ONLY ---- */
   @media print {
@@ -429,15 +430,15 @@
 <!-- ===== PRINT SLIP (hidden until print) ===== -->
 <div id="print-slip" style="display:none;">
   <div class="slip-header">
-    <img src="/img/ous-logo.png" class="slip-logo" alt="Logo" style="max-width: 90px; margin-bottom: 5px;">
-    <div style="font-size: 9pt; font-weight: bold; margin-bottom: 4px;">0324 3503152</div>
+    <img src="/img/ous-logo.png" class="slip-logo" alt="Logo">
     <div class="slip-subtitle">LADIES &amp; GENTS FASHION</div>
     <div class="slip-subtitle">WHOLESALE &amp; RETAIL</div>
+    <div class="slip-phone">0324 3503152</div>
     <div class="slip-datetime" id="slip-datetime"></div>
   </div>
 
   <!-- Customer info (shown only if filled) -->
-  <div id="slip-cust-block" style="display:none; border-bottom:1px dashed #000; padding-bottom:6px; margin-bottom:6px; font-size:8pt;">
+  <div id="slip-cust-block" style="display:none; border-bottom:1px dashed #333; padding-bottom:4px; margin-bottom:4px; font-size:7.5pt; line-height:1.25;">
     <div id="slip-cust-name"></div>
     <div id="slip-cust-phone"></div>
     <div id="slip-cust-city"></div>
@@ -460,42 +461,42 @@
     <tfoot>
       <!-- Summary rows: shown ONLY when returns exist -->
       <tr id="slip-summary-bill-row" style="display:none;">
-        <td colspan="8" style="text-align:right; font-weight:bold; padding:5px 3px 2px; border-top:1px dashed #222;">
-          Total Bill Amount:&nbsp;&nbsp;<span id="slip-summary-bill" style="font-size:10pt; font-weight:900;"></span>
+        <td colspan="8" style="text-align:right; font-weight:bold; padding:3px 2px 1px; border-top:1px dashed #333;">
+          Total Bill Amount:&nbsp;&nbsp;<span id="slip-summary-bill" style="font-size:9.5pt; font-weight:900;"></span>
         </td>
       </tr>
       <tr id="slip-summary-deduct-row" style="display:none;">
-        <td colspan="8" style="text-align:right; font-weight:bold; color:#c00; padding:2px 3px 5px;">
-          (&minus;) Return Deduction:&nbsp;&nbsp;<span id="slip-summary-deduct" style="font-size:10pt;"></span>
+        <td colspan="8" style="text-align:right; font-weight:bold; color:#c00; padding:1px 2px 3px;">
+          (&minus;) Return Deduction:&nbsp;&nbsp;<span id="slip-summary-deduct" style="font-size:9.5pt;"></span>
         </td>
       </tr>
       <!-- Grand Total / Total Amount Payable -->
       <tr id="slip-grand-row">
-        <td colspan="8" id="slip-grand-td" style="text-align:right; font-weight:bold; padding:6px 3px; border-top:1px dashed #222;">
-          <span id="slip-grand-label" style="font-weight:900; font-size:10pt;">Grand Total:</span>&nbsp;&nbsp;<span class="slip-grand" id="slip-grand" style="font-size:13pt; font-weight:900;"></span>
+        <td colspan="8" id="slip-grand-td" style="text-align:right; font-weight:bold; padding:4px 2px; border-top:1px dashed #333;">
+          <span id="slip-grand-label" style="font-weight:900; font-size:9.5pt;">Grand Total:</span>&nbsp;&nbsp;<span class="slip-grand" id="slip-grand" style="font-size:11.5pt; font-weight:900;"></span>
         </td>
       </tr>
       <!-- Discounted total row: shown only if entered -->
       <tr id="slip-disc-row" style="display:none;">
-        <td colspan="8" style="text-align:right; font-weight:900; font-size:11pt; color:#c00; padding:4px 3px;">
-          Amount to Pay:&nbsp;&nbsp;<span id="slip-disc-total" style="font-size:12pt; font-weight:900;"></span>
+        <td colspan="8" style="text-align:right; font-weight:900; font-size:9.5pt; color:#c00; padding:2px 2px;">
+          Amount to Pay:&nbsp;&nbsp;<span id="slip-disc-total" style="font-size:10.5pt; font-weight:900;"></span>
         </td>
       </tr>
       <!-- Payment Method row -->
       <tr id="slip-payment-row">
-        <td colspan="8" style="text-align:center; font-weight:bold; font-size:9pt; padding:6px 3px 4px; border-top:1px dashed #222;">
+        <td colspan="8" style="text-align:center; font-weight:bold; font-size:8pt; padding:4px 2px 1px; border-top:1px dashed #333;">
           Payment Method: <span id="slip-payment-method"></span>
         </td>
       </tr>
       <!-- Amount Paid row: shown only if entered -->
       <tr id="slip-paid-row" style="display:none;">
-        <td colspan="8" style="text-align:center; font-weight:bold; font-size:9pt; color:#007700; padding:3px;">
+        <td colspan="8" style="text-align:center; font-weight:bold; font-size:8pt; color:#007700; padding:1px 2px;">
           Amount Received: <span id="slip-amount-paid"></span>
         </td>
       </tr>
       <!-- Remaining Balance row: shown only if > 0 -->
       <tr id="slip-remaining-row" style="display:none;">
-        <td colspan="8" style="text-align:center; font-weight:900; font-size:9.5pt; color:#c00; padding:3px;">
+        <td colspan="8" style="text-align:center; font-weight:900; font-size:8.5pt; color:#c00; padding:1px 2px 2px;">
           Outstanding Balance: <span id="slip-remaining"></span>
         </td>
       </tr>
@@ -503,13 +504,13 @@
   </table>
   <div class="slip-footer">
     <div class="slip-footer-thanks">Thanks For Choosing OUS Collection</div>
-    <div style="font-weight: bold; margin-bottom: 6px; font-size: 9pt;">Please Shop Again!</div>
-    <div style="font-weight:900; font-size:9pt; margin-bottom:4px; letter-spacing:0.2px;">
+    <div style="font-weight: bold; margin-bottom: 3px; font-size: 8pt;">Please Shop Again!</div>
+    <div style="font-weight: bold; font-size: 7.5pt; margin-bottom: 2px;">
       Shop More From Our Website:<br>
-      <span style="text-decoration:underline; font-size:9.5pt; font-weight:900;">www.ouscollection.store</span>
+      <span style="text-decoration: underline; font-weight: 900; font-size: 8.5pt;">www.ouscollection.store</span>
     </div>
-    <div style="font-size:8pt; color:#444; margin-bottom:1px;">Powered By MHT Devs</div>
-    <div style="font-size:8pt; color:#444;">+923313884546</div>
+    <div style="font-size: 7.5pt; color: #444;">Powered By MHT Devs</div>
+    <div style="font-size: 7.5pt; color: #444;">+923313884546</div>
   </div>
 </div>
 
@@ -989,12 +990,12 @@ function calcRemainingBalance() {
     if (returnItems.length > 0) {
       // Bill Total row directly under normal items
       const billTotalTr = document.createElement('tr');
-      billTotalTr.innerHTML = `<td colspan="8" style="text-align:right; font-weight:bold; padding:6px 3px 5px; border-top:1px dashed #222;">Bill Total:&nbsp;&nbsp;<span style="font-size:10.5pt; font-weight:900;">Rs ${fmt(grand)}</span></td>`;
+      billTotalTr.innerHTML = `<td colspan="8" style="text-align:right; font-weight:bold; padding:4px 2px; border-top:1px dashed #333;">Bill Total:&nbsp;&nbsp;<span style="font-size:9.5pt; font-weight:900;">Rs ${fmt(grand)}</span></td>`;
       slipTbody.appendChild(billTotalTr);
 
       // Section divider for returned items
       const divTr = document.createElement('tr');
-      divTr.innerHTML = `<td colspan="8" style="padding:6px 2px 4px;border-top:1px dashed #aaa;border-bottom:1px dashed #aaa;font-weight:900;font-size:9pt;letter-spacing:0.4px;text-align:left;">&#8617; RETURNED ITEMS</td>`;
+      divTr.innerHTML = `<td colspan="8" style="padding:3px 2px;border-top:1px solid #333;border-bottom:1px solid #333;font-weight:900;font-size:8pt;letter-spacing:0.3px;text-align:left;background:#f5f5f5;">&#8617; RETURNED ITEMS</td>`;
       slipTbody.appendChild(divTr);
 
       returnItems.forEach(function (item, idx) {
@@ -1017,7 +1018,7 @@ function calcRemainingBalance() {
 
       // Return Amount row directly under returned items
       const retAmountTr = document.createElement('tr');
-      retAmountTr.innerHTML = `<td colspan="8" style="text-align:right; font-weight:bold; padding:5px 3px 5px; border-top:1px dashed #aaa; border-bottom:1px dashed #222;">Return Amount:&nbsp;&nbsp;<span style="font-size:10.5pt; font-weight:900;">Rs ${fmt(returnTotal)}</span></td>`;
+      retAmountTr.innerHTML = `<td colspan="8" style="text-align:right; font-weight:bold; padding:4px 2px; border-top:1px dashed #888; border-bottom:1px dashed #333;">Return Amount:&nbsp;&nbsp;<span style="font-size:9.5pt; font-weight:900;">Rs ${fmt(returnTotal)}</span></td>`;
       slipTbody.appendChild(retAmountTr);
 
       // Show summary breakdown in tfoot
@@ -1026,12 +1027,14 @@ function calcRemainingBalance() {
       document.getElementById('slip-summary-bill').textContent = 'Rs ' + fmt(grand);
       document.getElementById('slip-summary-deduct').textContent = 'Rs ' + fmt(returnTotal);
       document.getElementById('slip-grand-label').textContent = 'Total Amount Payable:';
-      document.getElementById('slip-grand-td').style.borderTop = '3px double #000';
+      document.getElementById('slip-grand-td').style.borderTop = '2px solid #000';
+      document.getElementById('slip-grand-td').style.borderBottom = '1px solid #000';
     } else {
       document.getElementById('slip-summary-bill-row').style.display = 'none';
       document.getElementById('slip-summary-deduct-row').style.display = 'none';
       document.getElementById('slip-grand-label').textContent = 'Grand Total:';
-      document.getElementById('slip-grand-td').style.borderTop = '1px dashed #222';
+      document.getElementById('slip-grand-td').style.borderTop = '1px dashed #333';
+      document.getElementById('slip-grand-td').style.borderBottom = 'none';
     }
 
     const finalGrand = grand - returnTotal;
@@ -1130,12 +1133,12 @@ function calcRemainingBalance() {
     if (returnItems.length > 0) {
       // Bill Total row directly under normal items
       const billTotalTr = document.createElement('tr');
-      billTotalTr.innerHTML = `<td colspan="8" style="text-align:right; font-weight:bold; padding:6px 3px 5px; border-top:1px dashed #222;">Bill Total:&nbsp;&nbsp;<span style="font-size:10.5pt; font-weight:900;">Rs ${fmt(grand)}</span></td>`;
+      billTotalTr.innerHTML = `<td colspan="8" style="text-align:right; font-weight:bold; padding:4px 2px; border-top:1px dashed #333;">Bill Total:&nbsp;&nbsp;<span style="font-size:9.5pt; font-weight:900;">Rs ${fmt(grand)}</span></td>`;
       slipTbody.appendChild(billTotalTr);
 
       // Section divider for returned items
       const divTr = document.createElement('tr');
-      divTr.innerHTML = `<td colspan="8" style="padding:6px 2px 4px;border-top:1px dashed #aaa;border-bottom:1px dashed #aaa;font-weight:900;font-size:9pt;letter-spacing:0.4px;text-align:left;">&#8617; RETURNED ITEMS</td>`;
+      divTr.innerHTML = `<td colspan="8" style="padding:3px 2px;border-top:1px solid #333;border-bottom:1px solid #333;font-weight:900;font-size:8pt;letter-spacing:0.3px;text-align:left;background:#f5f5f5;">&#8617; RETURNED ITEMS</td>`;
       slipTbody.appendChild(divTr);
 
       returnItems.forEach(function (item, idx) {
@@ -1158,7 +1161,7 @@ function calcRemainingBalance() {
 
       // Return Amount row directly under returned items
       const retAmountTr = document.createElement('tr');
-      retAmountTr.innerHTML = `<td colspan="8" style="text-align:right; font-weight:bold; padding:5px 3px 5px; border-top:1px dashed #aaa; border-bottom:1px dashed #222;">Return Amount:&nbsp;&nbsp;<span style="font-size:10.5pt; font-weight:900;">Rs ${fmt(returnTotal)}</span></td>`;
+      retAmountTr.innerHTML = `<td colspan="8" style="text-align:right; font-weight:bold; padding:4px 2px; border-top:1px dashed #888; border-bottom:1px dashed #333;">Return Amount:&nbsp;&nbsp;<span style="font-size:9.5pt; font-weight:900;">Rs ${fmt(returnTotal)}</span></td>`;
       slipTbody.appendChild(retAmountTr);
 
       // Show summary breakdown in tfoot
@@ -1167,12 +1170,14 @@ function calcRemainingBalance() {
       document.getElementById('slip-summary-bill').textContent = 'Rs ' + fmt(grand);
       document.getElementById('slip-summary-deduct').textContent = 'Rs ' + fmt(returnTotal);
       document.getElementById('slip-grand-label').textContent = 'Total Amount Payable:';
-      document.getElementById('slip-grand-td').style.borderTop = '3px double #000';
+      document.getElementById('slip-grand-td').style.borderTop = '2px solid #000';
+      document.getElementById('slip-grand-td').style.borderBottom = '1px solid #000';
     } else {
       document.getElementById('slip-summary-bill-row').style.display = 'none';
       document.getElementById('slip-summary-deduct-row').style.display = 'none';
       document.getElementById('slip-grand-label').textContent = 'Grand Total:';
-      document.getElementById('slip-grand-td').style.borderTop = '1px dashed #222';
+      document.getElementById('slip-grand-td').style.borderTop = '1px dashed #333';
+      document.getElementById('slip-grand-td').style.borderBottom = 'none';
     }
 
     const finalGrand = grand - returnTotal;
