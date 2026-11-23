@@ -1,4 +1,4 @@
-const express = require("express")
+﻿const express = require("express")
 const router = express.Router()
 const passport = require('passport')
 
@@ -32,6 +32,7 @@ const couponControl = require("../controllers/couponController")
 const domainTimingControl = require("../controllers/domainTimingController")
 const DomainTiming = require("../models/domainTiming")
 const posControl = require("../controllers/posController")
+const courierTrackingControl = require("../controllers/courierTrackingController")
 
 router.use(authentication.checkLoggedIn, authentication.checkAdminPrivilege)
 
@@ -97,5 +98,10 @@ router.delete("/logout", userControl.userLogout)
 
 router.get("/create-bill", posControl.getCreateBill)
 router.get("/create-barcode", posControl.getCreateBarcode)
+
+router.get('/courier-tracking', courierTrackingControl.getCourierTracking)
+router.post('/courier-tracking/save', courierTrackingControl.saveTracking)
+router.delete('/courier-tracking/:id', courierTrackingControl.deleteTracking)
+router.get('/courier-tracking/search-orders', courierTrackingControl.searchOrders)
 
 module.exports = router

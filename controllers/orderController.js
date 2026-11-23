@@ -138,16 +138,12 @@ module.exports = {
                 finalTotal = finalTotal * 1.04;
             }
 
-            const Counter = require('../models/counter');
-            const counter = await Counter.findOneAndUpdate(
-                { name: 'orderId' },
-                { $inc: { seq: 1 } },
-                { new: true, upsert: true }
-            );
+            const { getNextOrderSerial } = require('../services/orderSerialService');
+            const orderIdStr = await getNextOrderSerial();
             
             // 5. Create Order
             const newOrder = new Order({
-                orderIdStr: counter.seq.toString(),
+                orderIdStr: orderIdStr,
                 userId: userId, // Can be null for guests
                 deliveryAddress: deliveryAddress,
                 products: products,

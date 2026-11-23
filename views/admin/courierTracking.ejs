@@ -1,0 +1,519 @@
+<div class="container-fluid px-4 py-4" style="background: #0d1117; min-height: 100vh; color: #e6edf3;">
+
+  <!-- Page Header -->
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h3 class="fw-bold mb-1" style="color: #ffffff;">
+        <i class="fa-solid fa-truck-fast me-2" style="color: #f59e0b;"></i>Courier Tracking Management
+      </h3>
+      <p class="text-muted small mb-0">Assign, update, and manage courier consignment (CN) numbers for orders</p>
+    </div>
+    <a href="/admin/orders" class="btn btn-outline-secondary btn-sm" style="border-color: #30363d; color: #c9d1d9;">
+      <i class="fa-solid fa-arrow-left me-1"></i> Back to Orders
+    </a>
+  </div>
+
+  <!-- Main Card: Add / Update Tracking (Matching Image 4) -->
+  <div class="card shadow-lg mb-4" style="background: #161b22; border: 1px solid #30363d; border-radius: 12px;">
+    <div class="card-body p-4">
+      <div class="d-flex align-items-center mb-4">
+        <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #f59e0b; margin-right: 10px;"></span>
+        <h5 class="fw-bold mb-0" style="color: #f0f6fc; font-size: 1.15rem; letter-spacing: 0.3px;">Add / Update Tracking</h5>
+      </div>
+
+      <form id="trackingForm" autocomplete="off">
+        <div class="row g-3">
+          
+          <!-- ORDER ID INPUT WITH SEARCHABLE DROPDOWN -->
+          <div class="col-12 col-md-6 position-relative">
+            <label class="form-label text-uppercase small fw-bold" style="color: #8b949e; letter-spacing: 0.5px; font-size: 0.78rem;">
+              ORDER ID <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+              <span class="input-group-text" style="background: #21262d; border-color: #30363d; color: #8b949e;">
+                <i class="fa-solid fa-hashtag"></i>
+              </span>
+              <input type="text" 
+                     id="orderIdInput" 
+                     class="form-control" 
+                     placeholder="E.G. ISA101" 
+                     required
+                     style="background: #0d1117; border-color: #30363d; color: #f0f6fc; font-weight: 600; letter-spacing: 0.5px;">
+              <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="btnToggleOrderList" style="border-color: #30363d; color: #c9d1d9; background: #21262d;">
+              </button>
+            </div>
+            
+            <!-- Autocomplete Order Dropdown Menu -->
+            <div id="orderDropdown" 
+                 class="shadow-lg" 
+                 style="display:none; position:absolute; top: 100%; left: 12px; right: 12px; z-index: 1050; max-height: 280px; overflow-y: auto; background: #161b22; border: 1px solid #30363d; border-radius: 8px; margin-top: 4px;">
+              <div class="p-2 border-bottom" style="border-color: #21262d !important;">
+                <input type="text" id="filterOrderInput" class="form-control form-control-sm" placeholder="Search by ID, Customer, Phone..." style="background: #0d1117; border-color: #30363d; color: #fff; font-size: 0.8rem;">
+              </div>
+              <div id="orderListContainer">
+                <% if (recentOrders && recentOrders.length > 0) { %>
+                  <% recentOrders.forEach(function(o) { %>
+                    <div class="order-select-item p-2 border-bottom d-flex align-items-center justify-content-between" 
+                         style="border-color: #21262d !important; cursor: pointer; transition: background 0.15s;"
+                         data-id="<%= o.orderIdStr || o._id %>"
+                         data-courier="<%= o.courierName || '' %>"
+                         data-cn="<%= o.trackingNumber || '' %>"
+                         onmouseover="this.style.background='#21262d'" 
+                         onmouseout="this.style.background='transparent'">
+                      <div>
+                        <span class="fw-bold text-warning" style="font-family: monospace; font-size: 0.95rem;">#<%= o.orderIdStr || o._id %></span>
+                        <span class="text-white small ms-2"><%= o.deliveryAddress?.firstName || 'Customer' %></span>
+                        <% if (o.deliveryAddress?.phone) { %>
+                          <span class="text-muted small ms-1">(<%= o.deliveryAddress.phone %>)</span>
+                        <% } %>
+                      </div>
+                      <div class="text-end">
+                        <% if (o.trackingNumber) { %>
+                          <span class="badge bg-success small" style="font-size: 0.7rem;"><i class="fa-solid fa-check me-1"></i><%= o.courierName %></span>
+                        <% } else { %>
+                          <span class="badge bg-secondary small" style="font-size: 0.7rem;">No CN</span>
+                        <% } %>
+                      </div>
+                    </div>
+                  <% }); %>
+                <% } else { %>
+                  <div class="p-3 text-center text-muted small">No recent orders found</div>
+                <% } %>
+              </div>
+            </div>
+          </div>
+
+          <!-- COURIER COMPANY DROPDOWN -->
+          <div class="col-12 col-md-6">
+            <label class="form-label text-uppercase small fw-bold" style="color: #8b949e; letter-spacing: 0.5px; font-size: 0.78rem;">
+              COURIER COMPANY <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+              <span class="input-group-text" style="background: #21262d; border-color: #30363d; color: #8b949e;">
+                <i class="fa-solid fa-box"></i>
+              </span>
+              <select id="courierSelect" class="form-select" required style="background: #0d1117; border-color: #30363d; color: #f0f6fc; font-weight: 500;">
+                <option value="">Select Courier</option>
+                <option value="PostEx">PostEx</option>
+                <option value="TCS">TCS</option>
+                <option value="Leopards">Leopards Courier</option>
+                <option value="M&P">M&P Express</option>
+                <option value="Trax">Trax Logistics</option>
+                <option value="Call Courier">Call Courier</option>
+                <option value="Other">Other Courier (Manual Name)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- OTHER COURIER NAME (Shown when Other selected) -->
+          <div class="col-12 col-md-6" id="otherCourierCol" style="display: none;">
+            <label class="form-label text-uppercase small fw-bold" style="color: #f59e0b; letter-spacing: 0.5px; font-size: 0.78rem;">
+              ENTER COURIER NAME <span class="text-danger">*</span>
+            </label>
+            <input type="text" id="otherCourierInput" class="form-control" placeholder="e.g. Rider / Daewoo / SpeedEx" style="background: #0d1117; border-color: #f59e0b; color: #f0f6fc;">
+          </div>
+
+          <!-- TRACKING / CONSIGNMENT NUMBER (CN) -->
+          <div class="col-12">
+            <label class="form-label text-uppercase small fw-bold" style="color: #8b949e; letter-spacing: 0.5px; font-size: 0.78rem;">
+              TRACKING / CONSIGNMENT NUMBER (CN) <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+              <span class="input-group-text" style="background: #21262d; border-color: #30363d; color: #8b949e;">
+                <i class="fa-solid fa-barcode"></i>
+              </span>
+              <input type="text" 
+                     id="cnInput" 
+                     class="form-control" 
+                     placeholder="Enter courier tracking / CN number" 
+                     required
+                     style="background: #0d1117; border-color: #30363d; color: #f0f6fc; font-weight: 600; font-family: monospace; font-size: 0.95rem;">
+            </div>
+          </div>
+
+          <!-- ACTION BUTTON -->
+          <div class="col-12 mt-4">
+            <button type="submit" id="btnSaveTracking" class="btn fw-bold px-4 py-2" style="background: #f59e0b; color: #000; border: none; border-radius: 8px; font-size: 0.95rem;">
+              <i class="fa-solid fa-check me-2"></i>Save Tracking
+            </button>
+            <button type="button" id="btnResetForm" class="btn btn-outline-secondary btn-sm ms-2" style="border-color: #30363d; color: #8b949e;">
+              Reset Form
+            </button>
+          </div>
+
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Section: Saved Trackings (Matching Image 4) -->
+  <div class="mb-3 d-flex align-items-center justify-content-between">
+    <h5 class="fw-bold mb-0" style="color: #f0f6fc; font-size: 1.1rem;">
+      Saved Trackings (<span id="savedCount"><%= savedOrders ? savedOrders.length : 0 %></span>)
+    </h5>
+    <div class="small text-muted">
+      Orders with active tracking CN assigned
+    </div>
+  </div>
+
+  <div id="savedTrackingsContainer">
+    <% if (savedOrders && savedOrders.length > 0) { %>
+      <% savedOrders.forEach(function(order) { %>
+        <div class="saved-tracking-card card shadow-sm mb-3" 
+             id="card_<%= order.orderIdStr || order._id %>"
+             style="background: #161b22; border: 1px solid #30363d; border-radius: 10px; transition: transform 0.2s, border-color 0.2s;">
+          <div class="card-body p-3 d-flex align-items-center justify-content-between">
+            
+            <!-- Left: Map Icon & Info -->
+            <div class="d-flex align-items-center gap-3">
+              <div style="width: 44px; height: 44px; border-radius: 8px; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <i class="fa-solid fa-map-location-dot" style="color: #f59e0b; font-size: 1.25rem;"></i>
+              </div>
+              <div>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="fw-bold text-warning" style="font-family: monospace; font-size: 1.05rem;">
+                    <%= order.orderIdStr || order._id %>
+                  </span>
+                  <span class="badge" style="background: #21262d; color: #c9d1d9; font-size: 0.72rem;">
+                    <%= order.deliveryAddress?.firstName ? order.deliveryAddress.firstName + ' ' + (order.deliveryAddress.lastName || '') : 'Customer' %>
+                  </span>
+                </div>
+                <div class="fw-semibold text-white small mt-1">
+                  <%= order.courierName %>
+                </div>
+                <div class="small" style="color: #8b949e; font-family: monospace; font-size: 0.82rem;">
+                  CN: <strong style="color: #f0f6fc;"><%= order.trackingNumber %></strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Actions -->
+            <div class="d-flex align-items-center gap-2">
+              <button class="btn btn-sm btn-outline-warning btn-edit-tracking"
+                      title="Edit this tracking"
+                      data-id="<%= order.orderIdStr || order._id %>"
+                      data-courier="<%= order.courierName %>"
+                      data-cn="<%= order.trackingNumber %>"
+                      style="border-color: #30363d; color: #f59e0b;">
+                <i class="fa-solid fa-pen-to-square"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-danger btn-delete-tracking"
+                      title="Remove tracking from this order"
+                      data-id="<%= order.orderIdStr || order._id %>"
+                      style="border-color: #30363d; color: #f85149;">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      <% }); %>
+    <% } else { %>
+      <div id="noTrackingMsg" class="card p-5 text-center" style="background: #161b22; border: 1px dashed #30363d; border-radius: 10px;">
+        <i class="fa-solid fa-truck-ramp-box mb-3" style="font-size: 2.5rem; color: #484f58;"></i>
+        <h6 class="text-muted fw-normal mb-0">No active tracking numbers assigned yet</h6>
+        <p class="small text-muted mt-1">Select an order above and enter its courier CN to assign tracking</p>
+      </div>
+    <% } %>
+  </div>
+
+</div>
+
+<!-- Styles & SweetAlert2 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const orderIdInput = document.getElementById('orderIdInput');
+  const orderDropdown = document.getElementById('orderDropdown');
+  const btnToggle = document.getElementById('btnToggleOrderList');
+  const filterInput = document.getElementById('filterOrderInput');
+  const courierSelect = document.getElementById('courierSelect');
+  const otherCol = document.getElementById('otherCourierCol');
+  const otherInput = document.getElementById('otherCourierInput');
+  const cnInput = document.getElementById('cnInput');
+  const form = document.getElementById('trackingForm');
+  const btnReset = document.getElementById('btnResetForm');
+
+  // Toggle other courier input
+  courierSelect.addEventListener('change', function() {
+    if (this.value === 'Other') {
+      otherCol.style.display = 'block';
+      otherInput.required = true;
+      otherInput.focus();
+    } else {
+      otherCol.style.display = 'none';
+      otherInput.required = false;
+      otherInput.value = '';
+    }
+  });
+
+  // Toggle order dropdown
+  function showDropdown() {
+    orderDropdown.style.display = 'block';
+    filterInput.focus();
+  }
+  function hideDropdown() {
+    setTimeout(() => { orderDropdown.style.display = 'none'; }, 200);
+  }
+
+  orderIdInput.addEventListener('focus', showDropdown);
+  btnToggle.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (orderDropdown.style.display === 'block') {
+      orderDropdown.style.display = 'none';
+    } else {
+      showDropdown();
+    }
+  });
+
+  document.addEventListener('click', function(e) {
+    if (!orderIdInput.contains(e.target) && !orderDropdown.contains(e.target) && !btnToggle.contains(e.target)) {
+      orderDropdown.style.display = 'none';
+    }
+  });
+
+  // Filter orders in dropdown
+  filterInput.addEventListener('input', function() {
+    const q = this.value.toLowerCase().trim();
+    document.querySelectorAll('.order-select-item').forEach(function(el) {
+      const text = el.textContent.toLowerCase();
+      el.style.display = text.includes(q) ? 'flex' : 'none';
+    });
+  });
+
+  // Select order from dropdown
+  document.getElementById('orderListContainer').addEventListener('click', function(e) {
+    const item = e.target.closest('.order-select-item');
+    if (!item) return;
+    const id = item.dataset.id;
+    const courier = item.dataset.courier;
+    const cn = item.dataset.cn;
+
+    orderIdInput.value = id;
+    if (courier) {
+      const opt = Array.from(courierSelect.options).find(o => o.value.toLowerCase() === courier.toLowerCase());
+      if (opt) {
+        courierSelect.value = opt.value;
+        otherCol.style.display = 'none';
+      } else {
+        courierSelect.value = 'Other';
+        otherCol.style.display = 'block';
+        otherInput.value = courier;
+      }
+    }
+    if (cn) {
+      cnInput.value = cn;
+    }
+    orderDropdown.style.display = 'none';
+    cnInput.focus();
+  });
+
+  // Edit button in card
+  document.addEventListener('click', function(e) {
+    const btnEdit = e.target.closest('.btn-edit-tracking');
+    if (!btnEdit) return;
+    const id = btnEdit.dataset.id;
+    const courier = btnEdit.dataset.courier;
+    const cn = btnEdit.dataset.cn;
+
+    orderIdInput.value = id;
+    const opt = Array.from(courierSelect.options).find(o => o.value.toLowerCase() === (courier || '').toLowerCase());
+    if (opt) {
+      courierSelect.value = opt.value;
+      otherCol.style.display = 'none';
+    } else {
+      courierSelect.value = 'Other';
+      otherCol.style.display = 'block';
+      otherInput.value = courier;
+    }
+    cnInput.value = cn;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    cnInput.focus();
+  });
+
+  // Delete tracking button
+  document.addEventListener('click', async function(e) {
+    const btnDel = e.target.closest('.btn-delete-tracking');
+    if (!btnDel) return;
+    const id = btnDel.dataset.id;
+
+    const res = await Swal.fire({
+      title: 'Remove Tracking?',
+      text: `Are you sure you want to remove tracking number from Order #${id}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#f85149',
+      cancelButtonColor: '#30363d',
+      confirmButtonText: 'Yes, Remove',
+      cancelButtonText: 'Cancel',
+      background: '#161b22',
+      color: '#f0f6fc'
+    });
+
+    if (!res.isConfirmed) return;
+
+    try {
+      const resp = await axios.delete(`/admin/courier-tracking/${id}`);
+      if (resp.data && resp.data.success) {
+        const card = document.getElementById(`card_${id}`);
+        if (card) {
+          card.style.opacity = '0';
+          card.style.transform = 'scale(0.95)';
+          setTimeout(() => {
+            card.remove();
+            const countEl = document.getElementById('savedCount');
+            const newCount = Math.max(0, parseInt(countEl.textContent || '1') - 1);
+            countEl.textContent = newCount;
+            if (newCount === 0) {
+              document.getElementById('savedTrackingsContainer').innerHTML = `
+                <div id="noTrackingMsg" class="card p-5 text-center" style="background: #161b22; border: 1px dashed #30363d; border-radius: 10px;">
+                  <i class="fa-solid fa-truck-ramp-box mb-3" style="font-size: 2.5rem; color: #484f58;"></i>
+                  <h6 class="text-muted fw-normal mb-0">No active tracking numbers assigned yet</h6>
+                  <p class="small text-muted mt-1">Select an order above and enter its courier CN to assign tracking</p>
+                </div>`;
+            }
+          }, 200);
+        }
+        Swal.fire({
+          icon: 'success',
+          title: 'Removed!',
+          text: resp.data.message || 'Tracking removed',
+          timer: 1800,
+          showConfirmButton: false,
+          background: '#161b22',
+          color: '#f0f6fc'
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: err.response?.data?.message || 'Failed to remove tracking',
+        background: '#161b22',
+        color: '#f0f6fc'
+      });
+    }
+  });
+
+  // Reset form
+  btnReset.addEventListener('click', function() {
+    form.reset();
+    otherCol.style.display = 'none';
+  });
+
+  // Submit tracking form
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const orderId = orderIdInput.value.trim();
+    const courierCompany = courierSelect.value;
+    const otherCourierName = otherInput.value.trim();
+    const trackingNumber = cnInput.value.trim();
+
+    if (!orderId || !trackingNumber) {
+      Swal.fire({ icon: 'warning', title: 'Incomplete', text: 'Please fill in Order ID and CN number', background: '#161b22', color: '#f0f6fc' });
+      return;
+    }
+
+    if (courierCompany === 'Other' && !otherCourierName) {
+      Swal.fire({ icon: 'warning', title: 'Missing Info', text: 'Please enter courier company name', background: '#161b22', color: '#f0f6fc' });
+      return;
+    }
+
+    try {
+      const resp = await axios.post('/admin/courier-tracking/save', {
+        orderId,
+        courierCompany,
+        otherCourierName,
+        trackingNumber
+      });
+
+      if (resp.data && resp.data.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Tracking Saved!',
+          text: resp.data.message,
+          timer: 1800,
+          showConfirmButton: false,
+          background: '#161b22',
+          color: '#f0f6fc'
+        });
+
+        // Add or update the card live
+        const ord = resp.data.order;
+        const existingCard = document.getElementById(`card_${ord.orderIdStr}`);
+        const cardHTML = `
+          <div class="card-body p-3 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+              <div style="width: 44px; height: 44px; border-radius: 8px; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <i class="fa-solid fa-map-location-dot" style="color: #f59e0b; font-size: 1.25rem;"></i>
+              </div>
+              <div>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="fw-bold text-warning" style="font-family: monospace; font-size: 1.05rem;">
+                    ${ord.orderIdStr}
+                  </span>
+                </div>
+                <div class="fw-semibold text-white small mt-1">
+                  ${ord.courierName}
+                </div>
+                <div class="small" style="color: #8b949e; font-family: monospace; font-size: 0.82rem;">
+                  CN: <strong style="color: #f0f6fc;">${ord.trackingNumber}</strong>
+                </div>
+              </div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <button class="btn btn-sm btn-outline-warning btn-edit-tracking"
+                      title="Edit this tracking"
+                      data-id="${ord.orderIdStr}"
+                      data-courier="${ord.courierName}"
+                      data-cn="${ord.trackingNumber}"
+                      style="border-color: #30363d; color: #f59e0b;">
+                <i class="fa-solid fa-pen-to-square"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-danger btn-delete-tracking"
+                      title="Remove tracking"
+                      data-id="${ord.orderIdStr}"
+                      style="border-color: #30363d; color: #f85149;">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </div>`;
+
+        const container = document.getElementById('savedTrackingsContainer');
+        const noMsg = document.getElementById('noTrackingMsg');
+        if (noMsg) noMsg.remove();
+
+        if (existingCard) {
+          existingCard.innerHTML = cardHTML;
+        } else {
+          const newDiv = document.createElement('div');
+          newDiv.className = 'saved-tracking-card card shadow-sm mb-3';
+          newDiv.id = `card_${ord.orderIdStr}`;
+          newDiv.style.background = '#161b22';
+          newDiv.style.border = '1px solid #30363d';
+          newDiv.style.borderRadius = '10px';
+          newDiv.innerHTML = cardHTML;
+          container.prepend(newDiv);
+          const countEl = document.getElementById('savedCount');
+          countEl.textContent = parseInt(countEl.textContent || '0') + 1;
+        }
+
+        form.reset();
+        otherCol.style.display = 'none';
+      }
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: err.response?.data?.message || 'Failed to save tracking',
+        background: '#161b22',
+        color: '#f0f6fc'
+      });
+    }
+  });
+});
+</script>

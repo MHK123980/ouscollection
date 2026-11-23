@@ -1,4 +1,4 @@
-const express = require("express");
+﻿const express = require("express");
 const router = express.Router();
 const User = require("../models/users");
 const passport = require("passport");
@@ -6,6 +6,7 @@ const Category = require("../models/category");
 const userControl = require("../controllers/userController");
 const shopControl = require("../controllers/shopController");
 const orderControl = require("../controllers/orderController");
+const courierTrackingControl = require("../controllers/courierTrackingController");
 const authentication = require("../middleware/authentication");
 const { otpVerification, getOtpForm, sendOtp } = require("../middleware/otp");
 
@@ -44,8 +45,11 @@ router.get(
   authentication.checkAccountVerifiedInIndex,
   shopControl.getProductByKeyword
 );
-router.get(
-  "/contact",
+// Customer Order Tracking (Live / No-Refresh)
+router.get("/track-order", courierTrackingControl.getTrackOrderPage);
+router.get("/api/track-order/:orderId", courierTrackingControl.trackOrderApi);
+
+router.get("/contact",
   authentication.checkAccountVerifiedInIndex,
   async (req, res) => {
     const allCategories = await Category.find();

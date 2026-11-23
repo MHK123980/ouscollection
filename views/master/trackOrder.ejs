@@ -1,0 +1,446 @@
+<div class="track-order-page py-5" style="background: #0b0e14; min-height: 85vh; color: #f0f6fc;">
+  <div class="container" style="max-width: 540px;">
+
+    <!-- Top Header (Matching Image 1) -->
+    <div class="text-center mb-4">
+      <div class="mx-auto mb-3 d-flex align-items-center justify-content-center" 
+           style="width: 58px; height: 58px; border-radius: 14px; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);">
+        <i class="fa-solid fa-map-location-dot" style="color: #f59e0b; font-size: 1.6rem;"></i>
+      </div>
+      <h2 class="fw-bold mb-1" style="color: #ffffff; letter-spacing: -0.5px; font-size: 1.85rem;">
+        Track Your <span style="color: #f59e0b;">Order</span>
+      </h2>
+      <p class="text-muted small px-3 mb-0" style="font-size: 0.85rem; line-height: 1.4;">
+        Enter your Order ID (e.g. <strong style="color: #f59e0b;">ISA101</strong>) to see live progress and courier parcel status.
+      </p>
+    </div>
+
+    <!-- Search Input Card (Matching Image 1) -->
+    <div class="card shadow-lg mb-4" style="background: #141820; border: 1px solid #272d38; border-radius: 14px;">
+      <div class="card-body p-4">
+        <form id="trackForm" autocomplete="off">
+          <label class="form-label text-uppercase fw-bold small mb-2" style="color: #8b949e; letter-spacing: 0.8px; font-size: 0.75rem;">
+            ORDER ID
+          </label>
+          <div class="mb-3">
+            <input type="text" 
+                   id="trackOrderIdInput" 
+                   class="form-control form-control-lg fw-bold" 
+                   placeholder="e.g. ISA101" 
+                   value="<%= typeof initialId !== 'undefined' ? initialId : '' %>"
+                   required
+                   style="background: #1e2430; border: 1px solid #323b4b; color: #ffffff; border-radius: 10px; font-family: monospace; letter-spacing: 1px; font-size: 1.1rem; padding: 12px 16px;">
+          </div>
+          <button type="submit" id="btnTrackSubmit" class="btn w-100 fw-bold py-3 d-flex align-items-center justify-content-center" 
+                  style="background: #e68a00; color: #000; border: none; border-radius: 10px; font-size: 1rem; transition: background 0.2s;">
+            <i class="fa-solid fa-magnifying-glass me-2"></i> Track Order
+          </button>
+        </form>
+
+        <!-- Live Pulse Indicator -->
+        <div class="d-flex align-items-center mt-3 pt-2" style="font-size: 0.74rem; color: #8b949e;">
+          <span class="pulse-dot me-2"></span>
+          <span>Real-time tracking enabled &mdash; updates live without refreshing</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="trackingLoader" class="text-center py-4" style="display: none;">
+      <div class="spinner-border text-warning" role="status" style="width: 2.2rem; height: 2.2rem;">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="small text-muted mt-2">Checking live tracking status...</p>
+    </div>
+
+    <!-- Error Alert Box -->
+    <div id="trackingError" class="alert p-3 mb-4 text-center" style="display: none; background: rgba(248, 81, 73, 0.1); border: 1px solid rgba(248, 81, 73, 0.3); color: #ff7b72; border-radius: 12px; font-size: 0.9rem;">
+      <i class="fa-solid fa-circle-exclamation me-2"></i><span id="errorMsg">Order not found</span>
+    </div>
+
+    <!-- ORDER RESULTS SECTION (Matching Images 1, 2, 3) -->
+    <div id="trackingResult" style="display: none;">
+
+      <!-- CARD 1: ORDER SERIAL ID & CUSTOMER (Matching Image 1 & 2) -->
+      <div class="card shadow-sm mb-3" style="background: #141820; border: 1px solid #272d38; border-radius: 14px;">
+        <div class="card-body p-3 p-md-4">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <div>
+              <div class="text-uppercase small fw-bold" style="color: #8b949e; font-size: 0.72rem; letter-spacing: 0.6px;">ORDER SERIAL ID</div>
+              <div id="resOrderId" class="fw-bold" style="color: #f59e0b; font-family: monospace; font-size: 1.4rem; letter-spacing: 0.5px;">ISA101</div>
+            </div>
+            <div id="resStatusBadge">
+              <span class="badge px-3 py-2" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 20px; font-size: 0.82rem; font-weight: 700;">
+                Confirmed
+              </span>
+            </div>
+          </div>
+          <div class="d-flex align-items-center justify-content-between pt-2 border-top" style="border-color: #21262d !important; font-size: 0.85rem;">
+            <div>
+              <span style="color: #8b949e;">Customer:</span>
+              <strong id="resCustomer" class="text-white ms-1">Customer Name</strong>
+            </div>
+            <div id="resDate" style="color: #8b949e;">22 Nov 2026</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 2: ORDER PROGRESS (Matching Image 2 & 3) -->
+      <div class="card shadow-sm mb-3" style="background: #141820; border: 1px solid #272d38; border-radius: 14px;">
+        <div class="card-body p-3 p-md-4">
+          <div class="d-flex align-items-center mb-3">
+            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #f59e0b; margin-right: 8px;"></span>
+            <span class="text-uppercase fw-bold" style="color: #ffffff; font-size: 0.82rem; letter-spacing: 0.6px;">ORDER PROGRESS</span>
+          </div>
+
+          <!-- When Order is CANCELLED (Matching Image 3) -->
+          <div id="progressCancelledBox" style="display: none;">
+            <div class="p-3 text-center fw-bold" style="background: rgba(248, 81, 73, 0.12); border: 1px solid rgba(248, 81, 73, 0.3); border-radius: 10px; color: #ff7b72; font-size: 1rem;">
+              <i class="fa-solid fa-xmark me-2"></i> Order Canceled
+            </div>
+          </div>
+
+          <!-- When Order is CONFIRMED (Matching Image 2) -->
+          <div id="progressActiveBox">
+            <div class="progress-stepper">
+              
+              <!-- Step 1: Confirmed -->
+              <div class="step-item step-completed">
+                <div class="step-icon">
+                  <i class="fa-solid fa-check"></i>
+                </div>
+                <div class="step-content">
+                  <div class="step-title">Order Confirmed</div>
+                  <div class="step-subtitle">Your order has been verified & accepted</div>
+                </div>
+              </div>
+
+              <!-- Step 2: Shipping / Courier -->
+              <div class="step-item" id="stepShipping">
+                <div class="step-icon" id="stepShippingIcon">
+                  <i class="fa-solid fa-truck-fast"></i>
+                </div>
+                <div class="step-content">
+                  <div class="step-title" id="stepShippingTitle">Shipping</div>
+                  <div class="step-subtitle" id="stepShippingSubtitle">Preparing parcel for courier pickup</div>
+                </div>
+              </div>
+
+              <!-- Step 3: Delivered -->
+              <div class="step-item" id="stepDelivered">
+                <div class="step-icon">
+                  <i class="fa-solid fa-house"></i>
+                </div>
+                <div class="step-content">
+                  <div class="step-title">Delivered</div>
+                  <div class="step-subtitle">Delivered to your shipping address</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 3: COURIER DISPATCH DETAILS (Matching Image 2 & 3) -->
+      <div class="card shadow-sm mb-4" id="courierDetailsCard" style="background: #141820; border: 1px solid #272d38; border-radius: 14px;">
+        <div class="card-body p-3 p-md-4">
+          
+          <!-- State A: NO CN ASSIGNED YET (Matching Image 2) -->
+          <div id="noCnBox" class="text-center py-3">
+            <div class="mx-auto mb-3 d-flex align-items-center justify-content-center" 
+                 style="width: 48px; height: 48px; border-radius: 50%; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3);">
+              <i class="fa-solid fa-box" style="color: #f59e0b; font-size: 1.3rem;"></i>
+            </div>
+            <div class="fw-bold mb-1" style="color: #f59e0b; font-size: 0.95rem;">
+              Courier Tracking No: <span style="color: #f59e0b;">CN Will Be Provided Soon</span>
+            </div>
+            <p class="text-muted small mb-0 px-2" style="font-size: 0.8rem; line-height: 1.4;">
+              Once dispatched by our courier team, your tracking number will show here automatically.
+            </p>
+          </div>
+
+          <!-- State B: CN IS ASSIGNED (Matching Image 3) -->
+          <div id="hasCnBox" style="display: none;">
+            <div class="d-flex align-items-center mb-3">
+              <i class="fa-solid fa-map-location-dot me-2" style="color: #f59e0b;"></i>
+              <span class="text-uppercase fw-bold" style="color: #ffffff; font-size: 0.82rem; letter-spacing: 0.6px;">COURIER DISPATCH DETAILS</span>
+            </div>
+
+            <!-- Box 1: Courier Partner -->
+            <div class="p-3 mb-2" style="background: #1b212b; border: 1px solid #2a3342; border-radius: 10px;">
+              <div class="text-uppercase small fw-bold" style="color: #8b949e; font-size: 0.72rem; letter-spacing: 0.5px;">COURIER PARTNER</div>
+              <div id="resCourierPartner" class="fw-bold text-white mt-1" style="font-size: 1.05rem;">PostEx</div>
+            </div>
+
+            <!-- Box 2: Consignment No (CN) -->
+            <div class="p-3 mb-3" style="background: #1b212b; border: 1px solid #2a3342; border-radius: 10px;">
+              <div class="text-uppercase small fw-bold" style="color: #8b949e; font-size: 0.72rem; letter-spacing: 0.5px;">CONSIGNMENT NO (CN)</div>
+              <div id="resCnNumber" class="fw-bold mt-1" style="color: #f59e0b; font-family: monospace; font-size: 1.15rem; letter-spacing: 0.5px;">23538570000138</div>
+            </div>
+
+            <!-- Direct Courier Portal Button -->
+            <a id="btnCourierPortal" 
+               href="#" 
+               target="_blank" 
+               rel="noopener noreferrer"
+               class="btn w-100 fw-bold py-3 d-flex align-items-center justify-content-center"
+               style="background: #e68a00; color: #000; border: none; border-radius: 10px; font-size: 0.95rem; text-decoration: none;">
+              <span id="btnPortalText">Open PostEx Tracking Portal</span>
+              <i class="fa-solid fa-arrow-up-right-from-square ms-2"></i>
+            </a>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<style>
+/* Pulsing green live indicator */
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #3fb950;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 0 rgba(63, 185, 80, 0.4);
+  animation: pulseGreen 2s infinite;
+}
+@keyframes pulseGreen {
+  0% { box-shadow: 0 0 0 0 rgba(63, 185, 80, 0.7); }
+  70% { box-shadow: 0 0 0 6px rgba(63, 185, 80, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(63, 185, 80, 0); }
+}
+
+/* Modern Vertical Stepper */
+.progress-stepper {
+  position: relative;
+  padding-left: 10px;
+}
+.progress-stepper::before {
+  content: '';
+  position: absolute;
+  left: 26px;
+  top: 18px;
+  bottom: 24px;
+  width: 2px;
+  background: #272d38;
+}
+.step-item {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 22px;
+}
+.step-item:last-child {
+  margin-bottom: 0;
+}
+.step-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #1b212b;
+  border: 2px solid #323b4b;
+  color: #8b949e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  z-index: 2;
+  margin-right: 14px;
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+.step-content {
+  padding-top: 5px;
+}
+.step-title {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #c9d1d9;
+}
+.step-subtitle {
+  font-size: 0.78rem;
+  color: #8b949e;
+  margin-top: 2px;
+}
+
+/* Active / Completed states */
+.step-item.step-completed .step-icon {
+  background: #f59e0b;
+  border-color: #f59e0b;
+  color: #000;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+}
+.step-item.step-completed .step-title {
+  color: #ffffff;
+}
+
+.step-item.step-active .step-icon {
+  background: #e68a00;
+  border-color: #f59e0b;
+  color: #000;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.5);
+  animation: pulseStep 2s infinite;
+}
+@keyframes pulseStep {
+  0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.6); }
+  70% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
+.step-item.step-active .step-title {
+  color: #f59e0b;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('trackForm');
+  const input = document.getElementById('trackOrderIdInput');
+  const loader = document.getElementById('trackingLoader');
+  const errorBox = document.getElementById('trackingError');
+  const errorMsg = document.getElementById('errorMsg');
+  const resultBox = document.getElementById('trackingResult');
+
+  // Result fields
+  const resOrderId = document.getElementById('resOrderId');
+  const resStatusBadge = document.getElementById('resStatusBadge');
+  const resCustomer = document.getElementById('resCustomer');
+  const resDate = document.getElementById('resDate');
+
+  const progressCancelledBox = document.getElementById('progressCancelledBox');
+  const progressActiveBox = document.getElementById('progressActiveBox');
+  const stepShipping = document.getElementById('stepShipping');
+  const stepShippingTitle = document.getElementById('stepShippingTitle');
+  const stepShippingSubtitle = document.getElementById('stepShippingSubtitle');
+
+  const noCnBox = document.getElementById('noCnBox');
+  const hasCnBox = document.getElementById('hasCnBox');
+  const resCourierPartner = document.getElementById('resCourierPartner');
+  const resCnNumber = document.getElementById('resCnNumber');
+  const btnCourierPortal = document.getElementById('btnCourierPortal');
+  const btnPortalText = document.getElementById('btnPortalText');
+
+  let activePollingTimer = null;
+  let currentlyTrackingId = '';
+
+  async function fetchOrderStatus(orderId, isBackgroundPoll = false) {
+    if (!orderId) return;
+
+    if (!isBackgroundPoll) {
+      loader.style.display = 'block';
+      errorBox.style.display = 'none';
+      resultBox.style.display = 'none';
+    }
+
+    try {
+      const resp = await axios.get('/api/track-order/' + encodeURIComponent(orderId));
+      if (resp.data && resp.data.success) {
+        renderOrderData(resp.data.order);
+        currentlyTrackingId = orderId;
+        
+        // Setup live polling every 5 seconds without page reload
+        if (!activePollingTimer) {
+          activePollingTimer = setInterval(function() {
+            if (currentlyTrackingId) {
+              fetchOrderStatus(currentlyTrackingId, true);
+            }
+          }, 5000);
+        }
+      } else {
+        showError(resp.data?.message || 'Order not found');
+      }
+    } catch (err) {
+      if (!isBackgroundPoll) {
+        showError(err.response?.data?.message || 'Order not found. Please verify your Order ID.');
+      }
+    } finally {
+      if (!isBackgroundPoll) {
+        loader.style.display = 'none';
+      }
+    }
+  }
+
+  function showError(msg) {
+    loader.style.display = 'none';
+    resultBox.style.display = 'none';
+    errorMsg.textContent = msg;
+    errorBox.style.display = 'block';
+    currentlyTrackingId = '';
+    if (activePollingTimer) {
+      clearInterval(activePollingTimer);
+      activePollingTimer = null;
+    }
+  }
+
+  function renderOrderData(order) {
+    errorBox.style.display = 'none';
+    resultBox.style.display = 'block';
+
+    // 1. Order ID & Customer
+    resOrderId.textContent = order.orderIdStr;
+    resCustomer.textContent = order.customerName || 'Customer';
+    resDate.textContent = order.date;
+
+    // 2. Status Badge (Confirmed or Cancelled)
+    if (order.isCancelled) {
+      resStatusBadge.innerHTML = `
+        <span class="badge px-3 py-2" style="background: rgba(248, 81, 73, 0.18); color: #ff7b72; border: 1px solid rgba(248, 81, 73, 0.4); border-radius: 20px; font-size: 0.82rem; font-weight: 700;">
+          <i class="fa-solid fa-xmark me-1"></i> Canceled
+        </span>`;
+      progressCancelledBox.style.display = 'block';
+      progressActiveBox.style.display = 'none';
+    } else {
+      resStatusBadge.innerHTML = `
+        <span class="badge px-3 py-2" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 20px; font-size: 0.82rem; font-weight: 700;">
+          <i class="fa-solid fa-check me-1"></i> Confirmed
+        </span>`;
+      progressCancelledBox.style.display = 'none';
+      progressActiveBox.style.display = 'block';
+    }
+
+    // 3. Progress Steps
+    if (order.hasTracking) {
+      stepShipping.className = 'step-item step-active';
+      stepShippingTitle.textContent = `Dispatched (${order.courierName})`;
+      stepShippingSubtitle.textContent = `Handed over to courier with CN #${order.trackingNumber}`;
+    } else {
+      stepShipping.className = 'step-item';
+      stepShippingTitle.textContent = 'Shipping';
+      stepShippingSubtitle.textContent = 'Preparing parcel for courier pickup';
+    }
+
+    // 4. Courier Tracking Card (State A vs State B)
+    if (order.hasTracking) {
+      noCnBox.style.display = 'none';
+      hasCnBox.style.display = 'block';
+
+      resCourierPartner.textContent = order.courierName;
+      resCnNumber.textContent = order.trackingNumber;
+      btnCourierPortal.href = order.courierUrl || '#';
+      btnPortalText.textContent = `Open ${order.courierName} Tracking Portal`;
+    } else {
+      hasCnBox.style.display = 'none';
+      noCnBox.style.display = 'block';
+    }
+  }
+
+  // Handle Form Submit
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const id = input.value.trim();
+    if (!id) return;
+    fetchOrderStatus(id);
+  });
+
+  // Auto-fetch if ID passed via query parameter (e.g. /track-order?id=ISA101)
+  const initial = input.value.trim();
+  if (initial) {
+    fetchOrderStatus(initial);
+  }
+});
+</script>

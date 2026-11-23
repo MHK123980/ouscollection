@@ -1,4 +1,4 @@
-const _ = require("lodash");
+﻿const _ = require("lodash");
 const User = require("../models/users");
 const Category = require("../models/category");
 const Product = require("../models/product");
@@ -517,12 +517,8 @@ module.exports = {
       }
 
       // Generate sequential order ID
-      const counter = await Counter.findOneAndUpdate(
-        { name: 'orderId' },
-        { $inc: { seq: 1 } },
-        { new: true, upsert: true }
-      );
-      const orderIdStr = 'ORD-' + String(counter.seq).padStart(4, '0');
+      const { getNextOrderSerial } = require('../services/orderSerialService');
+      const orderIdStr = await getNextOrderSerial();
 
       const finalTotal = totalAmount + totalDeliveryCharges;
 

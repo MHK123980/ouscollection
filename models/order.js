@@ -1,4 +1,4 @@
-const mongoose = require("mongoose")
+﻿const mongoose = require("mongoose")
 
 const orderSchema = new mongoose.Schema({
     userId: {
@@ -54,6 +54,17 @@ const orderSchema = new mongoose.Schema({
     orderIdStr: {
         type: String,
         unique: true
+    },
+    courierName: {
+        type: String,
+        default: ""
+    },
+    trackingNumber: {
+        type: String,
+        default: ""
+    },
+    trackingAssignedAt: {
+        type: Date
     },
     isDeleted: {
         type: Boolean,
