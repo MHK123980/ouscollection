@@ -306,11 +306,15 @@ module.exports = {
 
             if (myOrder.status != "Cancelled" && myOrder.status != "Delivered") {
                 //updating stock for each items in order before cancelling 
-                myOrder.products.forEach(async product => {
-                    let myProduct = await Product.findById(product.productId)
-                    myProduct.quantity += product.quantity
-                    await myProduct.save()
-                })
+                for (const product of myOrder.products) {
+                    if (product.productId) {
+                        let myProduct = await Product.findById(product.productId)
+                        if (myProduct) {
+                            myProduct.quantity += product.quantity
+                            await myProduct.save()
+                        }
+                    }
+                }
                 myOrder.status = "Cancelled"
                 await myOrder.save()
                 const pusher = req.app.get('pusher');

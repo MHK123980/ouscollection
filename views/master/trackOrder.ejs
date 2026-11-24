@@ -95,48 +95,15 @@
 
           <!-- When Order is CANCELLED (Matching Image 3) -->
           <div id="progressCancelledBox" style="display: none;">
-            <div class="p-3 text-center fw-bold" style="background: rgba(248, 81, 73, 0.12); border: 1px solid rgba(248, 81, 73, 0.3); border-radius: 10px; color: #ff7b72; font-size: 1rem;">
+            <div class="p-3 text-center fw-bold" style="background: rgba(248, 81, 73, 0.12); border: 1px solid rgba(248, 81, 73, 0.3); border-radius: 10px; color: #ff7b72; font-size: 1.05rem;">
               <i class="fa-solid fa-xmark me-2"></i> Order Canceled
             </div>
           </div>
 
-          <!-- When Order is CONFIRMED (Matching Image 2) -->
+          <!-- When Order is CONFIRMED -->
           <div id="progressActiveBox">
-            <div class="progress-stepper">
-              
-              <!-- Step 1: Confirmed -->
-              <div class="step-item step-completed">
-                <div class="step-icon">
-                  <i class="fa-solid fa-check"></i>
-                </div>
-                <div class="step-content">
-                  <div class="step-title">Order Confirmed</div>
-                  <div class="step-subtitle">Your order has been verified & accepted</div>
-                </div>
-              </div>
-
-              <!-- Step 2: Shipping / Courier -->
-              <div class="step-item" id="stepShipping">
-                <div class="step-icon" id="stepShippingIcon">
-                  <i class="fa-solid fa-truck-fast"></i>
-                </div>
-                <div class="step-content">
-                  <div class="step-title" id="stepShippingTitle">Shipping</div>
-                  <div class="step-subtitle" id="stepShippingSubtitle">Preparing parcel for courier pickup</div>
-                </div>
-              </div>
-
-              <!-- Step 3: Delivered -->
-              <div class="step-item" id="stepDelivered">
-                <div class="step-icon">
-                  <i class="fa-solid fa-house"></i>
-                </div>
-                <div class="step-content">
-                  <div class="step-title">Delivered</div>
-                  <div class="step-subtitle">Delivered to your shipping address</div>
-                </div>
-              </div>
-
+            <div class="p-3 text-center fw-bold" style="background: rgba(46, 160, 67, 0.12); border: 1px solid rgba(46, 160, 67, 0.35); border-radius: 10px; color: #3fb950; font-size: 1.05rem;">
+              <i class="fa-solid fa-circle-check me-2"></i> Order Confirmed
             </div>
           </div>
         </div>
@@ -314,9 +281,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
   const progressCancelledBox = document.getElementById('progressCancelledBox');
   const progressActiveBox = document.getElementById('progressActiveBox');
-  const stepShipping = document.getElementById('stepShipping');
-  const stepShippingTitle = document.getElementById('stepShippingTitle');
-  const stepShippingSubtitle = document.getElementById('stepShippingSubtitle');
 
   const noCnBox = document.getElementById('noCnBox');
   const hasCnBox = document.getElementById('hasCnBox');
@@ -403,18 +367,7 @@ document.addEventListener('DOMContentLoaded', function() {
       progressActiveBox.style.display = 'block';
     }
 
-    // 3. Progress Steps
-    if (order.hasTracking) {
-      stepShipping.className = 'step-item step-active';
-      stepShippingTitle.textContent = `Dispatched (${order.courierName})`;
-      stepShippingSubtitle.textContent = `Handed over to courier with CN #${order.trackingNumber}`;
-    } else {
-      stepShipping.className = 'step-item';
-      stepShippingTitle.textContent = 'Shipping';
-      stepShippingSubtitle.textContent = 'Preparing parcel for courier pickup';
-    }
-
-    // 4. Courier Tracking Card (State A vs State B)
+    // 3. Courier Tracking Card (State A vs State B)
     if (order.hasTracking) {
       noCnBox.style.display = 'none';
       hasCnBox.style.display = 'block';

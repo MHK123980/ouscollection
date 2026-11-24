@@ -460,8 +460,10 @@ module.exports = {
     try {
       const errorMessage = req.flash("message");
       const products = await Product.find({ quantity: { $gt: 0 } }).sort({ name: 1 });
+      const allCategories = await Category.find().sort({ categoryName: 1 });
       res.render("admin/addOrder", {
         products: products,
+        allCategories: allCategories,
         errorMessage: errorMessage,
         layout: "layouts/adminLayout"
       });
@@ -474,9 +476,13 @@ module.exports = {
 
   postAddOrder: async (req, res) => {
     try {
-      const Counter = require("../models/counter");
-      const { email, firstName, lastName, address, city, province, phone, orderProducts } = req.body;
+      const { email, firstName, lastName, address, city, province, phone, orderProducts, paymentType } = req.body;
       
+      if (!paymentType) {
+        req.flash("message", "Please select a payment method (COD or Online Payment)");
+        return res.redirect("/admin/addOrder");
+      }
+
       const items = JSON.parse(orderProducts);
       if (!items || items.length === 0) {
         req.flash("message", "No products selected");
@@ -489,30 +495,60 @@ module.exports = {
       const orderItems = [];
 
       for (let item of items) {
-        const product = await Product.findById(item.productId);
-        if (product && product.quantity >= item.quantity) {
-          const price = product.offerPrice || product.price;
-          const itemTotal = price * item.quantity;
-          totalAmount += itemTotal;
-          totalQuantity += item.quantity;
-          
-          // Calculate delivery charges
-          totalDeliveryCharges += calculateDeliveryCharge(product, item.quantity);
-          
-          orderItems.push({
-            productId: product._id,
-            name: product.name,
-            quantity: item.quantity,
-            price: product.price,
-            offerPrice: product.offerPrice
-          });
+        const qty = Math.max(1, parseInt(item.quantity) || 1);
 
-          // update stock
-          product.quantity -= item.quantity;
-          await product.save();
+        if (item.isManual) {
+          // Manual custom product not in database
+          const unitPrice = Number(item.price) || 0;
+          const discPrice = (item.discountedPrice && Number(item.discountedPrice) > 0) ? Number(item.discountedPrice) : 0;
+          const effectivePrice = discPrice > 0 ? discPrice : unitPrice;
+          const itemTotal = effectivePrice * qty;
+
+          totalAmount += itemTotal;
+          totalQuantity += qty;
+
+          let displayName = (item.name || "Custom Item").trim();
+          if (item.pieceType) {
+            displayName += ` (${item.pieceType})`;
+          }
+          if (item.category) {
+            displayName += ` - ${item.category}`;
+          }
+
+          orderItems.push({
+            productId: null,
+            name: displayName,
+            quantity: qty,
+            price: unitPrice,
+            offerPrice: effectivePrice
+          });
         } else {
-          req.flash("message", `Insufficient stock for ${item.name}`);
-          return res.redirect("/admin/addOrder");
+          // Website Catalog Product
+          const product = await Product.findById(item.productId);
+          if (product && product.quantity >= qty) {
+            const price = product.offerPrice || product.price;
+            const itemTotal = price * qty;
+            totalAmount += itemTotal;
+            totalQuantity += qty;
+            
+            // Calculate delivery charges
+            totalDeliveryCharges += calculateDeliveryCharge(product, qty);
+            
+            orderItems.push({
+              productId: product._id,
+              name: product.name,
+              quantity: qty,
+              price: product.price,
+              offerPrice: product.offerPrice
+            });
+
+            // update stock
+            product.quantity -= qty;
+            await product.save();
+          } else {
+            req.flash("message", `Insufficient stock for ${item.name}`);
+            return res.redirect("/admin/addOrder");
+          }
         }
       }
 
@@ -532,7 +568,7 @@ module.exports = {
         total: finalTotal,
         subTotal: totalAmount,
         totalDeliveryCharges: totalDeliveryCharges,
-        paymentType: 'online_paid',
+        paymentType: paymentType, // 'cod' or 'online_paid'
         status: "Pending"
       });
 

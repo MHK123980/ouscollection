@@ -1,3 +1,21 @@
+<style>
+.payment-card {
+  cursor: pointer;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  transition: all 0.2s ease-in-out;
+}
+.payment-card:hover {
+  border-color: #cbd5e1;
+  background-color: #f8fafc;
+}
+.payment-card:has(input:checked) {
+  border-color: #0d6efd !important;
+  background-color: #eff6ff !important;
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.12);
+}
+</style>
+
 <div class="container-fluid px-4">
   <h1 class="mt-4">Add Order</h1>
   <%- include("../partials/errorMessage") %>
@@ -10,10 +28,10 @@
     <div class="card-body">
       <form action="/admin/addOrder" method="POST" id="addOrderForm" onsubmit="return submitOrderForm(this)">
         
-        <h5 class="mb-3"><i class="fas fa-box me-2"></i>Products</h5>
+        <h5 class="mb-3"><i class="fas fa-box me-2"></i>Select Website Product</h5>
         <div class="row mb-3 align-items-end">
           <div class="col-md-6">
-            <label class="form-label">Select Product</label>
+            <label class="form-label">Search / Select Product</label>
             <select id="productSelect" class="form-select product-select2">
               <option value="">Search product...</option>
               <% products.forEach(product => { %>
@@ -33,7 +51,65 @@
             <input type="number" id="productQuantity" class="form-control" min="1" value="1">
           </div>
           <div class="col-md-4">
-            <button type="button" class="btn btn-outline-dark w-100" onclick="addProductToTable()">Add to Order</button>
+            <button type="button" class="btn btn-outline-dark w-100" onclick="addProductToTable()">
+              <i class="fas fa-cart-plus me-1"></i> Add Website Product
+            </button>
+          </div>
+        </div>
+
+        <!-- Manual Custom Product Entry Section -->
+        <div class="card mb-3" style="background-color: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 10px;">
+          <div class="card-body p-3">
+            <div class="d-flex align-items-center mb-2">
+              <i class="fas fa-edit text-primary me-2"></i>
+              <strong class="text-dark" style="font-size: 0.95rem;">Manual / Custom Product Entry</strong>
+              <span class="badge bg-secondary ms-2" style="font-size: 0.72rem; font-weight: 500;">For products not on website</span>
+            </div>
+            <div class="row g-2 align-items-end">
+              <div class="col-md-3">
+                <label class="form-label small fw-bold mb-1">Item Name <span class="text-danger">*</span></label>
+                <input type="text" id="manualItemName" class="form-control form-control-sm" placeholder="e.g. Kurti / Lawn Suit">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small fw-bold mb-1">Category <span class="text-muted small">(Optional)</span></label>
+                <select id="manualCategory" class="form-select form-select-sm">
+                  <option value="">Select Category...</option>
+                  <% if (typeof allCategories !== 'undefined' && allCategories) { %>
+                    <% allCategories.forEach(cat => { %>
+                      <option value="<%= cat.categoryName %>"><%= cat.categoryName %></option>
+                    <% }) %>
+                  <% } %>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small fw-bold mb-1">Pieces <span class="text-muted small">(Optional)</span></label>
+                <select id="manualPieces" class="form-select form-select-sm">
+                  <option value="">-- None --</option>
+                  <option value="1pc">1pc</option>
+                  <option value="2pc">2pc</option>
+                  <option value="3pc">3pc</option>
+                  <option value="4pc">4pc</option>
+                  <option value="5pc">5pc</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small fw-bold mb-1">Price (PKR) <span class="text-danger">*</span></label>
+                <input type="number" id="manualPrice" class="form-control form-control-sm" placeholder="e.g. 2500" min="0">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small fw-bold mb-1">Discount Price <span class="text-muted small">(Optional)</span></label>
+                <input type="number" id="manualDiscountPrice" class="form-control form-control-sm" placeholder="e.g. 2200" min="0">
+              </div>
+              <div class="col-md-1">
+                <label class="form-label small fw-bold mb-1">Qty <span class="text-danger">*</span></label>
+                <input type="number" id="manualQuantity" class="form-control form-control-sm" min="1" value="1">
+              </div>
+              <div class="col-12 text-end mt-2">
+                <button type="button" class="btn btn-sm btn-dark px-3" onclick="addManualProductToTable()">
+                  <i class="fas fa-plus me-1"></i> Add to Order
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -120,16 +196,33 @@
         </div>
 
         <hr>
-        <h5 class="mb-3"><i class="fas fa-credit-card me-2"></i>Payment</h5>
-        <div class="row mb-3">
+        <h5 class="mb-3"><i class="fas fa-credit-card me-2"></i>Payment Method <span class="text-danger">*</span></h5>
+        <div class="row g-3 mb-4">
           <div class="col-md-4">
-            <div class="card border-success">
-              <div class="card-body text-center">
-                <i class="fas fa-check-circle text-success fs-3 mb-2"></i>
-                <h6 class="card-title">Online Payment <span class="text-success">✅</span></h6>
-                <p class="card-text text-muted small">Payment received</p>
+            <label class="card h-100 p-3 payment-card" for="payCod">
+              <div class="d-flex align-items-center">
+                <input type="radio" name="paymentType" value="cod" class="form-check-input me-3 fs-5" id="payCod" required>
+                <div>
+                  <div class="fw-bold text-dark d-flex align-items-center">
+                    <i class="fas fa-hand-holding-dollar text-warning me-2 fs-5"></i> Cash On Delivery (COD)
+                  </div>
+                  <div class="text-muted small mt-1">Payment collected in cash upon parcel delivery</div>
+                </div>
               </div>
-            </div>
+            </label>
+          </div>
+          <div class="col-md-4">
+            <label class="card h-100 p-3 payment-card" for="payOnline">
+              <div class="d-flex align-items-center">
+                <input type="radio" name="paymentType" value="online_paid" class="form-check-input me-3 fs-5" id="payOnline" required>
+                <div>
+                  <div class="fw-bold text-dark d-flex align-items-center">
+                    <i class="fas fa-circle-check text-success me-2 fs-5"></i> Online Payment
+                  </div>
+                  <div class="text-muted small mt-1">Paid in advance via Bank / EasyPaisa / JazzCash</div>
+                </div>
+              </div>
+            </label>
           </div>
         </div>
 
@@ -202,8 +295,10 @@
       
       orderItems.push({
         productId: productId,
+        isManual: false,
         name: name,
         price: price,
+        effectivePrice: price,
         quantity: qty,
         delivery: pData.delivery,
         increaseWithQty: pData.increaseWithQty
@@ -213,6 +308,64 @@
     renderTable();
     $('#productSelect').val(null).trigger('change');
     qtyInput.value = 1;
+  }
+
+  function addManualProductToTable() {
+    const nameInput = document.getElementById('manualItemName');
+    const catInput = document.getElementById('manualCategory');
+    const pieceInput = document.getElementById('manualPieces');
+    const priceInput = document.getElementById('manualPrice');
+    const discPriceInput = document.getElementById('manualDiscountPrice');
+    const qtyInput = document.getElementById('manualQuantity');
+
+    const name = nameInput.value.trim();
+    const price = parseFloat(priceInput.value);
+    const discPrice = parseFloat(discPriceInput.value) || 0;
+    const qty = parseInt(qtyInput.value);
+    const category = catInput.value;
+    const pieceType = pieceInput.value;
+
+    if (!name) {
+      alert("Please enter the custom item name.");
+      nameInput.focus();
+      return;
+    }
+    if (isNaN(price) || price < 0) {
+      alert("Please enter a valid price.");
+      priceInput.focus();
+      return;
+    }
+    if (isNaN(qty) || qty < 1) {
+      alert("Quantity must be at least 1.");
+      qtyInput.focus();
+      return;
+    }
+
+    const effectivePrice = (discPrice > 0) ? discPrice : price;
+
+    orderItems.push({
+      productId: 'manual_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      isManual: true,
+      name: name,
+      category: category,
+      pieceType: pieceType,
+      price: price,
+      discountedPrice: discPrice > 0 ? discPrice : 0,
+      effectivePrice: effectivePrice,
+      quantity: qty,
+      delivery: 0,
+      increaseWithQty: false
+    });
+
+    renderTable();
+
+    // Clear input fields
+    nameInput.value = '';
+    catInput.value = '';
+    pieceInput.value = '';
+    priceInput.value = '';
+    discPriceInput.value = '';
+    qtyInput.value = '1';
   }
 
   function removeProduct(index) {
@@ -237,7 +390,8 @@
     }
 
     orderItems.forEach((item, index) => {
-      const subtotal = item.price * item.quantity;
+      const unitPrice = item.effectivePrice || item.price;
+      const subtotal = unitPrice * item.quantity;
       productTotal += subtotal;
       
       let deliveryCharge = item.delivery || 0;
@@ -245,11 +399,27 @@
         deliveryCharge = deliveryCharge * item.quantity;
       }
       deliveryTotal += deliveryCharge;
+
+      let displayName = item.name;
+      if (item.pieceType) {
+        displayName += ` <span class="badge bg-light text-dark border">${item.pieceType}</span>`;
+      }
+      if (item.category) {
+        displayName += ` <small class="text-muted">(${item.category})</small>`;
+      }
+      if (item.isManual) {
+        displayName += ` <span class="badge bg-secondary" style="font-size:0.68rem;">Custom</span>`;
+      }
+
+      let priceHtml = `PKR ${item.price.toFixed(2)}`;
+      if (item.discountedPrice && item.discountedPrice > 0) {
+        priceHtml = `<del class="text-muted small">PKR ${item.price.toFixed(2)}</del> <span class="text-success fw-bold">PKR ${item.discountedPrice.toFixed(2)}</span>`;
+      }
       
       tbody.innerHTML += `
         <tr>
-          <td>${item.name}</td>
-          <td>PKR ${item.price.toFixed(2)}</td>
+          <td>${displayName}</td>
+          <td>${priceHtml}</td>
           <td>${item.quantity}</td>
           <td>PKR ${subtotal.toFixed(2)}</td>
           <td>PKR ${deliveryCharge.toFixed(2)}</td>
@@ -272,6 +442,11 @@
   function submitOrderForm(form) {
     if (orderItems.length === 0) {
       alert("Please add at least one product to the order.");
+      return false;
+    }
+    const paymentSelected = form.querySelector('input[name="paymentType"]:checked');
+    if (!paymentSelected) {
+      alert("Please select a payment method (COD or Online Payment).");
       return false;
     }
     const btn = document.getElementById('submitOrderBtn');

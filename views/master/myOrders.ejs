@@ -34,11 +34,13 @@
                       <span class="text-muted small bold mb-1">orderId: #<%= order.orderIdStr || order.id %></span>
                       <% order.products.forEach(product=>{%>
                         <span class="text-muted mb-2"><img
-                            src="<%= product.productId.productImagePath[0].startsWith('http') ? product.productId.productImagePath[0] : '/files/' + product.productId.productImagePath[0] %>"
+                            src="<%= product.productId && product.productId.productImagePath && product.productId.productImagePath[0] ? (product.productId.productImagePath[0].startsWith('http') ? product.productId.productImagePath[0] : '/files/' + product.productId.productImagePath[0]) : '/img/ous-logo.png' %>"
                             alt="" width="60" class="img-fluid rounded">
-                          <a href="/product/<%= product.productId.id %>" class="text-muted">
-                            <%= product.productId.name %>
-                          </a> x <%= product.quantity %> </span>
+                          <% if (product.productId) { %>
+                            <a href="/product/<%= product.productId.id %>" class="text-muted"><%= product.productId.name %></a>
+                          <% } else { %>
+                            <span class="text-muted"><%= product.name %></span>
+                          <% } %> x <%= product.quantity %> </span>
                         <% }) %>
 
                           <span class="text-muted small">on <%= order.createdAt.toDateString() %></span>
